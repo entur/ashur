@@ -40,17 +40,17 @@ class FilterService(
      *
      * @param directoryForInputFiles The directory containing input files.
      * @param directoryForOutputFiles The directory containing output files.
-     * @param outputZipFile The zip file created as output.
+     * @param filteredNetexZipFile The zip file created as output.
      */
     private fun cleanUpFiles(
         directoryForInputFiles: File,
         directoryForOutputFiles: File,
-        outputZipFile: File
+        filteredNetexZipFile: File
     ) {
         logger.info("Cleaning up files...")
         directoryForInputFiles.deleteRecursively()
         directoryForOutputFiles.listFiles()?.forEach { file ->
-            if (file.path != outputZipFile.path) {
+            if (file.path != filteredNetexZipFile.path) {
                 file.delete()
             }
         }
@@ -60,19 +60,19 @@ class FilterService(
     /**
      * Filters a Netex file from a zip archive and returns the filtered zip file.
      *
-     * @param netexZipFile ByteArray of the zip file containing Netex files
+     * @param unfilteredNetexZipFile ByteArray of the zip file containing Netex files
      * @param inputDirectory The directory where the input files will be extracted.
      * @param outputDirectory The directory where the filtered output files will be saved.
      * @return The filtered zip file containing the processed Netex data.
      */
     private fun filterNetexToZipFile(
-        netexZipFile: ByteArray,
+        unfilteredNetexZipFile: ByteArray,
+        fileNameOfUnfilteredNetexZipFile: String,
         inputDirectory: File,
         outputDirectory: File,
-        zipFileName: String
     ): File {
-        logger.info("Unzipping Netex file: $zipFileName")
-        ZipUtils.unzipToDirectory(netexZipFile, inputDirectory)
+        logger.info("Unzipping Netex file: $fileNameOfUnfilteredNetexZipFile")
+        ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
 
         FilterNetexApp(
             // TODO: Adjust config such that config values come from a pubsub message rather than configuration file
@@ -81,7 +81,7 @@ class FilterService(
             target = outputDirectory,
         ).run()
 
-        val outputZipFile = File("$outputDirectory/filtered_$zipFileName")
+        val outputZipFile = File("$outputDirectory/filtered_$fileNameOfUnfilteredNetexZipFile")
         ZipUtils.zipDirectory(
             outputDirectory,
             outputZipFile,
@@ -115,18 +115,18 @@ class FilterService(
 
             val (directoryForInputFiles, directoryForOutputFiles) = createDirectories(inputDirectory, outputDirectory)
 
-            val outputZipFile = filterNetexToZipFile(
-                netexZipFile = inputZipFile,
+            val filteredNetexZipFile = filterNetexToZipFile(
+                unfilteredNetexZipFile = inputZipFile,
+                fileNameOfUnfilteredNetexZipFile = fileName,
                 inputDirectory = directoryForInputFiles,
                 outputDirectory = directoryForOutputFiles,
-                zipFileName = fileName
             )
 
             if (cleanUpEnabled) {
                 cleanUpFiles(
                     directoryForInputFiles = directoryForInputFiles,
                     directoryForOutputFiles = directoryForOutputFiles,
-                    outputZipFile = outputZipFile,
+                    filteredNetexZipFile = filteredNetexZipFile,
                 )
             }
         }
