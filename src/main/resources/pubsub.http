@@ -1,0 +1,26 @@
+# Create a topic named "FilterNetexFileQueue" under project "test"
+PUT http://localhost:8085/v1/projects/test/topics/FilterNetexFileQueue
+
+###
+# Create a subcription named "FilterNetexFileQueue"
+PUT http://localhost:8085/v1/projects/test/subscriptions/FilterNetexFileQueue
+Content-Type: application/json
+
+{ "topic": "projects/test/topics/FilterNetexFileQueue" }
+
+###
+# Publish to the "FilterNetexFileQueue", to start filtering netex
+POST http://localhost:8085/v1/projects/test/topics/FilterNetexFileQueue:publish
+Content-Type: application/json
+
+{
+  "messages": [
+    {
+      "attributes": {
+        "NetexFile": "rb_hur-aggregated-netex.zip",
+        "Codespace": "hur",
+        "CorrelationId": "correlationId"
+      }
+    }
+  ]
+}
