@@ -8,11 +8,11 @@ This component is still a work in progress and is not yet used in any environmen
 
 A minimal local setup requires a Google PubSub emulator, and a built version of netex-tools in your local Maven repository.
 
-Once the emulator is running, you can start Ashur by running the main method of Main.kt. You should pass the path to your
-`application.properties` file as a VM argument, like this:
+Once the emulator is running, you can start Ashur by running the main method of Main.kt. You should pass the paths to your
+`application.properties` and `logback.xml` files as VM arguments, like this:
 
 ```
--Dconfig.file=/path/to/your/application.properties
+-Dconfig.file=/path/to/your/application.properties -Dlogging.config=/path/to/your/logback.xml
 ```
 
 Sample of `application.properties` file:
@@ -28,6 +28,23 @@ cleanup.enabled=false
 file.service.type=local
 pubsub.service.type=emulator
 gcp.bucket.name=
+```
+
+Sample of `logback.xml` file:
+```xml
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} %replace(%X{codespace}){'^(.+)$','[codespace=$1 '}%replace(%X{correlationId}){'^(.+)$','correlationId=$1] '}%msg%n
+            </pattern>
+        </encoder>
+    </appender>
+    <root level="trace">
+        <appender-ref ref="STDOUT"/>
+    </root>
+    <logger name="io.netty" level="INFO"/>
+</configuration>
 ```
 
 ### Google PubSub emulator

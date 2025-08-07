@@ -1,5 +1,7 @@
 package org.entur.ror.ashur
 
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.joran.JoranConfigurator
 import com.google.cloud.pubsub.v1.AckReplyConsumer
 import com.google.pubsub.v1.PubsubMessage
 import org.entur.ror.ashur.gcp.GcsClient
@@ -12,7 +14,17 @@ import org.entur.ror.ashur.file.GcsFileService
 import org.entur.ror.ashur.file.LocalFileService
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import java.io.File
 import java.util.Properties
+
+fun configureLogback(logbackXmlPath: String = System.getProperty("logging.config")) {
+    val context = LoggerFactory.getILoggerFactory() as LoggerContext
+    val configurator = JoranConfigurator()
+    configurator.context = context
+    context.reset()
+    configurator.doConfigure(File(logbackXmlPath))
+    LoggerFactory.getLogger("Configuration").info("Logback configured with file: $logbackXmlPath")
+}
 
 fun getConfiguration(): Properties {
     val logger = LoggerFactory.getLogger("Configuration")

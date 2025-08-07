@@ -3,6 +3,8 @@ package org.entur.ror.ashur
 import org.entur.ror.ashur.pubsub.NetexFilterMessageHandler
 
 fun main() {
+    configureLogback()
+
     val config = getConfiguration()
     val messageHandler = NetexFilterMessageHandler(
         inputDirectory = config.getProperty("input.path"),
@@ -13,5 +15,6 @@ fun main() {
         messageHandler = messageHandler,
         config = config
     )
+
     pubsubListener.listen()
 }
