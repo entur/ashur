@@ -20,7 +20,7 @@ fun configureLogback(logbackXmlPath: String = System.getProperty("logging.config
 }
 
 fun getConfiguration(): Properties {
-    val logger = LoggerFactory.getLogger("Configuration")
+    val logger = LoggerFactory.getLogger("Configuration:")
     val properties = Properties()
     val configFile = System.getProperty("config.file")
     val inputStream = if (configFile != null) {

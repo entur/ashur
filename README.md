@@ -44,8 +44,10 @@ Sample of `logback.xml` file:
     <root level="trace">
         <appender-ref ref="STDOUT"/>
     </root>
-    <logger name="io.netty" level="INFO"/>
-    <logger name="org.apache.camel" level="DEBUG" additivity="false">
+    <logger name="io.grpc.netty" level="WARN"/>
+    <logger name="io.grpc" level="WARN"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="org.apache.camel" level="INFO" additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
 </configuration>
