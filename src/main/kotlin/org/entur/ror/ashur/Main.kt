@@ -1,20 +1,24 @@
 package org.entur.ror.ashur
 
-import org.entur.ror.ashur.pubsub.NetexFilterMessageHandler
+import org.apache.camel.component.properties.PropertiesComponent
+import org.apache.camel.main.Main
+import org.entur.ror.ashur.camel.NetexFilterRouteBuilder
 
 fun main() {
     configureLogback()
 
     val config = getConfiguration()
-    val messageHandler = NetexFilterMessageHandler(
-        inputDirectory = config.getProperty("input.path"),
-        outputDirectory = config.getProperty("output.path"),
-        config = config
-    )
-    val pubsubListener = setupPubsubListener(
-        messageHandler = messageHandler,
-        config = config
-    )
 
-    pubsubListener.listen()
+    val main = Main()
+    configureCamelProperties(main)
+    val netexFilterRouteBuilder = NetexFilterRouteBuilder(config = config)
+    main.configure().addRoutesBuilder(netexFilterRouteBuilder)
+
+    main.run()
+}
+
+fun configureCamelProperties(main: Main) {
+    val propertiesComponent = PropertiesComponent()
+    propertiesComponent.location = "file:${System.getProperty("config.file")}"
+    main.bind("properties", propertiesComponent)
 }

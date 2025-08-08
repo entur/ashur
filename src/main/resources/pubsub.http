@@ -10,6 +10,7 @@ Content-Type: application/json
 
 ###
 # Publish to the "FilterNetexFileQueue", to start filtering netex
+# TXlUZXN0U3RyaW5n = MyTestString
 POST http://localhost:8085/v1/projects/test/topics/FilterNetexFileQueue:publish
 Content-Type: application/json
 
@@ -19,8 +20,9 @@ Content-Type: application/json
       "attributes": {
         "NetexFile": "rb_hur-aggregated-netex.zip",
         "Codespace": "hur",
-        "CorrelationId": "correlationId"
-      }
+        "CorrelationId": "testCorrelationId"
+      },
+      "data": "TXlUZXN0U3RyaW5n"
     }
   ]
 }

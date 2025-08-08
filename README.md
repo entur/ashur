@@ -17,17 +17,18 @@ Once the emulator is running, you can start Ashur by running the main method of 
 
 Sample of `application.properties` file:
 ```properties
-project.id=test
+ashur.pubsub.project.id=test
 subscription.id=FilterNetexFileQueue
-emulator.host=localhost:8085
 
 input.path=netex-data/input
 output.path=netex-data/output
 
 cleanup.enabled=false
 file.service.type=local
-pubsub.service.type=emulator
 gcp.bucket.name=
+
+camel.component.google-pubsub.endpoint=localhost:8085
+camel.component.google-pubsub.authenticate=false
 ```
 
 Sample of `logback.xml` file:
@@ -44,6 +45,9 @@ Sample of `logback.xml` file:
         <appender-ref ref="STDOUT"/>
     </root>
     <logger name="io.netty" level="INFO"/>
+    <logger name="org.apache.camel" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
 </configuration>
 ```
 
@@ -56,10 +60,11 @@ gcloud beta emulators pubsub start
 ```
 and will listen on port 8085 by default.
 
-For the local pubsub emulator to be used when running this app locally, you need to set this property in your `application.properties` file:
+For the local pubsub emulator to be used when running this app locally, you need to set these properties in your `application.properties` file:
 
 ```properties
-pubsub.service.type=emulator
+camel.component.google-pubsub.endpoint=localhost:8085
+camel.component.google-pubsub.authenticate=false
 ```
 
 ### netex-tools
