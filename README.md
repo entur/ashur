@@ -27,6 +27,8 @@ cleanup.enabled=false
 file.service.type=local
 gcp.bucket.name=
 
+useLocalFilterConfig=true
+
 camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
 ```
