@@ -3,7 +3,9 @@ package org.entur.ror.ashur.utils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.File
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 class ZipUtilsTest {
     @Test
@@ -32,6 +34,45 @@ class ZipUtilsTest {
             }
         } finally {
             testDirectory.deleteRecursively()
+        }
+    }
+
+    private fun zipFileToOutputStream(fileToZip: File, zipOutputStream: ZipOutputStream) {
+        zipOutputStream.putNextEntry(ZipEntry(fileToZip.name))
+        zipOutputStream.write(fileToZip.readBytes())
+        zipOutputStream.closeEntry()
+    }
+
+    @Test
+    fun testUnzipToDirectory() {
+        val testDirectory = "test"
+        val targetDirectory = File("$testDirectory/tmpDir")
+        if (!targetDirectory.exists()) {
+            targetDirectory.mkdirs()
+        }
+
+        try {
+            val zipFile = File("$testDirectory/testZip.zip")
+            val file1 = File(targetDirectory, "file1.txt").apply { writeText("Content of file 1") }
+            val file2 = File(targetDirectory, "file2.txt").apply { writeText("Content of file 2") }
+            ZipOutputStream(zipFile.outputStream()).use { zipOutputStream ->
+                zipFileToOutputStream(file1, zipOutputStream)
+                zipFileToOutputStream(file2, zipOutputStream)
+            }
+
+            file1.delete()
+            file2.delete()
+
+            ZipUtils.unzipToDirectory(zipFile.readBytes(), targetDirectory)
+            val unzippedFile1 = File(targetDirectory, "file1.txt")
+            val unzippedFile2 = File(targetDirectory, "file2.txt")
+            assertTrue(unzippedFile1.exists(), "file1.txt should be unzipped")
+            assertTrue(unzippedFile2.exists(), "file2.txt should be unzipped")
+            assertEquals("Content of file 1", unzippedFile1.readText(), "Content of file 1 should match")
+            assertEquals("Content of file 2", unzippedFile2.readText(), "Content of file 2 should match")
+
+        } finally {
+            File(testDirectory).deleteRecursively()
         }
     }
 }
