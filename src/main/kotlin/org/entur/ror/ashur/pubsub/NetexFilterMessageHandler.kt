@@ -1,7 +1,9 @@
 package org.entur.ror.ashur.pubsub
 
 import com.google.pubsub.v1.PubsubMessage
+import org.entur.netex.tools.pipeline.config.CliConfig
 import org.entur.ror.ashur.FilterService
+import org.entur.ror.ashur.filter.FilterConfigLoader
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getNetexFileName
 import org.entur.ror.ashur.getCodespace
@@ -26,13 +28,18 @@ class NetexFilterMessageHandler(config: Properties): MessageHandler {
     fun getPathOfOutputDirectoryForMessage(message: PubsubMessage): String =
         "${outputDirectory}/${message.getCodespace()}/${message.getCorrelationId()}"
 
+    fun getFilterConfig(message: PubsubMessage): CliConfig? =
+        FilterConfigLoader().loadFilterConfig(message)
+
     override fun handleMessage(message: PubsubMessage) {
         try {
             val fileName: String? = message.getNetexFileName()
+            val filterConfig: CliConfig = getFilterConfig(message = message)!!
             filterService.handleFilterRequestForFile(
                 fileName,
                 inputDirectory = getPathOfInputDirectoryForMessage(message),
                 outputDirectory = getPathOfOutputDirectoryForMessage(message),
+                filterConfig = filterConfig
             )
         } catch (e: Exception) {
             logger.error("Exception occurred while processing message", e)
