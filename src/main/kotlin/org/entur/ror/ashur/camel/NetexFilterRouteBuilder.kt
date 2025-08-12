@@ -21,6 +21,11 @@ class NetexFilterRouteBuilder(
         requireNotNull(config.getProperty("subscription.id")) { "Subscription ID is required in configuration" }
     }
 
+    private fun errorHandler() = defaultErrorHandler()
+        .maximumRedeliveries(3) // internal retries for failed messages
+        .redeliveryDelay(2000) // delay between retries
+        .retryAttemptedLogLevel(LoggingLevel.WARN) // log level for retry attempts
+
     override fun configure() {
         val projectId = config.getProperty("ashur.pubsub.project.id")
         val subscriptionId = config.getProperty("subscription.id")
@@ -29,6 +34,12 @@ class NetexFilterRouteBuilder(
         val lastMessageStrategy = LastMessageStrategy(subscriptionId)
 
         from("google-pubsub:$projectId:$subscriptionId")
+            .errorHandler(errorHandler())
+            .onException(Exception::class.java)
+                .handled(true)
+                .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $subscriptionId: \${exception.message}")
+                .to("google-pubsub:$projectId:AshurDeadLetterQueue")
+            .end()
             .process({ exchange ->
                 val pubsubMessage = exchange.toPubsubMessage()
                 exchange.message.setHeader("codespace", pubsubMessage.getCodespace())
@@ -44,6 +55,7 @@ class NetexFilterRouteBuilder(
 
         // This queue ensures only one message is processed at a time per pod
         from("seda:sequentialProcessingQueue?concurrentConsumers=1")
+            .errorHandler(errorHandler())
             .log(LoggingLevel.INFO, "Finished aggregating messages for codespace ${header("codespace")}")
             .process(MDCSetupProcessor())
             .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $subscriptionId")

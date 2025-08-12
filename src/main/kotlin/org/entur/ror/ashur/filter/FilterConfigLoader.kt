@@ -7,6 +7,7 @@ import org.entur.ror.ashur.getConfiguration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
+import java.util.Properties
 
 /**
  * Loader for filter configuration.
@@ -15,14 +16,13 @@ import java.io.InputStream
  * or from a Pub/Sub message. It checks the configuration to determine the source of the filter
  * configuration and loads it accordingly.
  */
-class FilterConfigLoader {
+class FilterConfigLoader(private val config: Properties = getConfiguration()) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     fun loadFromInputStream(inputStream: InputStream): CliConfig? =
         JsonConfig.load(inputStream)
 
     fun loadFilterConfig(message: PubsubMessage): CliConfig? {
-        val config = getConfiguration()
         val useLocalFilterConfig = config.getProperty("useLocalFilterConfig")?.toBoolean() ?: false
         if (useLocalFilterConfig) {
             val resourceStream = javaClass.classLoader.getResourceAsStream("config.json")

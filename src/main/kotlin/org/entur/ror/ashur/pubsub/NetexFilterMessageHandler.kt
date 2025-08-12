@@ -27,14 +27,15 @@ class NetexFilterMessageHandler(config: Properties): MessageHandler {
         cleanUpEnabled = config.getProperty("cleanup.enabled").toBoolean(),
     )
 
+    private val filterConfigLoader = FilterConfigLoader(config)
+
     fun getPathOfInputDirectoryForMessage(message: PubsubMessage): String =
         "${inputDirectory}/${message.getCodespace()}/${message.getCorrelationId()}"
 
     fun getPathOfOutputDirectoryForMessage(message: PubsubMessage): String =
         "${outputDirectory}/${message.getCodespace()}/${message.getCorrelationId()}"
 
-    fun getFilterConfig(message: PubsubMessage): CliConfig? =
-        FilterConfigLoader().loadFilterConfig(message)
+    fun getFilterConfig(message: PubsubMessage): CliConfig? = filterConfigLoader.loadFilterConfig(message)
 
     /**
      * Performs the filtering operation on the Netex file specified in the Pub/Sub message.
