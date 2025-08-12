@@ -4,6 +4,12 @@ import org.apache.camel.AggregationStrategy
 import org.apache.camel.Exchange
 import org.slf4j.LoggerFactory
 
+/**
+ * LastMessageStrategy is an implementation of Camel's AggregationStrategy that aggregates messages
+ * based on the last message received for a specific codespace.
+ *
+ * @param subscriptionId The ID of the Pub/Sub subscription from which messages are received.
+ */
 class LastMessageStrategy(
     private val subscriptionId: String,
 ): AggregationStrategy {

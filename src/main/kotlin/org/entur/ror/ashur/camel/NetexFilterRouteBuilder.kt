@@ -7,6 +7,11 @@ import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.toPubsubMessage
 import java.util.Properties
 
+/**
+ * Entry point for the Camel route that processes messages from a Google Pub/Sub topic.
+ *
+ * Aggregates messages by codespace and processes them sequentially to filter Netex data.
+ **/
 class NetexFilterRouteBuilder(
     private val config: Properties
 ): RouteBuilder() {

@@ -11,6 +11,11 @@ import org.entur.ror.ashur.setupFileService
 import org.slf4j.LoggerFactory
 import java.util.Properties
 
+/**
+ * Handles incoming messages from a Pub/Sub topic and processes Netex files based on a filter configuration.
+ *
+ * @param config The configuration properties for the message handler.
+ */
 class NetexFilterMessageHandler(config: Properties): MessageHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -31,6 +36,9 @@ class NetexFilterMessageHandler(config: Properties): MessageHandler {
     fun getFilterConfig(message: PubsubMessage): CliConfig? =
         FilterConfigLoader().loadFilterConfig(message)
 
+    /**
+     * Performs the filtering operation on the Netex file specified in the Pub/Sub message.
+     **/
     override fun handleMessage(message: PubsubMessage) {
         try {
             val fileName: String? = message.getNetexFileName()

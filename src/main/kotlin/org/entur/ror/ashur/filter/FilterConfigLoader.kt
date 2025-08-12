@@ -8,6 +8,13 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.InputStream
 
+/**
+ * Loader for filter configuration.
+ *
+ * This class is responsible for loading the filter configuration either from a local resource file
+ * or from a Pub/Sub message. It checks the configuration to determine the source of the filter
+ * configuration and loads it accordingly.
+ */
 class FilterConfigLoader {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
