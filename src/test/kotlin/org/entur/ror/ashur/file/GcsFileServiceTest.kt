@@ -4,6 +4,7 @@ import com.google.cloud.storage.Blob
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
+import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.gcp.GcsClient
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -17,7 +18,11 @@ class GcsFileServiceTest {
     private val storage = mock(Storage::class.java)
     private val gcsClient: GcsClient = GcsClient(storage)
     private val bucketName = "test-bucket"
-    private val fileService = GcsFileService(gcsClient, bucketName)
+    private val fileService = GcsFileService(gcsClient, AppConfig(
+        gcp = AppConfig.GcpConfig().also {
+            it.bucketName = bucketName
+        }
+    ))
 
     private val content = "Hello".toByteArray()
     private val fileName = "test.txt"

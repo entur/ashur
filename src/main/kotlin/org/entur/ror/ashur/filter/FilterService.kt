@@ -1,20 +1,23 @@
-package org.entur.ror.ashur
+package org.entur.ror.ashur.filter
 
 import org.entur.netex.tools.pipeline.app.FilterNetexApp
 import org.entur.netex.tools.pipeline.config.CliConfig
+import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.exceptions.InvalidZipFileException
-import org.entur.ror.ashur.utils.FileUtils
 import org.entur.ror.ashur.file.FileService
+import org.entur.ror.ashur.utils.FileUtils
 import org.entur.ror.ashur.utils.ZipUtils
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import java.io.File
 
 /**
  * Service for filtering Netex files from a zip archive.
  */
+@Component
 class FilterService(
     private val fileService: FileService,
-    private val cleanUpEnabled: Boolean = true
+    private val appConfig: AppConfig
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -76,7 +79,6 @@ class FilterService(
         ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
 
         FilterNetexApp(
-            // TODO: Adjust config such that config values come from a pubsub message rather than configuration file
             config = filterConfig,
             input = inputDirectory,
             target = outputDirectory,
@@ -98,7 +100,7 @@ class FilterService(
      * @param fileName The name of the file to filter.
      * @param inputDirectory The directory where the input files are located.
      * @param outputDirectory The directory where the output files will be saved.
-     * @throws InvalidZipFileException If the file is invalid or empty.
+     * @throws org.entur.ror.ashur.exceptions.InvalidZipFileException If the file is invalid or empty.
      */
     fun handleFilterRequestForFile(
         fileName: String?,
@@ -125,7 +127,7 @@ class FilterService(
                 filterConfig = filterConfig
             )
 
-            if (cleanUpEnabled) {
+            if (appConfig.netex.cleanupEnabled) {
                 cleanUpFiles(
                     directoryForInputFiles = directoryForInputFiles,
                     directoryForOutputFiles = directoryForOutputFiles,

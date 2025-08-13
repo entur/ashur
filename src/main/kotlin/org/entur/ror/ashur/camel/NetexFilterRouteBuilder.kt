@@ -2,24 +2,22 @@ package org.entur.ror.ashur.camel
 
 import org.apache.camel.LoggingLevel
 import org.apache.camel.builder.RouteBuilder
+import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.getCodespace
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.toPubsubMessage
-import java.util.Properties
+import org.springframework.stereotype.Component
 
 /**
  * Entry point for the Camel route that processes messages from a Google Pub/Sub topic.
  *
  * Aggregates messages by codespace and processes them sequentially to filter Netex data.
  **/
+@Component
 class NetexFilterRouteBuilder(
-    private val config: Properties
+    private val appConfig: AppConfig,
+    private val netexFilterMessageProcessor: NetexFilterMessageProcessor
 ): RouteBuilder() {
-
-    init {
-        requireNotNull(config.getProperty("ashur.pubsub.project.id")) { "Project ID is required in configuration" }
-        requireNotNull(config.getProperty("subscription.id")) { "Subscription ID is required in configuration" }
-    }
 
     private fun errorHandler() = defaultErrorHandler()
         .maximumRedeliveries(3) // internal retries for failed messages
@@ -27,18 +25,16 @@ class NetexFilterRouteBuilder(
         .retryAttemptedLogLevel(LoggingLevel.WARN) // log level for retry attempts
 
     override fun configure() {
-        val projectId = config.getProperty("ashur.pubsub.project.id")
-        val subscriptionId = config.getProperty("subscription.id")
+        val projectId = appConfig.pubsub.projectId
+        val subscription = appConfig.pubsub.subscription
+        val lastMessageStrategy = LastMessageStrategy(subscription)
 
-        val netexFilterMessageProcessor = NetexFilterMessageProcessor(config = config)
-        val lastMessageStrategy = LastMessageStrategy(subscriptionId)
-
-        from("google-pubsub:$projectId:$subscriptionId")
+        from("google-pubsub:$projectId:$subscription")
             .errorHandler(errorHandler())
             .onException(Exception::class.java)
                 .handled(true)
-                .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $subscriptionId: \${exception.message}")
-                .to("google-pubsub:$projectId:AshurDeadLetterQueue")
+                .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $subscription: \${exception.message}")
+                .to("google-pubsub:$projectId:${subscription}DeadLetterQueue")
             .end()
             .process({ exchange ->
                 val pubsubMessage = exchange.toPubsubMessage()
@@ -47,7 +43,7 @@ class NetexFilterRouteBuilder(
             })
             .aggregate(header("codespace"), lastMessageStrategy)
             // fires aggregation if a given group hasn’t received a new message for 5 seconds
-            .completionTimeout(5000)
+            .completionTimeout(1000)
             .parallelProcessing(false)
             .optimisticLocking()
             .to("seda:sequentialProcessingQueue")
@@ -58,9 +54,9 @@ class NetexFilterRouteBuilder(
             .errorHandler(errorHandler())
             .log(LoggingLevel.INFO, "Finished aggregating messages for codespace ${header("codespace")}")
             .process(MDCSetupProcessor())
-            .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $subscriptionId")
+            .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $subscription")
             .process(netexFilterMessageProcessor)
-            .log(LoggingLevel.INFO, "Done processing message from Pub/Sub topic $subscriptionId")
+            .log(LoggingLevel.INFO, "Done processing message from Pub/Sub topic $subscription")
             .onCompletion()
             .process(MDCCleanupProcessor())
             .routeId("sequential-processing-route")

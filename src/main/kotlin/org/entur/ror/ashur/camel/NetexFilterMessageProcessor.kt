@@ -4,7 +4,7 @@ import org.apache.camel.Exchange
 import org.apache.camel.Processor
 import org.entur.ror.ashur.pubsub.NetexFilterMessageHandler
 import org.entur.ror.ashur.toPubsubMessage
-import java.util.Properties
+import org.springframework.stereotype.Component
 
 /**
  * NetexFilterMessageProcessor is a Camel processor that handles messages for filtering Netex.
@@ -12,12 +12,13 @@ import java.util.Properties
  *
  * @param config Properties containing configuration settings such as input and output directories.
  */
+@Component
 class NetexFilterMessageProcessor(
-    private val config: Properties
+    private val messageHandler: NetexFilterMessageHandler
 ): Processor {
     override fun process(exchange: Exchange) {
         val pubsubMessage = exchange.toPubsubMessage()
-        val messageHandler = NetexFilterMessageHandler(config = config)
+        // TODO: Inspect the message for filtering profile, and pass appropriate config to the handler.
         messageHandler.handleMessage(pubsubMessage)
     }
 }

@@ -12,25 +12,25 @@ Once the emulator is running, you can start Ashur by running the main method of 
 `application.properties` and `logback.xml` files as VM arguments, like this:
 
 ```
--Dconfig.file=/path/to/your/application.properties -Dlogging.config=/path/to/your/logback.xml
+-Dspring.config.location=/path/to/your/application.properties -Dlogging.config=/path/to/your/logback.xml
 ```
 
 Sample of `application.properties` file:
 ```properties
-ashur.pubsub.project.id=test
-subscription.id=FilterNetexFileQueue
+ashur.pubsub.project-id=test
+ashur.pubsub.subscription=FilterNetexFileQueue
 
-input.path=netex-data/input
-output.path=netex-data/output
+ashur.netex.input-path=netex-data/input
+ashur.netex.output-path=netex-data/output
+ashur.netex.cleanup-enabled=true
 
-cleanup.enabled=false
-file.service.type=local
-gcp.bucket.name=
-
-useLocalFilterConfig=true
+ashur.gcp.bucket-name=
 
 camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
+camel.component.google-pubsub.projectId=test
+
+spring.profiles.active=local
 ```
 
 Sample of `logback.xml` file:
@@ -69,6 +69,7 @@ For the local pubsub emulator to be used when running this app locally, you need
 ```properties
 camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
+camel.component.google-pubsub.project-id=test
 ```
 
 ### netex-tools

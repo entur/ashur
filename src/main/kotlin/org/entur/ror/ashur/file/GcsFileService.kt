@@ -3,12 +3,20 @@ package org.entur.ror.ashur.file
 import com.google.cloud.storage.Blob
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
+import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.gcp.GcsClient
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
 
-class GcsFileService(private val gcsClient: GcsClient, private val bucketName: String): FileService() {
-
+@Profile("gcp")
+@Component
+class GcsFileService(
+    private val gcsClient: GcsClient,
+    appConfig: AppConfig
+): FileService() {
     private val logger = LoggerFactory.getLogger(javaClass)
+    private val bucketName = appConfig.gcp.bucketName
 
     override fun fileExists(fileName: String): Boolean {
         val maxAttempts = 3
@@ -50,5 +58,4 @@ class GcsFileService(private val gcsClient: GcsClient, private val bucketName: S
         }
         return false
     }
-
 }

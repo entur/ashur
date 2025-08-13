@@ -1,9 +1,13 @@
 package org.entur.ror.ashur.file
 
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
 import java.io.File
 
-class LocalFileService(): FileService() {
+@Profile("local")
+@Component
+class LocalFileService: FileService() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
