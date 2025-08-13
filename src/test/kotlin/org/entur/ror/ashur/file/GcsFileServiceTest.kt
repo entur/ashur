@@ -45,22 +45,7 @@ class GcsFileServiceTest {
     }
 
     @Test
-    fun `uploadFile should retry on failure and return true when upload eventually succeeds`() {
-        val blobInfo = mockBlob()
-
-        // Simulate a failure on the first attempt, then success on the second attempt
-        whenever(gcsClient.storage.create(blobInfo, content))
-            .thenThrow(RuntimeException("Temporary failure"))
-            .thenReturn(mock(Blob::class.java))
-
-        val result = fileService.uploadFile(fileName, content)
-
-        assertTrue(result)
-        verify(gcsClient.storage, times(2)).create(blobInfo, content)
-    }
-
-    @Test
-    fun `uploadFile should throw exception if upload has failed after 3 retries`() {
+    fun `uploadFile should throw exception if upload fails`() {
         val blobInfo = mockBlob()
 
         whenever(gcsClient.storage.create(blobInfo, content))
@@ -70,7 +55,7 @@ class GcsFileServiceTest {
             fileService.uploadFile(fileName, content)
         }
 
-        verify(gcsClient.storage, times(3)).create(blobInfo, content)
+        verify(gcsClient.storage).create(blobInfo, content)
     }
 
     @Test
@@ -103,23 +88,6 @@ class GcsFileServiceTest {
         val resultWhenExistsIsFalse = fileService.fileExists(fileName)
         assertFalse(resultWhenExistsIsFalse) { "Expected file to not exist in GCS" }
 
-        verify(gcsClient.storage, times(2)).get(blobId)
-    }
-
-    @Test
-    fun `fileExists should retry on failure and return true when file eventually exists`() {
-        val blobId = BlobId.of(bucketName, fileName)
-        val blob = mock(Blob::class.java)
-
-        // Simulate a failure on the first attempt, then success on the second attempt
-        whenever(gcsClient.storage[blobId])
-            .thenThrow(RuntimeException("Temporary failure"))
-            .thenReturn(blob)
-
-        whenever(blob.exists()).thenReturn(true)
-
-        val result = fileService.fileExists(fileName)
-        assertTrue(result) { "Expected file to exist in GCS" }
         verify(gcsClient.storage, times(2)).get(blobId)
     }
 
