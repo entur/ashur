@@ -29,6 +29,7 @@
         <slf4j.version>2.0.17</slf4j.version>
         <mockito-kotlin.version>3.2.0</mockito-kotlin.version>
         <spring-boot.version>3.3.1</spring-boot.version>
+        <micrometer.version>1.14.10</micrometer.version>
     </properties>
 
     <repositories>
@@ -190,6 +191,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-spring-boot-starter</artifactId>
             <version>${camel.version}</version>
@@ -208,6 +213,11 @@
             <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-servlet-starter</artifactId>
             <version>${camel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <version>${micrometer.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mockito.kotlin</groupId>
