@@ -3,6 +3,8 @@ package org.entur.ror.ashur
 import com.google.protobuf.ByteString
 import com.google.pubsub.v1.PubsubMessage
 import org.apache.camel.Exchange
+import org.entur.ror.ashur.exceptions.InvalidFilterProfileException
+import org.entur.ror.ashur.filter.FilterProfile
 
 fun PubsubMessage.getCorrelationId(): String? {
     return this.attributesMap["CorrelationId"]
@@ -14,6 +16,16 @@ fun PubsubMessage.getNetexFileName(): String? {
 
 fun PubsubMessage.getCodespace(): String? {
     return this.attributesMap["Codespace"]
+}
+
+fun PubsubMessage.getFilterProfile(): FilterProfile {
+    try {
+        return FilterProfile.valueOf(this.attributesMap["FilterProfile"]!!)
+    } catch (_: Exception) {
+        throw InvalidFilterProfileException(
+            "Invalid or missing FilteringProfile attribute in PubsubMessage: ${this.attributesMap["FilterProfile"]}",
+        )
+    }
 }
 
 fun Exchange.getPubsubAttributes(): Map<String, String> {

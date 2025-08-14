@@ -42,7 +42,6 @@ class NetexFilterRouteBuilder(
                 exchange.message.setHeader("correlationId", pubsubMessage.getCorrelationId())
             })
             .aggregate(header("codespace"), lastMessageStrategy)
-            // fires aggregation if a given group hasn’t received a new message for 5 seconds
             .completionTimeout(1000)
             .parallelProcessing(false)
             .optimisticLocking()

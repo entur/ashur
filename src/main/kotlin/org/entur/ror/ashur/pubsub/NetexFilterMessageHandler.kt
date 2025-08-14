@@ -1,13 +1,13 @@
 package org.entur.ror.ashur.pubsub
 
 import com.google.pubsub.v1.PubsubMessage
-import org.entur.netex.tools.pipeline.config.CliConfig
 import org.entur.ror.ashur.filter.FilterService
 import org.entur.ror.ashur.config.AppConfig
-import org.entur.ror.ashur.filter.FilterConfigLoader
+import org.entur.ror.ashur.filter.FilterConfigResolver
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getNetexFileName
 import org.entur.ror.ashur.getCodespace
+import org.entur.ror.ashur.getFilterProfile
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -20,10 +20,9 @@ import org.springframework.stereotype.Component
 class NetexFilterMessageHandler(
     private val appConfig: AppConfig,
     private val filterService: FilterService,
+    private val filterConfigResolver: FilterConfigResolver
 ): MessageHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
-
-    private val filterConfigLoader = FilterConfigLoader()
 
     fun getPathOfInputDirectoryForMessage(message: PubsubMessage): String {
         return "${appConfig.netex.inputPath}/${message.getCodespace()}/${message.getCorrelationId()}"
@@ -33,17 +32,17 @@ class NetexFilterMessageHandler(
         return "${appConfig.netex.outputPath}/${message.getCodespace()}/${message.getCorrelationId()}"
     }
 
-    fun getFilterConfig(): CliConfig? = filterConfigLoader.loadFilterConfig()
-
     /**
      * Performs the filtering operation on the Netex file specified in the Pub/Sub message.
      **/
     override fun handleMessage(message: PubsubMessage) {
         try {
             val fileName: String? = message.getNetexFileName()
-            val filterConfig: CliConfig = getFilterConfig()!!
+            val filterProfile = message.getFilterProfile()
+            val filterConfig = filterConfigResolver.resolve(filterProfile)
+            logger.info("Detected config matching filter profile $filterProfile: $filterConfig")
             filterService.handleFilterRequestForFile(
-                fileName,
+                fileName = fileName,
                 inputDirectory = getPathOfInputDirectoryForMessage(message),
                 outputDirectory = getPathOfOutputDirectoryForMessage(message),
                 filterConfig = filterConfig

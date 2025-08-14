@@ -1,7 +1,7 @@
 package org.entur.ror.ashur.filter
 
+import org.entur.netex.tools.lib.config.FilterConfig
 import org.entur.netex.tools.pipeline.app.FilterNetexApp
-import org.entur.netex.tools.pipeline.config.CliConfig
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.exceptions.InvalidZipFileException
 import org.entur.ror.ashur.file.FileService
@@ -73,13 +73,13 @@ class FilterService(
         fileNameOfUnfilteredNetexZipFile: String,
         inputDirectory: File,
         outputDirectory: File,
-        filterConfig: CliConfig,
+        filterConfig: FilterConfig,
     ): File {
         logger.info("Unzipping Netex file: $fileNameOfUnfilteredNetexZipFile")
         ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
 
         FilterNetexApp(
-            config = filterConfig,
+            filterConfig = filterConfig,
             input = inputDirectory,
             target = outputDirectory,
         ).run()
@@ -106,7 +106,7 @@ class FilterService(
         fileName: String?,
         inputDirectory: String,
         outputDirectory: String,
-        filterConfig: CliConfig,
+        filterConfig: FilterConfig,
     ) {
         if (fileName == null || fileName.isBlank() || fileName.isEmpty()) {
             throw InvalidZipFileException("File name cannot be null or blank")

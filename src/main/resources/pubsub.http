@@ -10,7 +10,6 @@ Content-Type: application/json
 
 ###
 # Publish to the "FilterNetexFileQueue", to start filtering netex
-# base64 encoded String = contents of config.json in resources-directory
 POST http://localhost:8085/v1/projects/test/topics/FilterNetexFileQueue:publish
 Content-Type: application/json
 
@@ -19,17 +18,16 @@ Content-Type: application/json
     {
       "attributes": {
         "NetexFile": "rb_hur-aggregated-netex.zip",
+        "FilterProfile": "StandardImportFilter",
         "Codespace": "hur",
         "CorrelationId": "testCorrelationId1"
-      },
-      "data": "ewogICJsb2dMZXZlbCI6ICJJTkZPIiwKICAicHJpbnRSZXBvcnQiOiB0cnVlLAogICJwcmVzZXJ2ZUNvbW1lbnRzIjogZmFsc2UsCiAgInJlbW92ZVByaXZhdGVEYXRhIjogZmFsc2UsCiAgInBlcmlvZCI6IHsKICAgICJzdGFydCI6ICIyMDI1LTA4LTA1IiwKICAgICJlbmQiOiAiMjAyOS0wOS0wMSIKICB9LAogICJ4c2tpcEVsZW1lbnRzIjogWwogICAgIlZlaGljbGVTY2hlZHVsZUZyYW1lIiwKICAgICJEZWFkUnVuIgogIF0sCiAgImFsaWFzIjogewogICAgIkNvbXBvc2l0ZUZyYW1lIjogIkNGIiwKICAgICJSZXNvdXJjZUZyYW1lIjogIlJGIiwKICAgICJTZXJ2aWNlQ2FsZW5kYXJGcmFtZSI6ICJTQ0YiLAogICAgIlNlcnZpY2VGcmFtZSI6ICJTRiIsCiAgICAiTmV0d29yayI6ICJOVyIsCiAgICAiVGltZXRhYmxlRnJhbWUgIjogIlRGIiwKICAgICJTaXRlRnJhbWUiOiAiU0YiLAogICAgIlN0b3BQb2ludEluSm91cm5leVBhdHRlcm4iOiAiU1BJbkpQIgogIH0KfQ=="
+      }
     }
   ]
 }
 
 ###
 # Publish to the "FilterNetexFileQueue", to start filtering netex
-# TXlUZXN0U3RyaW5n = MyTestString
 POST http://localhost:8085/v1/projects/test/topics/FilterNetexFileQueue:publish
 Content-Type: application/json
 
@@ -38,10 +36,10 @@ Content-Type: application/json
     {
       "attributes": {
         "NetexFile": "rb_hur-aggregated-netex.zip",
+        "FilterProfile": "StandardImportFilter",
         "Codespace": "hur",
         "CorrelationId": "testCorrelationId2"
-      },
-      "data": "TXlUZXN0U3RyaW5n"
+      }
     }
   ]
 }
