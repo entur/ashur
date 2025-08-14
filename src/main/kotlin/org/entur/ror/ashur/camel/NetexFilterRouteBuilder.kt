@@ -1,7 +1,6 @@
 package org.entur.ror.ashur.camel
 
 import org.apache.camel.LoggingLevel
-import org.apache.camel.builder.RouteBuilder
 import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.getCodespace
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Component
 class NetexFilterRouteBuilder(
     private val appConfig: AppConfig,
     private val netexFilterMessageProcessor: NetexFilterMessageProcessor
-): RouteBuilder() {
+): BaseRouteBuilder() {
     override fun configure() {
         val projectId = appConfig.pubsub.projectId
 
@@ -38,11 +37,14 @@ class NetexFilterRouteBuilder(
                 exchange.message.setHeader("codespace", pubsubMessage.getCodespace())
                 exchange.message.setHeader("correlationId", pubsubMessage.getCorrelationId())
             })
+            .process(this::removeSynchronizationForAggregatedExchange)
             .aggregate(header("codespace"), lastMessageStrategy)
             .completionTimeout(1000)
             .parallelProcessing(false)
             .optimisticLocking()
+            .process(this::addSynchronizationForAggregatedExchange)
             .to("google-pubsub:$projectId:$statusSubscription")
+            .log(LoggingLevel.INFO, "Aggregated messages for codespace: \${header.codespace}. Sending to filter processing queue...")
             .to("direct:filterProcessingQueue")
             .to("google-pubsub:$projectId:$statusSubscription")
             .routeId("netex-filter-route")
@@ -50,7 +52,7 @@ class NetexFilterRouteBuilder(
         // Note: direct is blocking by default, so only one aggregated message will be processed at a time.
         from("direct:filterProcessingQueue")
             .process(MDCSetupProcessor())
-            .log(LoggingLevel.INFO, "Finished aggregating messages for codespace. Processing request to filter Netex from Pub/Sub topic $filterSubscription...")
+            .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $filterSubscription...")
             .process(netexFilterMessageProcessor)
             .log(LoggingLevel.INFO, "Done processing message from Pub/Sub topic $filterSubscription")
             .onCompletion()

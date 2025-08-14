@@ -1,6 +1,5 @@
 package org.entur.ror.ashur
 
-import org.apache.camel.spring.boot.CamelSpringBootApplicationController
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
@@ -8,6 +7,5 @@ import org.springframework.boot.runApplication
 open class AshurApplication
 
 fun main(args: Array<String>) {
-    val ctx = runApplication<AshurApplication>(*args)
-    ctx.getBean(CamelSpringBootApplicationController::class.java).run()
+    runApplication<AshurApplication>(*args)
 }
