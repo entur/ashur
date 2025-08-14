@@ -6,7 +6,6 @@ import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.google.pubsub.consumer.AcknowledgeCompletion
 import org.apache.camel.spi.Synchronization
 import org.apache.camel.support.DefaultExchange
-import java.util.function.Predicate
 
 abstract class BaseRouteBuilder: RouteBuilder() {
     private val SYNCHRONIZATION_HOLDER: String = "SYNCHRONIZATION_HOLDER"
@@ -25,7 +24,7 @@ abstract class BaseRouteBuilder: RouteBuilder() {
             .unitOfWork
             .handoverSynchronization(
                 temporaryExchange,
-                Predicate { obj: Synchronization? -> AcknowledgeCompletion::class.java.isInstance(obj) }
+                { obj: Synchronization? -> AcknowledgeCompletion::class.java.isInstance(obj) }
             )
         e.getIn().setHeader(SYNCHRONIZATION_HOLDER, temporaryExchange)
     }
@@ -36,10 +35,10 @@ abstract class BaseRouteBuilder: RouteBuilder() {
      * @see .removeSynchronizationForAggregatedExchange
      */
     protected fun addSynchronizationForAggregatedExchange(aggregatedExchange: Exchange) {
-        val messages: MutableList<Message> =
-            aggregatedExchange.getIn().getBody(MutableList::class.java) as MutableList<Message>
+        val messages = aggregatedExchange.getIn().getBody(List::class.java)
         for (m in messages) {
-            val temporaryExchange = m.getHeader(SYNCHRONIZATION_HOLDER, Exchange::class.java)
+            val msg = m as Message
+            val temporaryExchange = msg.getHeader(SYNCHRONIZATION_HOLDER, Exchange::class.java)
             checkNotNull(temporaryExchange) { "Synchronization holder not found" }
             temporaryExchange.exchangeExtension.handoverCompletions(aggregatedExchange)
         }

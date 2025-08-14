@@ -30,23 +30,25 @@ class NetexFilterRouteBuilder(
             .onException(Exception::class.java)
                 .handled(true)
                 .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message}")
-                .to("google-pubsub:$projectId:$statusSubscription")
+                .to("direct:filterProcessingStatusFailed")
             .end()
+            // Temporarily commented out due to Pub/Sub re-sending messages
+            // .process(this::removeSynchronizationForAggregatedExchange)
             .process({ exchange ->
                 val pubsubMessage = exchange.toPubsubMessage()
                 exchange.message.setHeader("codespace", pubsubMessage.getCodespace())
                 exchange.message.setHeader("correlationId", pubsubMessage.getCorrelationId())
             })
-            .process(this::removeSynchronizationForAggregatedExchange)
+            .to("direct:filterProcessingStatusStarted")
             .aggregate(header("codespace"), lastMessageStrategy)
             .completionTimeout(1000)
+            // Temporarily commented out due to Pub/Sub re-sending messages
+            // .process(this::addSynchronizationForAggregatedExchange)
             .parallelProcessing(false)
             .optimisticLocking()
-            .process(this::addSynchronizationForAggregatedExchange)
-            .to("google-pubsub:$projectId:$statusSubscription")
             .log(LoggingLevel.INFO, "Aggregated messages for codespace: \${header.codespace}. Sending to filter processing queue...")
             .to("direct:filterProcessingQueue")
-            .to("google-pubsub:$projectId:$statusSubscription")
+            .to("direct:filterProcessingStatusSucceeded")
             .routeId("netex-filter-route")
 
         // Note: direct is blocking by default, so only one aggregated message will be processed at a time.
@@ -58,5 +60,20 @@ class NetexFilterRouteBuilder(
             .onCompletion()
             .process(MDCCleanupProcessor())
             .routeId("sequential-processing-route")
+
+        from("direct:filterProcessingStatusStarted")
+            .setHeader("status", constant("STARTED"))
+            .log(LoggingLevel.INFO, "Publishing processing status STARTED for codespace: \${header.codespace}")
+            .to("google-pubsub:$projectId:$statusSubscription")
+
+        from("direct:filterProcessingStatusFailed")
+            .setHeader("status", constant("FAILED"))
+            .log(LoggingLevel.INFO, "Publishing processing status FAILED for codespace: \${header.codespace}")
+            .to("google-pubsub:$projectId:$statusSubscription")
+
+        from("direct:filterProcessingStatusSucceeded")
+            .setHeader("status", constant("SUCCEEDED"))
+            .log(LoggingLevel.INFO, "Publishing processing status SUCCEEDED for codespace: \${header.codespace}")
+            .to("google-pubsub:$projectId:$statusSubscription")
     }
 }
