@@ -18,7 +18,6 @@ Once the emulator is running, you can start Ashur by running the main method of 
 Sample of `application.properties` file:
 ```properties
 ashur.pubsub.project-id=test
-ashur.pubsub.subscription=FilterNetexFileQueue
 
 ashur.netex.input-path=netex-data/input
 ashur.netex.output-path=netex-data/output

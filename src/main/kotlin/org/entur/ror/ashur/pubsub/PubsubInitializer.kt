@@ -9,6 +9,7 @@ import com.google.cloud.pubsub.v1.TopicAdminSettings
 import com.google.pubsub.v1.ProjectSubscriptionName
 import com.google.pubsub.v1.ProjectTopicName
 import com.google.pubsub.v1.PushConfig
+import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.CamelConfig
 import org.slf4j.LoggerFactory
@@ -51,19 +52,22 @@ class PubSubInitializer(
     @PostConstruct
     fun init() {
         val projectId = appConfig.pubsub.projectId
-        val topicId = appConfig.pubsub.subscription
-        val subscriptionId = appConfig.pubsub.subscription
 
         val topicClient = createTopicAdminClient()
-        val topicName = ProjectTopicName.of(projectId, topicId)
+        val topics = listOf<ProjectTopicName>(
+            ProjectTopicName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
+            ProjectTopicName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_SUBSCRIPTION)
+        )
 
-        topicClient.use { client ->
+        for (topic in topics) {
+            val topicId = topic.topic
             try {
                 logger.info("Checking if topic $topicId exists in project $projectId")
-                client.getTopic(topicName)
+                topicClient.getTopic(topic)
+                logger.info("Detected existing topic $topicId in project $projectId")
             } catch (_: NotFoundException) {
                 logger.info("Creating topic $topicId in project $projectId...")
-                client.createTopic(topicName)
+                topicClient.createTopic(topic)
                 logger.info("Done creating topic $topicId in project $projectId")
             } catch (e: Exception) {
                 logger.error("Failed to check or create topic $topicId in project $projectId", e)
@@ -72,18 +76,23 @@ class PubSubInitializer(
         }
 
         val subscriptionClient = createSubscriptionAdminClient()
-        val subscriptionName = ProjectSubscriptionName.of(projectId, subscriptionId)
+        val subscriptions = listOf<ProjectSubscriptionName>(
+            ProjectSubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
+            ProjectSubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_SUBSCRIPTION)
+        )
 
-        subscriptionClient.use { client ->
+        for (subscription in subscriptions) {
+            val topicName = ProjectTopicName.of(projectId, subscription.subscription)
             try {
-                logger.info("Checking if subscription $subscriptionName exists in project $projectId")
-                client.getSubscription(subscriptionName)
+                logger.info("Checking if subscription $subscription exists in project $projectId")
+                subscriptionClient.getSubscription(subscription)
+                logger.info("Detected existing subscription $subscription in project $projectId")
             } catch (_: NotFoundException) {
-                logger.info("Creating subscription $subscriptionName in project $projectId...")
-                client.createSubscription(subscriptionName, topicName, PushConfig.getDefaultInstance(), 10)
-                logger.info("Done creating subscription $subscriptionName in project $projectId")
+                logger.info("Creating subscription $subscription in project $projectId...")
+                subscriptionClient.createSubscription(subscription, topicName, PushConfig.getDefaultInstance(), 10)
+                logger.info("Done creating subscription $subscription in project $projectId")
             } catch (e: Exception) {
-                logger.error("Failed to check or create subscription $subscriptionName in project $projectId", e)
+                logger.error("Failed to check or create subscription $subscription in project $projectId", e)
                 throw e
             }
         }
