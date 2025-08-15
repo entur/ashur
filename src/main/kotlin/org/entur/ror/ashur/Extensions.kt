@@ -5,6 +5,17 @@ import com.google.pubsub.v1.PubsubMessage
 import org.apache.camel.Exchange
 import org.entur.ror.ashur.exceptions.InvalidFilterProfileException
 import org.entur.ror.ashur.filter.FilterProfile
+import java.io.File
+
+fun File.createFileWithDirectories(): File {
+    if (!this.exists()) {
+        if (!this.parentFile.exists()) {
+            this.parentFile?.mkdirs()
+        }
+        this.createNewFile()
+    }
+    return this
+}
 
 fun PubsubMessage.getCorrelationId(): String? {
     return this.attributesMap["CorrelationId"]

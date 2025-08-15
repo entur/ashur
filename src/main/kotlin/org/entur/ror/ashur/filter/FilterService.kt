@@ -63,19 +63,23 @@ class FilterService(
     /**
      * Filters a Netex file from a zip archive and returns the filtered zip file.
      *
-     * @param unfilteredNetexZipFile ByteArray of the zip file containing Netex files
+     * @param inputNetexFileName Name of the Netex file to filter.
      * @param inputDirectory The directory where the input files will be extracted.
      * @param outputDirectory The directory where the filtered output files will be saved.
      * @return The filtered zip file containing the processed Netex data.
      */
     private fun filterNetexToZipFile(
-        unfilteredNetexZipFile: ByteArray,
-        fileNameOfUnfilteredNetexZipFile: String,
+        inputNetexFileName: String,
         inputDirectory: File,
         outputDirectory: File,
         filterConfig: FilterConfig,
     ): File {
-        logger.info("Unzipping Netex file: $fileNameOfUnfilteredNetexZipFile")
+        val unfilteredNetexZipFile = fileService.getFileAsByteArray(inputNetexFileName)
+        if (unfilteredNetexZipFile.isEmpty()) {
+            throw InvalidZipFileException("Zip file is empty: $inputNetexFileName")
+        }
+
+        logger.info("Unzipping Netex file: $inputNetexFileName")
         ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
 
         FilterNetexApp(
@@ -84,7 +88,7 @@ class FilterService(
             target = outputDirectory,
         ).run()
 
-        val outputZipFile = File("$outputDirectory/filtered_$fileNameOfUnfilteredNetexZipFile")
+        val outputZipFile = File("$outputDirectory/filtered_$inputNetexFileName")
         ZipUtils.zipDirectory(
             outputDirectory,
             outputZipFile,
@@ -92,6 +96,28 @@ class FilterService(
         logger.info("Zipped contents to file: ${outputZipFile.path}")
 
         return outputZipFile
+    }
+
+    /**
+     * Constructs the path for the input directory based on the codespace and correlation ID.
+     *
+     * @param codespace The codespace identifier
+     * @param correlationId The correlation ID
+     * @return The path of the input directory for the specified message.
+     */
+    fun getPathForNetexInputFiles(codespace: String, correlationId: String): String {
+        return "${appConfig.netex.inputPath}/${codespace}/${correlationId}"
+    }
+
+    /**
+     * Constructs the path for the output directory based on the codespace and correlation ID.
+     *
+     * @param codespace The codespace identifier
+     * @param correlationId The correlation ID
+     * @return The path of the output directory for the specified message.
+     */
+    fun getPathForNetexOutputFiles(codespace: String, correlationId: String): String {
+        return "${appConfig.netex.outputPath}/${codespace}/${correlationId}"
     }
 
     /**
@@ -104,9 +130,9 @@ class FilterService(
      */
     fun handleFilterRequestForFile(
         fileName: String?,
-        inputDirectory: String,
-        outputDirectory: String,
         filterConfig: FilterConfig,
+        codespace: String,
+        correlationId: String,
     ) {
         if (fileName == null || fileName.isBlank() || fileName.isEmpty()) {
             throw InvalidZipFileException("File name cannot be null or blank")
@@ -117,11 +143,12 @@ class FilterService(
                 throw InvalidZipFileException("Zip file is empty: $fileName")
             }
 
-            val (directoryForInputFiles, directoryForOutputFiles) = createDirectories(inputDirectory, outputDirectory)
+            val pathForInputFiles = getPathForNetexInputFiles(codespace, correlationId)
+            val pathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId)
+            val (directoryForInputFiles, directoryForOutputFiles) = createDirectories(pathForInputFiles, pathForOutputFiles)
 
             val filteredNetexZipFile = filterNetexToZipFile(
-                unfilteredNetexZipFile = inputZipFile,
-                fileNameOfUnfilteredNetexZipFile = fileName,
+                inputNetexFileName = fileName,
                 inputDirectory = directoryForInputFiles,
                 outputDirectory = directoryForOutputFiles,
                 filterConfig = filterConfig
@@ -134,6 +161,11 @@ class FilterService(
                     filteredNetexZipFile = filteredNetexZipFile,
                 )
             }
+
+            fileService.uploadFile(
+                "${appConfig.gcp.bucketPath}/${codespace}/${correlationId}/filtered_${fileName}",
+                filteredNetexZipFile.readBytes()
+            )
         }
     }
 }

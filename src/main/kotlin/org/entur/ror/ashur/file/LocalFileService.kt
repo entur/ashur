@@ -1,9 +1,11 @@
 package org.entur.ror.ashur.file
 
+import org.entur.ror.ashur.createFileWithDirectories
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import java.io.File
+import java.util.UUID
 
 @Profile("local")
 @Component
@@ -39,7 +41,17 @@ class LocalFileService: FileService() {
     }
 
     override fun uploadFile(fileName: String, content: ByteArray): Boolean {
-        File(fileName).writeBytes(content)
+        val file = File(fileName)
+        if (file.exists()) {
+            val uniqueFileName = "$fileName-${UUID.randomUUID()}.zip"
+            logger.warn("File $fileName already exists on local file system. Writing to file $uniqueFileName instead.")
+            val uniqueFile = File(uniqueFileName)
+            uniqueFile.createFileWithDirectories()
+            uniqueFile.writeBytes(content)
+        } else {
+            file.createFileWithDirectories()
+            file.writeBytes(content)
+        }
         logger.info("File uploaded successfully: $fileName")
         return true
     }

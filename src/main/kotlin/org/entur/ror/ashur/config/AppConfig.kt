@@ -12,7 +12,6 @@ class AppConfig(
 ) {
     class PubsubConfig {
         lateinit var projectId: String
-        lateinit var subscription: String
     }
 
     class NetexConfig {
@@ -23,5 +22,6 @@ class AppConfig(
 
     class GcpConfig {
         lateinit var bucketName: String
+        lateinit var bucketPath: String
     }
 }

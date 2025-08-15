@@ -24,6 +24,7 @@ ashur.netex.output-path=netex-data/output
 ashur.netex.cleanup-enabled=true
 
 ashur.gcp.bucket-name=
+ashur.gcp.bucket-path=/path/to/your/local/ashur/bucket
 
 camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
