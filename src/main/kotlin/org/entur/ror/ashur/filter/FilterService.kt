@@ -61,6 +61,30 @@ class FilterService(
     }
 
     /**
+     * Uploads the kept entities and references to .txt files through fileService
+     *
+     * @param entities The set of entity IDs to upload.
+     * @param refs The set of reference IDs to upload.
+     * @param codespace The codespace identifier.
+     * @param correlationId The correlation ID for the operation.
+     */
+    fun uploadKeptEntitiesAndRefsExports(
+        entities: Set<String>,
+        refs: Set<String>,
+        uploadPath: String,
+    ) {
+        fileService.uploadFile(
+            "${uploadPath}/entities.txt",
+            entities.sorted().joinToString("\n").toByteArray()
+        )
+
+        fileService.uploadFile(
+            "${uploadPath}/refs.txt",
+            refs.sorted().joinToString("\n").toByteArray()
+        )
+    }
+
+    /**
      * Filters a Netex file from a zip archive and returns the filtered zip file.
      *
      * @param inputNetexFileName Name of the Netex file to filter.
@@ -73,6 +97,7 @@ class FilterService(
         inputDirectory: File,
         outputDirectory: File,
         filterConfig: FilterConfig,
+        uploadPath: String,
     ): File {
         val unfilteredNetexZipFile = fileService.getFileAsByteArray(inputNetexFileName)
         if (unfilteredNetexZipFile.isEmpty()) {
@@ -82,11 +107,17 @@ class FilterService(
         logger.info("Unzipping Netex file: $inputNetexFileName")
         ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
 
-        FilterNetexApp(
+        val (entities, refs) = FilterNetexApp(
             filterConfig = filterConfig,
             input = inputDirectory,
             target = outputDirectory,
         ).run()
+
+        uploadKeptEntitiesAndRefsExports(
+            entities = entities,
+            refs = refs,
+            uploadPath = uploadPath,
+        )
 
         val outputZipFile = File("$outputDirectory/filtered_$inputNetexFileName")
         ZipUtils.zipDirectory(
@@ -143,27 +174,32 @@ class FilterService(
                 throw InvalidZipFileException("Zip file is empty: $fileName")
             }
 
-            val pathForInputFiles = getPathForNetexInputFiles(codespace, correlationId)
-            val pathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId)
-            val (directoryForInputFiles, directoryForOutputFiles) = createDirectories(pathForInputFiles, pathForOutputFiles)
+            val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId)
+            val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId)
+            val (localDirectoryForInputFiles, localDirectoryForOutputFiles) = createDirectories(
+                localPathForInputFiles,
+                localPathForOutputFiles
+            )
 
+            val uploadPath = "${appConfig.gcp.bucketPath}/${codespace}/${correlationId}"
             val filteredNetexZipFile = filterNetexToZipFile(
                 inputNetexFileName = fileName,
-                inputDirectory = directoryForInputFiles,
-                outputDirectory = directoryForOutputFiles,
-                filterConfig = filterConfig
+                inputDirectory = localDirectoryForInputFiles,
+                outputDirectory = localDirectoryForOutputFiles,
+                filterConfig = filterConfig,
+                uploadPath = uploadPath
             )
 
             if (appConfig.netex.cleanupEnabled) {
                 cleanUpFiles(
-                    directoryForInputFiles = directoryForInputFiles,
-                    directoryForOutputFiles = directoryForOutputFiles,
+                    directoryForInputFiles = localDirectoryForInputFiles,
+                    directoryForOutputFiles = localDirectoryForOutputFiles,
                     filteredNetexZipFile = filteredNetexZipFile,
                 )
             }
 
             fileService.uploadFile(
-                "${appConfig.gcp.bucketPath}/${codespace}/${correlationId}/filtered_${fileName}",
+                "${uploadPath}/filtered_${fileName}",
                 filteredNetexZipFile.readBytes()
             )
         }

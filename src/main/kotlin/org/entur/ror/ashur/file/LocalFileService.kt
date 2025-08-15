@@ -43,7 +43,7 @@ class LocalFileService: FileService() {
     override fun uploadFile(fileName: String, content: ByteArray): Boolean {
         val file = File(fileName)
         if (file.exists()) {
-            val uniqueFileName = "$fileName-${UUID.randomUUID()}.zip"
+            val uniqueFileName = "$fileName-${UUID.randomUUID()}.${file.extension}"
             logger.warn("File $fileName already exists on local file system. Writing to file $uniqueFileName instead.")
             val uniqueFile = File(uniqueFileName)
             uniqueFile.createFileWithDirectories()
