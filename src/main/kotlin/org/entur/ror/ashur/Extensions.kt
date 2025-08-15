@@ -51,6 +51,6 @@ fun Exchange.toPubsubMessage(): PubsubMessage {
     return PubsubMessage
         .newBuilder()
         .setData(ByteString.copyFromUtf8(bodyAsString))
-        .putAllAttributes(attributes as Map<String, String>)
+        .putAllAttributes(attributes)
         .build()
 }
