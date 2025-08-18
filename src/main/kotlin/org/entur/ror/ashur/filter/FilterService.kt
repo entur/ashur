@@ -93,18 +93,19 @@ class FilterService(
      * @return The filtered zip file containing the processed Netex data.
      */
     private fun filterNetexToZipFile(
-        inputNetexFileName: String,
+        netexInputFile: File,
         inputDirectory: File,
         outputDirectory: File,
         filterConfig: FilterConfig,
         uploadPath: String,
     ): File {
-        val unfilteredNetexZipFile = fileService.getFileAsByteArray(inputNetexFileName)
+        val netexInputFilePath = netexInputFile.path
+        val unfilteredNetexZipFile = fileService.getFileAsByteArray(netexInputFilePath)
         if (unfilteredNetexZipFile.isEmpty()) {
-            throw InvalidZipFileException("Zip file is empty: $inputNetexFileName")
+            throw InvalidZipFileException("Zip file is empty: $netexInputFilePath")
         }
 
-        logger.info("Unzipping Netex file: $inputNetexFileName")
+        logger.info("Unzipping Netex file: $netexInputFilePath")
         ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
 
         val (entities, refs) = FilterNetexApp(
@@ -119,7 +120,7 @@ class FilterService(
             uploadPath = uploadPath,
         )
 
-        val outputZipFile = File("$outputDirectory/filtered_$inputNetexFileName")
+        val outputZipFile = File("$outputDirectory/filtered_${netexInputFile.name}")
         ZipUtils.zipDirectory(
             outputDirectory,
             outputZipFile,
@@ -182,8 +183,9 @@ class FilterService(
             )
 
             val uploadPath = "${appConfig.gcp.bucketPath}/${codespace}/${correlationId}"
+            val netexInputFile = File(fileName)
             val filteredNetexZipFile = filterNetexToZipFile(
-                inputNetexFileName = fileName,
+                netexInputFile = netexInputFile,
                 inputDirectory = localDirectoryForInputFiles,
                 outputDirectory = localDirectoryForOutputFiles,
                 filterConfig = filterConfig,
@@ -199,7 +201,7 @@ class FilterService(
             }
 
             fileService.uploadFile(
-                "${uploadPath}/filtered_${fileName}",
+                "${uploadPath}/filtered_${netexInputFile.name}",
                 filteredNetexZipFile.readBytes()
             )
         }

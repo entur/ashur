@@ -32,8 +32,7 @@ class NetexFilterRouteBuilder(
                 .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message}")
                 .to("direct:filterProcessingStatusFailed")
             .end()
-            // Temporarily commented out due to Pub/Sub re-sending messages
-            // .process(this::removeSynchronizationForAggregatedExchange)
+            .process(this::removeSynchronizationForAggregatedExchange)
             .process({ exchange ->
                 val pubsubMessage = exchange.toPubsubMessage()
                 exchange.message.setHeader("codespace", pubsubMessage.getCodespace())
@@ -42,8 +41,7 @@ class NetexFilterRouteBuilder(
             .to("direct:filterProcessingStatusStarted")
             .aggregate(header("codespace"), lastMessageStrategy)
             .completionTimeout(1000)
-            // Temporarily commented out due to Pub/Sub re-sending messages
-            // .process(this::addSynchronizationForAggregatedExchange)
+            .process(this::addSynchronizationForAggregatedExchange)
             .parallelProcessing(false)
             .optimisticLocking()
             .log(LoggingLevel.INFO, "Aggregated messages for codespace: \${header.codespace}. Sending to filter processing queue...")
