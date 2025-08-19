@@ -7,6 +7,7 @@ import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getNetexFileName
 import org.entur.ror.ashur.getCodespace
 import org.entur.ror.ashur.getFilterProfile
+import org.entur.ror.ashur.getNetexSource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -31,6 +32,7 @@ class NetexFilterMessageHandler(
             val filterProfile = message.getFilterProfile()
             val codespace = message.getCodespace()
             val correlationId = message.getCorrelationId()
+            val netexSource = message.getNetexSource()
 
             val filterConfig = filterConfigResolver.resolve(filterProfile)
             logger.info("Detected config matching filter profile $filterProfile: $filterConfig")
@@ -40,6 +42,7 @@ class NetexFilterMessageHandler(
                 filterConfig = filterConfig,
                 codespace = codespace ?: "unknown",
                 correlationId = correlationId ?: "unknown",
+                netexSource = netexSource ?: "unknown",
             )
         } catch (e: Exception) {
             logger.error("Exception occurred while processing message", e)

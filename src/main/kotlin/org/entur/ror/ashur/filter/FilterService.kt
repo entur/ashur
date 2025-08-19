@@ -137,8 +137,8 @@ class FilterService(
      * @param correlationId The correlation ID
      * @return The path of the input directory for the specified message.
      */
-    fun getPathForNetexInputFiles(codespace: String, correlationId: String): String {
-        return "${appConfig.netex.inputPath}/${codespace}/${correlationId}"
+    fun getPathForNetexInputFiles(codespace: String, correlationId: String, netexSource: String): String {
+        return "${appConfig.netex.inputPath}/${codespace}/${correlationId}/${netexSource}"
     }
 
     /**
@@ -148,8 +148,23 @@ class FilterService(
      * @param correlationId The correlation ID
      * @return The path of the output directory for the specified message.
      */
-    fun getPathForNetexOutputFiles(codespace: String, correlationId: String): String {
-        return "${appConfig.netex.outputPath}/${codespace}/${correlationId}"
+    fun getPathForNetexOutputFiles(codespace: String, correlationId: String, netexSource: String): String {
+        return "${appConfig.netex.outputPath}/${codespace}/${correlationId}/${netexSource}"
+    }
+
+    private fun validateZipFile(fileName: String?): File {
+        if (fileName == null || fileName.isBlank() || fileName.isEmpty()) {
+            throw InvalidZipFileException("File name cannot be null or blank")
+        }
+        if (!fileService.fileExists(fileName)) {
+            throw InvalidZipFileException("File does not exist: $fileName")
+        }
+        return File(fileName)
+    }
+
+    private fun getZipFile(fileName: String?): File {
+        val file = validateZipFile(fileName)
+        return file
     }
 
     /**
@@ -165,45 +180,36 @@ class FilterService(
         filterConfig: FilterConfig,
         codespace: String,
         correlationId: String,
+        netexSource: String,
     ) {
-        if (fileName == null || fileName.isBlank() || fileName.isEmpty()) {
-            throw InvalidZipFileException("File name cannot be null or blank")
-        }
-        if (fileService.fileExists(fileName)) {
-            val inputZipFile = fileService.getFileAsByteArray(fileName)
-            if (inputZipFile.isEmpty()) {
-                throw InvalidZipFileException("Zip file is empty: $fileName")
-            }
+        val netexInputFile = getZipFile(fileName)
+        val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId, netexSource)
+        val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId, netexSource)
+        val (localDirectoryForInputFiles, localDirectoryForOutputFiles) = createDirectories(
+            localPathForInputFiles,
+            localPathForOutputFiles
+        )
 
-            val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId)
-            val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId)
-            val (localDirectoryForInputFiles, localDirectoryForOutputFiles) = createDirectories(
-                localPathForInputFiles,
-                localPathForOutputFiles
-            )
+        val uploadPath = "${appConfig.gcp.bucketPath}/${codespace}/${correlationId}/$netexSource"
+        val filteredNetexZipFile = filterNetexToZipFile(
+            netexInputFile = netexInputFile,
+            inputDirectory = localDirectoryForInputFiles,
+            outputDirectory = localDirectoryForOutputFiles,
+            filterConfig = filterConfig,
+            uploadPath = uploadPath
+        )
 
-            val uploadPath = "${appConfig.gcp.bucketPath}/${codespace}/${correlationId}"
-            val netexInputFile = File(fileName)
-            val filteredNetexZipFile = filterNetexToZipFile(
-                netexInputFile = netexInputFile,
-                inputDirectory = localDirectoryForInputFiles,
-                outputDirectory = localDirectoryForOutputFiles,
-                filterConfig = filterConfig,
-                uploadPath = uploadPath
-            )
-
-            if (appConfig.netex.cleanupEnabled) {
-                cleanUpFiles(
-                    directoryForInputFiles = localDirectoryForInputFiles,
-                    directoryForOutputFiles = localDirectoryForOutputFiles,
-                    filteredNetexZipFile = filteredNetexZipFile,
-                )
-            }
-
-            fileService.uploadFile(
-                "${uploadPath}/filtered_${netexInputFile.name}",
-                filteredNetexZipFile.readBytes()
+        if (appConfig.netex.cleanupEnabled) {
+            cleanUpFiles(
+                directoryForInputFiles = localDirectoryForInputFiles,
+                directoryForOutputFiles = localDirectoryForOutputFiles,
+                filteredNetexZipFile = filteredNetexZipFile,
             )
         }
+
+        fileService.uploadFile(
+            "${uploadPath}/filtered_${netexInputFile.name}",
+            filteredNetexZipFile.readBytes()
+        )
     }
 }

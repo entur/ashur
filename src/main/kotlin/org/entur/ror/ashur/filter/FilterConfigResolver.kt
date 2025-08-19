@@ -5,7 +5,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class FilterConfigResolver(
-    private val standardImportFilterConfig: FilterConfig = StandardImportFilteringProfileConfig().build()
+    private val standardImportFilterConfig: FilterConfig = StandardImportFilteringProfileConfig().build(),
+    private val asIsImportFilterConfig: FilterConfig = AsIsImportFilteringProfileConfig().build()
 ) {
     /**
      * Resolves the appropriate filter configuration based on the provided filtering profile.
@@ -16,6 +17,7 @@ class FilterConfigResolver(
     fun resolve(filterProfile: FilterProfile): FilterConfig {
         return when (filterProfile) {
             FilterProfile.StandardImportFilter -> standardImportFilterConfig
+            FilterProfile.AsIsImportFilter -> asIsImportFilterConfig
         }
     }
 }

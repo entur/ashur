@@ -1,5 +1,6 @@
 package org.entur.ror.ashur.filter
 
 enum class FilterProfile {
-    StandardImportFilter
+    StandardImportFilter,
+    AsIsImportFilter,
 }

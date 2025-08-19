@@ -1,5 +1,6 @@
 package org.entur.ror.ashur.file
 
+import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.createFileWithDirectories
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -9,12 +10,17 @@ import java.util.UUID
 
 @Profile("local")
 @Component
-class LocalFileService: FileService() {
+class LocalFileService(private val appConfig: AppConfig): FileService() {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    private fun getPathToFileInBlobstore(fileName: String): String {
+        return "${appConfig.gcp.bucketPath}/$fileName"
+    }
+
     override fun fileExists(fileName: String): Boolean {
-        val fileExistsOnFileSystem = File(fileName).exists()
+        val pathToFileInBlobstore = getPathToFileInBlobstore(fileName)
+        val fileExistsOnFileSystem = File(pathToFileInBlobstore).exists()
         val fileExistsOnClasspath = javaClass.classLoader.getResource(fileName) != null
 
         if (fileExistsOnFileSystem || fileExistsOnClasspath) {
@@ -27,7 +33,8 @@ class LocalFileService: FileService() {
     }
 
     override fun getFileAsByteArray(fileName: String): ByteArray {
-        val fileFromFileSystem = File(fileName)
+        val pathToFileInBlobstore = getPathToFileInBlobstore(fileName)
+        val fileFromFileSystem = File(pathToFileInBlobstore)
         val fileFromClassPath = javaClass.classLoader.getResource(fileName)
 
         if (fileFromFileSystem.exists()) {

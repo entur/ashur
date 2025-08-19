@@ -26,7 +26,11 @@ fun PubsubMessage.getNetexFileName(): String? {
 }
 
 fun PubsubMessage.getCodespace(): String? {
-    return this.attributesMap["Codespace"]
+    return this.attributesMap["EnturDatasetReferential"]
+}
+
+fun PubsubMessage.getNetexSource(): String? {
+    return this.attributesMap["NetexSource"]
 }
 
 fun PubsubMessage.getFilterProfile(): FilterProfile {

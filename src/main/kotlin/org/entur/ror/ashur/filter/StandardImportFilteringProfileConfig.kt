@@ -14,5 +14,9 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
             .withSkipElements(listOf("VehicleScheduleFrame", "DeadRun"))
             .withRemovePrivateData(true)
             .withPreserveComments(true)
+            .withUseSelfClosingTagsWhereApplicable(false)
+            .withPruneReferences(true)
+            .withReferencesToExcludeFromPruning(setOf("QuayRef"))
+            .withUnreferencedEntitiesToPrune(setOf("JourneyPattern"))
             .build()
 }
