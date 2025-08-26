@@ -19,11 +19,11 @@ class LocalFileService(private val appConfig: AppConfig): FileService() {
     }
 
     override fun fileExists(fileName: String): Boolean {
-        val pathToFileInBlobstore = getPathToFileInBlobstore(fileName)
-        val fileExistsOnFileSystem = File(pathToFileInBlobstore).exists()
+        val fileExistsOnFileSystem = File(fileName).exists()
+        val fileExistsInLocalBlobstore = File(getPathToFileInBlobstore(fileName)).exists()
         val fileExistsOnClasspath = javaClass.classLoader.getResource(fileName) != null
 
-        if (fileExistsOnFileSystem || fileExistsOnClasspath) {
+        if (fileExistsOnFileSystem || fileExistsOnClasspath || fileExistsInLocalBlobstore) {
             logger.info("File exists: $fileName")
             return true
         }
@@ -33,10 +33,13 @@ class LocalFileService(private val appConfig: AppConfig): FileService() {
     }
 
     override fun getFileAsByteArray(fileName: String): ByteArray {
-        val pathToFileInBlobstore = getPathToFileInBlobstore(fileName)
-        val fileFromFileSystem = File(pathToFileInBlobstore)
+        val fileFromFileSystem = File(fileName)
+        val fileFromLocalBlobstore = File(getPathToFileInBlobstore(fileName))
         val fileFromClassPath = javaClass.classLoader.getResource(fileName)
 
+        if (fileFromLocalBlobstore.exists()) {
+            return fileFromLocalBlobstore.readBytes()
+        }
         if (fileFromFileSystem.exists()) {
             return fileFromFileSystem.readBytes()
         }
