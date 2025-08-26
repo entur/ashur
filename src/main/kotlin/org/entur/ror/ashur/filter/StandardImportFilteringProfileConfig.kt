@@ -10,6 +10,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         FilterConfigBuilder()
             .withPeriod(TimePeriod(
                 start = LocalDate.now().minusDays(2),
+                end = null
             ))
             .withSkipElements(listOf("VehicleScheduleFrame", "DeadRun"))
             .withRemovePrivateData(true)
@@ -17,6 +18,12 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
             .withUseSelfClosingTagsWhereApplicable(false)
             .withPruneReferences(true)
             .withReferencesToExcludeFromPruning(setOf("QuayRef"))
-            .withUnreferencedEntitiesToPrune(setOf("JourneyPattern"))
+            .withUnreferencedEntitiesToPrune(
+                setOf(
+                    "JourneyPattern",
+                    "Route",
+                    "Line"
+                )
+            )
             .build()
 }
