@@ -10,7 +10,7 @@ resource "google_pubsub_subscription" "FilterNetexFileQueue" {
   project                    = var.gcp_resources_project
   labels                     = var.labels
   message_retention_duration = "3600s"
-  ack_deadline_seconds       = 30
+  ack_deadline_seconds       = 600
   expiration_policy {
     minimum_backoff = "10s"
     maximum_backoff = "600s"

@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "storage_bucket" {
-  name                        = "${var.bucket_instance_prefix}-${var.bucket_instance_suffix}"
+  name                        = "ror-ashur-exchange-gcp-${var.bucket_instance_suffix}"
   force_destroy               = var.force_destroy
   location                    = var.location
   project                     = var.gcp_resources_project
