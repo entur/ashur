@@ -89,7 +89,7 @@ class PubSubInitializer(
                 logger.info("Detected existing subscription $subscription in project $projectId")
             } catch (_: NotFoundException) {
                 logger.info("Creating subscription $subscription in project $projectId...")
-                subscriptionClient.createSubscription(subscription, topicName, PushConfig.getDefaultInstance(), 60)
+                subscriptionClient.createSubscription(subscription, topicName, PushConfig.getDefaultInstance(), 600)
                 logger.info("Done creating subscription $subscription in project $projectId")
             } catch (e: Exception) {
                 logger.error("Failed to check or create subscription $subscription in project $projectId", e)
