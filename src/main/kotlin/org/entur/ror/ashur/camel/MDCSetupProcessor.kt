@@ -1,6 +1,8 @@
 package org.entur.ror.ashur.camel
 
-import org.entur.ror.ashur.getPubsubAttributes
+import org.entur.ror.ashur.getCodespace
+import org.entur.ror.ashur.getCorrelationId
+import org.entur.ror.ashur.toPubsubMessage
 import org.slf4j.MDC
 
 /**
@@ -10,8 +12,8 @@ import org.slf4j.MDC
  */
 class MDCSetupProcessor : org.apache.camel.Processor {
     override fun process(exchange: org.apache.camel.Exchange) {
-        val pubsubAttributes = exchange.getPubsubAttributes()
-        MDC.put("correlationId", pubsubAttributes.get("CorrelationId") ?: "unknown")
-        MDC.put("codespace", pubsubAttributes.get("Codespace") ?: "unknown")
+        val pubsubMessage = exchange.toPubsubMessage()
+        MDC.put("correlationId", pubsubMessage.getCorrelationId() ?: "unknown")
+        MDC.put("codespace", pubsubMessage.getCodespace() ?: "unknown")
     }
 }

@@ -18,11 +18,11 @@ fun File.createFileWithDirectories(): File {
 }
 
 fun PubsubMessage.getCorrelationId(): String? {
-    return this.attributesMap["CorrelationId"]
+    return this.attributesMap["RutebankenCorrelationId"]
 }
 
 fun PubsubMessage.getNetexFileName(): String? {
-    return this.attributesMap["NetexFile"]
+    return this.attributesMap["RutebankenFileHandle"]
 }
 
 fun PubsubMessage.getCodespace(): String? {
