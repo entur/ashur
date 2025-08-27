@@ -1,5 +1,27 @@
-variable "gcp_resources_project" {
+variable "gcs_bucket_project" {
   description = "The GCP project hosting the project resources"
+}
+
+variable "pubsub_topic_project" {
+  description = "The GCP project hosting Pub/Sub topics"
+}
+
+variable "ashur_project" {
+  description = "The GCP project hosting the Ashur application"
+}
+
+variable "service_account" {
+  description = "Service account for Ashur to use for IAM roles."
+}
+
+variable "service_account_pubsub_subscriber_role" {
+  description = "Role of the Service Account - more about roles https://cloud.google.com/pubsub/docs/access-control"
+  default     = "roles/pubsub.subscriber"
+}
+
+variable "service_account_pubsub_publisher_role" {
+  description = "Role of the Service Account - more about roles https://cloud.google.com/pubsub/docs/access-control"
+  default     = "roles/pubsub.publisher"
 }
 
 variable "labels" {
@@ -20,11 +42,6 @@ variable "location" {
 
 variable "bucket_instance_suffix" {
   description = "A suffix for the bucket instance, may be changed if environment is destroyed and then needed again (name collision workaround) - also bucket names must be globally unique"
-}
-
-variable "bucket_instance_prefix" {
-  description = "A prefix for the bucket instance, may be changed if environment is destroyed and then needed again (name collision workaround) - also bucket names must be globally unique"
-  default     = "ror-ashur-exchange"
 }
 
 variable "force_destroy" {

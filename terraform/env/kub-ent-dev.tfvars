@@ -1,2 +1,5 @@
-gcp_resources_project = "ent-ashur-dev"
+ashur_project = "ent-ashur-dev"
+pubsub_topic_project = "ent-marduk-dev"
+gcs_bucket_project = "ent-ashur-dev"
 bucket_instance_suffix="dev"
+service_account = "serviceAccount:application@ent-ashur-dev.iam.gserviceaccount.com"
