@@ -1,0 +1,23 @@
+common:
+  env: dev
+  ingress:
+    host:
+      ashur.dev.entur.io
+
+configmap:
+  gcp:
+    pubsubProjectId: ent-marduk-dev
+
+  ashur:
+    netex:
+      inputPath: netex-data/input
+      outputPath: netex-data/output
+      cleanupEnabled: true
+    gcp:
+      bucketName: ror-ashur-exchange-gcp-dev
+      bucketPath: /exchange
+
+  camel:
+    component:
+      googlePubsub:
+        projectId: ent-marduk-dev

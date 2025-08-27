@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ashur-application
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "common.labels" . | indent 4 }}
+data:
+  application.properties: |+
+    ashur.pubsub.project-id={{ .Values.configmap.gcp.pubsubProjectId }}
+    
+    ashur.netex.input-path={{ .Values.configmap.ashur.netex.inputPath }}
+    ashur.netex.output-path={{ .Values.configmap.ashur.netex.outputPath }}
+    ashur.netex.cleanup-enabled={{ .Values.configmap.ashur.netex.cleanupEnabled }}
+    
+    ashur.gcp.bucket-name={{ .Values.configmap.ashur.gcp.bucketName }}
+    ashur.gcp.bucket-path={{ .Values.configmap.ashur.gcp.bucketPath }}
+    
+    camel.component.google-pubsub.projectId={{ .Values.configmap.camel.component.googlePubsub.projectId }}
+    
+    spring.profiles.active=gcp
+    
+    management.endpoints.web.exposure.include=info, health, prometheus, env, metrics, loggers
+    management.endpoints.prometheus.enabled=true
+    management.metrics.endpoint.export.prometheus.enabled=true

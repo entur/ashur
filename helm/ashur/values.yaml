@@ -1,0 +1,45 @@
+common:
+  app: ashur
+  shortname: ashur
+  team: ror
+  ingress:
+    trafficType: api
+  service:
+    externalPort: 80
+    internalPort: 8080
+  hpa:
+    spec:
+      minReplicas: 1
+      maxReplicas: 1
+  container:
+    image: <+artifacts.primary.image>
+    maxReplicas: 2
+    cpu: 3
+    memory: 6000
+    memoryLimit: 6000
+    probes:
+      liveness:
+        path: /actuator/health/liveness
+      readiness:
+        path: /actuator/health/readiness
+    prometheus:
+      enabled: true
+      path: /actuator/prometheus
+    volumeMounts:
+      - mountPath: /etc/application-config
+        name: application-config
+        readOnly: true
+    volumes:
+      - configMap:
+          defaultMode: 420
+          name: ashur-application
+        name: application-config
+  configmap:
+    data:
+      JDK_JAVA_OPTIONS: -server -Xmx11000m -Xss512k -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
+        -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40
+        -Dspring.config.location=/etc/application-config/application.properties
+        -Dfile.encoding=UTF-8
+      TZ: Europe/Oslo
+    enabled: true
+    toEnv: true

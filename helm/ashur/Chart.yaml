@@ -1,0 +1,17 @@
+apiVersion: v2
+appVersion: "0.1.0"
+description: Ashur
+name: ashur
+version: 0.1.0
+keywords:
+  - netex
+sources:
+  - https://github.com/entur/ashur
+maintainers:
+  - name: 'team-ror'
+    email: team.rutedata@entur.org
+engine: gotpl
+dependencies:
+  - name: common
+    version: 1.17.5
+    repository: "https://entur.github.io/helm-charts"
