@@ -1,0 +1,6 @@
+apiVersion: orchestrator.entur.io/github/v1
+kind: Repository
+metadata:
+  id: ashur
+spec:
+  environments: [dev, tst, prd]
