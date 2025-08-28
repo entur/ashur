@@ -7,15 +7,14 @@ common:
 configmap:
   gcp:
     pubsubProjectId: ent-marduk-dev
+    mardukBucketName: marduk-exchange-dev
+    ashurBucketName: ror-ashur-internal-gcp-dev
 
   ashur:
     netex:
       inputPath: netex-data/input
       outputPath: netex-data/output
       cleanupEnabled: true
-    gcp:
-      bucketName: ror-ashur-exchange-gcp-dev
-      bucketPath: /exchange
 
   camel:
     component:

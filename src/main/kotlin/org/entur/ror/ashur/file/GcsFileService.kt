@@ -3,18 +3,12 @@ package org.entur.ror.ashur.file
 import com.google.cloud.storage.Blob
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.BlobInfo
-import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.gcp.GcsClient
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
 
-@Profile("gcp")
-@Component
-class GcsFileService(
+abstract class GcsFileService(
     private val gcsClient: GcsClient,
-    appConfig: AppConfig
+    private val bucketName: String
 ): FileService() {
-    private val bucketName = appConfig.gcp.bucketName
 
     override fun fileExists(fileName: String): Boolean {
         val blobId = BlobId.of(bucketName, fileName)

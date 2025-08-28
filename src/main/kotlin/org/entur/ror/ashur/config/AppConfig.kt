@@ -9,6 +9,7 @@ class AppConfig(
     var pubsub: PubsubConfig = PubsubConfig(),
     var netex: NetexConfig = NetexConfig(),
     var gcp: GcpConfig = GcpConfig(),
+    var local: LocalConfig = LocalConfig(),
 ) {
     class PubsubConfig {
         lateinit var projectId: String
@@ -21,7 +22,12 @@ class AppConfig(
     }
 
     class GcpConfig {
-        lateinit var bucketName: String
-        lateinit var bucketPath: String
+        lateinit var ashurBucketName: String
+        lateinit var mardukBucketName: String
+    }
+
+    class LocalConfig {
+        lateinit var ashurBucketPath: String
+        lateinit var mardukBucketPath: String
     }
 }

@@ -8,6 +8,7 @@ import org.entur.ror.ashur.file.FileService
 import org.entur.ror.ashur.utils.FileUtils
 import org.entur.ror.ashur.utils.ZipUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.io.File
 
@@ -16,7 +17,8 @@ import java.io.File
  */
 @Component
 class FilterService(
-    private val fileService: FileService,
+    @Qualifier("ashurBucketService") private val ashurBucketService: FileService,
+    @Qualifier("mardukBucketService") private val mardukBucketService: FileService,
     private val appConfig: AppConfig
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -73,12 +75,12 @@ class FilterService(
         refs: Set<String>,
         uploadPath: String,
     ) {
-        fileService.uploadFile(
+        ashurBucketService.uploadFile(
             "${uploadPath}/entities.txt",
             entities.sorted().joinToString("\n").toByteArray()
         )
 
-        fileService.uploadFile(
+        ashurBucketService.uploadFile(
             "${uploadPath}/refs.txt",
             refs.sorted().joinToString("\n").toByteArray()
         )
@@ -100,7 +102,7 @@ class FilterService(
         uploadPath: String,
     ): File {
         val netexInputFilePath = netexInputFile.path
-        val unfilteredNetexZipFile = fileService.getFileAsByteArray(netexInputFilePath)
+        val unfilteredNetexZipFile = mardukBucketService.getFileAsByteArray(netexInputFilePath)
         if (unfilteredNetexZipFile.isEmpty()) {
             throw InvalidZipFileException("Zip file is empty: $netexInputFilePath")
         }
@@ -156,7 +158,7 @@ class FilterService(
         if (fileName == null || fileName.isBlank() || fileName.isEmpty()) {
             throw InvalidZipFileException("File name cannot be null or blank")
         }
-        if (!fileService.fileExists(fileName)) {
+        if (!mardukBucketService.fileExists(fileName)) {
             throw InvalidZipFileException("File does not exist: $fileName")
         }
         return File(fileName)
@@ -190,7 +192,7 @@ class FilterService(
             localPathForOutputFiles
         )
 
-        val uploadPath = "${appConfig.gcp.bucketPath}/${codespace}/${correlationId}/$netexSource"
+        val uploadPath = "${codespace}/${correlationId}/$netexSource"
         val filteredNetexZipFile = filterNetexToZipFile(
             netexInputFile = netexInputFile,
             inputDirectory = localDirectoryForInputFiles,
@@ -207,7 +209,7 @@ class FilterService(
             )
         }
 
-        fileService.uploadFile(
+        ashurBucketService.uploadFile(
             "${uploadPath}/filtered_${netexInputFile.name}",
             filteredNetexZipFile.readBytes()
         )
