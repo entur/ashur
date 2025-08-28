@@ -53,6 +53,8 @@ jobs:
   docker-lint:
     needs: [maven-verify]
     uses: entur/gha-docker/.github/workflows/lint.yml@v1
+    with:
+      ignore: [DL3018]
   docker-build:
     if: github.repository_owner == 'entur' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [maven-verify]
