@@ -3,7 +3,7 @@ common:
   shortname: ashur
   team: ror
   ingress:
-    trafficType: api
+    enabled: false
   service:
     externalPort: 80
     internalPort: 8080
@@ -13,7 +13,7 @@ common:
       maxReplicas: 1
   container:
     image: <+artifacts.primary.image>
-    maxReplicas: 2
+    forceReplicas: 1
     cpu: 3
     memory: 6000
     memoryLimit: 6000
