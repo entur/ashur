@@ -1,21 +1,15 @@
 package org.entur.ror.ashur.file
 
-import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.createFileWithDirectories
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
 import java.io.File
 import java.util.UUID
 
-@Profile("local")
-@Component
-class LocalFileService(private val appConfig: AppConfig): FileService() {
-
+abstract class LocalFileService(private val bucketPath: String): FileService() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private fun getPathToFileInBlobstore(fileName: String): String {
-        return "${appConfig.gcp.bucketPath}/$fileName"
+        return "${bucketPath}/$fileName"
     }
 
     override fun fileExists(fileName: String): Boolean {
@@ -51,11 +45,12 @@ class LocalFileService(private val appConfig: AppConfig): FileService() {
     }
 
     override fun uploadFile(fileName: String, content: ByteArray): Boolean {
-        val file = File(fileName)
+        val filePathInBlobstore = getPathToFileInBlobstore(fileName)
+        val file = File(filePathInBlobstore)
         if (file.exists()) {
             val uniqueFileName = "$fileName-${UUID.randomUUID()}.${file.extension}"
             logger.warn("File $fileName already exists on local file system. Writing to file $uniqueFileName instead.")
-            val uniqueFile = File(uniqueFileName)
+            val uniqueFile = File("${bucketPath}/${uniqueFileName}")
             uniqueFile.createFileWithDirectories()
             uniqueFile.writeBytes(content)
         } else {
