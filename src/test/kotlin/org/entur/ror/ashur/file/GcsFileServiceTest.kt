@@ -18,9 +18,9 @@ class GcsFileServiceTest {
     private val storage = mock(Storage::class.java)
     private val gcsClient: GcsClient = GcsClient(storage)
     private val bucketName = "test-bucket"
-    private val fileService = GcsFileService(gcsClient, AppConfig(
+    private val fileService = AshurBucketService(gcsClient, AppConfig(
         gcp = AppConfig.GcpConfig().also {
-            it.bucketName = bucketName
+            it.ashurBucketName = bucketName
         }
     ))
 
