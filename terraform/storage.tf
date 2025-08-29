@@ -1,5 +1,5 @@
 resource "google_storage_bucket" "storage_bucket" {
-  name                        = "ror-ashur-exchange-gcp-${var.bucket_instance_suffix}"
+  name                        = "ror-ashur-internal-gcp-${var.bucket_instance_suffix}"
   force_destroy               = var.force_destroy
   location                    = var.location
   project                     = var.gcs_bucket_project
@@ -11,6 +11,6 @@ resource "google_storage_bucket" "storage_bucket" {
   }
   logging {
     log_bucket        = var.log_bucket
-    log_object_prefix = "ror-ashur-exchange-gcp-${var.bucket_instance_suffix}"
+    log_object_prefix = "ror-ashur-internal-gcp-${var.bucket_instance_suffix}"
   }
 }
