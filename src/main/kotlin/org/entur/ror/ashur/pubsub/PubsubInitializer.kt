@@ -51,12 +51,12 @@ class PubSubInitializer(
 
     @PostConstruct
     fun init() {
-        val projectId = appConfig.pubsub.projectId
+        val projectId = appConfig.gcp.ashurProjectId
 
         val topicClient = createTopicAdminClient()
         val topics = listOf<ProjectTopicName>(
             ProjectTopicName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
-            ProjectTopicName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_SUBSCRIPTION)
+            ProjectTopicName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_TOPIC)
         )
 
         for (topic in topics) {
@@ -78,7 +78,7 @@ class PubSubInitializer(
         val subscriptionClient = createSubscriptionAdminClient()
         val subscriptions = listOf<ProjectSubscriptionName>(
             ProjectSubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
-            ProjectSubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_SUBSCRIPTION)
+            ProjectSubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_TOPIC)
         )
 
         for (subscription in subscriptions) {

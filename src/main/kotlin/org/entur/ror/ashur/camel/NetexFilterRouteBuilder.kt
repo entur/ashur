@@ -20,12 +20,14 @@ class NetexFilterRouteBuilder(
     private val netexFilterMessageProcessor: NetexFilterMessageProcessor
 ): RouteBuilder() {
     override fun configure() {
-        val projectId = appConfig.pubsub.projectId
+        val ashurProjectId = appConfig.gcp.ashurProjectId
+        val mardukProjectId = appConfig.gcp.mardukProjectId
 
         val filterSubscription = Constants.FILTER_NETEX_FILE_SUBSCRIPTION
-        val statusSubscription = Constants.FILTER_NETEX_FILE_STATUS_SUBSCRIPTION
+        val statusTopic = Constants.FILTER_NETEX_FILE_STATUS_TOPIC
 
-        from("google-pubsub:$projectId:${filterSubscription}?synchronousPull=true")
+        // This subscription resides in the ashur project
+        from("google-pubsub:$ashurProjectId:${filterSubscription}?synchronousPull=true")
             .onException(Exception::class.java)
                 .handled(true)
                 .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message}")
@@ -55,16 +57,19 @@ class NetexFilterRouteBuilder(
         from("direct:filterProcessingStatusStarted")
             .setHeader("status", constant("STARTED"))
             .log(LoggingLevel.INFO, "Publishing processing status STARTED for codespace: \${header.codespace}")
-            .to("google-pubsub:$projectId:$statusSubscription")
+            // This topic resides in the marduk project
+            .to("google-pubsub:$mardukProjectId:$statusTopic")
 
         from("direct:filterProcessingStatusFailed")
             .setHeader("status", constant("FAILED"))
             .log(LoggingLevel.INFO, "Publishing processing status FAILED for codespace: \${header.codespace}")
-            .to("google-pubsub:$projectId:$statusSubscription")
+            // This topic resides in the marduk project
+            .to("google-pubsub:$mardukProjectId:$statusTopic")
 
         from("direct:filterProcessingStatusSucceeded")
             .setHeader("status", constant("SUCCEEDED"))
             .log(LoggingLevel.INFO, "Publishing processing status SUCCEEDED for codespace: \${header.codespace}")
-            .to("google-pubsub:$projectId:$statusSubscription")
+            // This topic resides in the marduk project
+            .to("google-pubsub:$mardukProjectId:$statusTopic")
     }
 }

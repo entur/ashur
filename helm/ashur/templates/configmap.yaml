@@ -7,14 +7,14 @@ metadata:
   {{- include "common.labels" . | indent 4 }}
 data:
   application.properties: |+
-    ashur.pubsub.project-id={{ .Values.configmap.gcp.pubsubProjectId }}
+    ashur.gcp.marduk-project-id={{ .Values.configmap.gcp.mardukProjectId }}
+    ashur.gcp.ashur-project-id={{ .Values.configmap.gcp.ashurProjectId }}
+    ashur.gcp.ashur-bucket-name={{ .Values.configmap.gcp.ashurBucketName }}
+    ashur.gcp.marduk-bucket-name={{ .Values.configmap.gcp.mardukBucketName }}
     
     ashur.netex.input-path={{ .Values.configmap.ashur.netex.inputPath }}
     ashur.netex.output-path={{ .Values.configmap.ashur.netex.outputPath }}
     ashur.netex.cleanup-enabled={{ .Values.configmap.ashur.netex.cleanupEnabled }}
-    
-    ashur.gcp.ashur-bucket-name={{ .Values.configmap.gcp.ashurBucketName }}
-    ashur.gcp.marduk-bucket-name={{ .Values.configmap.gcp.mardukBucketName }}
     
     camel.component.google-pubsub.projectId={{ .Values.configmap.camel.component.googlePubsub.projectId }}
     

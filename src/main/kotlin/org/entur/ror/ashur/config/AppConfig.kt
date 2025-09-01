@@ -6,15 +6,10 @@ import org.springframework.stereotype.Component
 @Component
 @ConfigurationProperties(prefix = "ashur")
 class AppConfig(
-    var pubsub: PubsubConfig = PubsubConfig(),
     var netex: NetexConfig = NetexConfig(),
     var gcp: GcpConfig = GcpConfig(),
     var local: LocalConfig = LocalConfig(),
 ) {
-    class PubsubConfig {
-        lateinit var projectId: String
-    }
-
     class NetexConfig {
         lateinit var inputPath: String
         lateinit var outputPath: String
@@ -22,7 +17,9 @@ class AppConfig(
     }
 
     class GcpConfig {
+        lateinit var ashurProjectId: String
         lateinit var ashurBucketName: String
+        lateinit var mardukProjectId: String
         lateinit var mardukBucketName: String
     }
 

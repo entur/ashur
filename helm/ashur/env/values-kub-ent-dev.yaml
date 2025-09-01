@@ -6,8 +6,9 @@ common:
 
 configmap:
   gcp:
-    pubsubProjectId: ent-marduk-dev
+    mardukProjectId: ent-marduk-dev
     mardukBucketName: marduk-exchange-dev
+    ashurProjectId: ent-ashur-dev
     ashurBucketName: ror-ashur-internal-gcp-dev
 
   ashur:
