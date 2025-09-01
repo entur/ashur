@@ -13,8 +13,8 @@ data:
     ashur.netex.output-path={{ .Values.configmap.ashur.netex.outputPath }}
     ashur.netex.cleanup-enabled={{ .Values.configmap.ashur.netex.cleanupEnabled }}
     
-    ashur.gcp.bucket-name={{ .Values.configmap.gcp.ashurBucketName }}
-    marduk.gcp.bucket-name={{ .Values.configmap.gcp.mardukBucketName }}
+    ashur.gcp.ashur-bucket-name={{ .Values.configmap.gcp.ashurBucketName }}
+    ashur.gcp.marduk-bucket-name={{ .Values.configmap.gcp.mardukBucketName }}
     
     camel.component.google-pubsub.projectId={{ .Values.configmap.camel.component.googlePubsub.projectId }}
     
