@@ -7,7 +7,7 @@ import org.entur.ror.ashur.gcp.GcsClient
 
 abstract class GcsFileService(
     private val gcsClient: GcsClient,
-    private val bucketName: String
+    val bucketName: String
 ): FileService() {
 
     override fun fileExists(fileName: String): Boolean {
