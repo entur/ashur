@@ -4,6 +4,12 @@ Ashur performs a filtering job of NeTEx datasets, using a set of rules currently
 
 This component is still a work in progress and is not yet used in any environments.
 
+## How it works
+
+Ashur listens to a Google PubSub topic for messages indicating that a new NeTEx dataset is available in a Google Cloud Storage bucket.
+When a message is received, Ashur downloads the dataset, processes it using netex-tools, and uploads the filtered dataset to its own Google Cloud Storage bucket.
+Ashur then sends a message to another Google PubSub topic to notify that the filtered dataset is available.
+
 ## Running Ashur locally
 
 A minimal local setup requires a Google PubSub emulator, and a built version of netex-tools in your local Maven repository.
@@ -17,20 +23,22 @@ Once the emulator is running, you can start Ashur by running the main method of 
 
 Sample of `application.properties` file:
 ```properties
-ashur.pubsub.project-id=test
-
 ashur.netex.input-path=netex-data/input
 ashur.netex.output-path=netex-data/output
-ashur.netex.cleanup-enabled=true
+ashur.netex.cleanup-enabled=false
 
-ashur.gcp.bucket-name=
-ashur.gcp.bucket-path=/path/to/your/local/ashur/bucket
+ashur.gcp.ashur-project-id=test
+ashur.gcp.marduk-project-id=test
+
+ashur.local.ashur-bucket-path=/path/to/my/local/ashur/bucket
+ashur.local.marduk-bucket-path=/path/to/my/local/marduk/bucket
 
 camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
 camel.component.google-pubsub.projectId=test
 
 spring.profiles.active=local
+management.endpoints.web.exposure.include=prometheus
 ```
 
 Sample of `logback.xml` file:
