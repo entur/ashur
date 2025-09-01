@@ -35,10 +35,10 @@ fun PubsubMessage.getNetexSource(): String? {
 
 fun PubsubMessage.getFilterProfile(): FilterProfile {
     try {
-        return FilterProfile.valueOf(this.attributesMap["FilterProfile"]!!)
+        return FilterProfile.valueOf(this.attributesMap["EnturFilteringProfile"]!!)
     } catch (_: Exception) {
         throw InvalidFilterProfileException(
-            "Invalid or missing FilteringProfile attribute in PubsubMessage: ${this.attributesMap["FilterProfile"]}",
+            "Invalid or missing FilteringProfile attribute in PubsubMessage: ${this.attributesMap["EnturFilteringProfile"]}",
         )
     }
 }
