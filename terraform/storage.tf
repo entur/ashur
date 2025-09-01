@@ -6,8 +6,9 @@ resource "google_storage_bucket" "storage_bucket" {
   storage_class               = var.storage_class
   labels                      = var.labels
   uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
   versioning {
-    enabled = true
+    enabled = false
   }
   logging {
     log_bucket        = var.log_bucket
