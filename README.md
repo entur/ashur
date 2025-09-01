@@ -79,11 +79,3 @@ camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
 camel.component.google-pubsub.project-id=test
 ```
-
-### netex-tools
-
-The netex-tools repository must be built and installed in your local Maven repository.
-This can be done with the following command in your local netex-tools repository:
-```
-mvn clean install -DskipTests
-```
