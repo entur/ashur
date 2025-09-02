@@ -33,18 +33,17 @@ class NetexFilterRouteBuilder(
                 .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message}")
                 .to("direct:filterProcessingStatusFailed")
             .end()
+            .log(LoggingLevel.INFO, "Received request to filter Netex from Pub/Sub topic $filterSubscription")
             .process({ exchange ->
                 val pubsubMessage = exchange.toPubsubMessage()
                 exchange.message.setHeader("codespace", pubsubMessage.getCodespace())
                 exchange.message.setHeader("correlationId", pubsubMessage.getCorrelationId())
             })
             .to("direct:filterProcessingStatusStarted")
-            .log(LoggingLevel.INFO, "Aggregated messages for codespace: \${header.codespace}. Sending to filter processing queue...")
             .to("direct:filterProcessingQueue")
             .to("direct:filterProcessingStatusSucceeded")
             .routeId("netex-filter-route")
 
-        // Note: direct is blocking by default, so only one aggregated message will be processed at a time.
         from("direct:filterProcessingQueue")
             .process(MDCSetupProcessor())
             .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $filterSubscription...")
@@ -52,7 +51,7 @@ class NetexFilterRouteBuilder(
             .log(LoggingLevel.INFO, "Done processing message from Pub/Sub topic $filterSubscription")
             .onCompletion()
             .process(MDCCleanupProcessor())
-            .routeId("sequential-processing-route")
+            .routeId("netex-filter-processing-route")
 
         from("direct:filterProcessingStatusStarted")
             .setHeader("status", constant("STARTED"))

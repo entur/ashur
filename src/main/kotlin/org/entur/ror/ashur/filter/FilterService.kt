@@ -45,21 +45,17 @@ class FilterService(
      *
      * @param directoryForInputFiles The directory containing input files.
      * @param directoryForOutputFiles The directory containing output files.
-     * @param filteredNetexZipFile The zip file created as output.
      */
     private fun cleanUpFiles(
         directoryForInputFiles: File,
         directoryForOutputFiles: File,
-        filteredNetexZipFile: File
     ) {
-        logger.info("Cleaning up files...")
+        logger.info("Cleaning up files in local file system...")
         directoryForInputFiles.deleteRecursively()
         directoryForOutputFiles.listFiles()?.forEach { file ->
-            if (file.path != filteredNetexZipFile.path) {
-                file.delete()
-            }
+            file.delete()
         }
-        logger.info("Successfully cleaned up files.")
+        logger.info("Successfully cleaned up files in local file system.")
     }
 
     /**
@@ -193,6 +189,7 @@ class FilterService(
         )
 
         val uploadPath = "${codespace}/${correlationId}/$netexSource"
+        logger.info("Starting filtering process for file: ${netexInputFile.name}")
         val filteredNetexZipFile = filterNetexToZipFile(
             netexInputFile = netexInputFile,
             inputDirectory = localDirectoryForInputFiles,
@@ -200,18 +197,21 @@ class FilterService(
             filterConfig = filterConfig,
             uploadPath = uploadPath
         )
+        logger.info("Filtering process for file ${netexInputFile.name} was successful")
+
+        val filteredZipFileName = "${uploadPath}/filtered_${netexInputFile.name}"
+        logger.info("Uploading filtered Netex zip file to Ashur bucket")
+        ashurBucketService.uploadFile(
+            filteredZipFileName,
+            filteredNetexZipFile.readBytes()
+        )
+        logger.info("Successfully uploaded filtered Netex zip file. Path in bucket: $filteredZipFileName")
 
         if (appConfig.netex.cleanupEnabled) {
             cleanUpFiles(
                 directoryForInputFiles = localDirectoryForInputFiles,
                 directoryForOutputFiles = localDirectoryForOutputFiles,
-                filteredNetexZipFile = filteredNetexZipFile,
             )
         }
-
-        ashurBucketService.uploadFile(
-            "${uploadPath}/filtered_${netexInputFile.name}",
-            filteredNetexZipFile.readBytes()
-        )
     }
 }

@@ -18,7 +18,6 @@ class NetexFilterMessageProcessor(
 ): Processor {
     override fun process(exchange: Exchange) {
         val pubsubMessage = exchange.toPubsubMessage()
-        // TODO: Inspect the message for filtering profile, and pass appropriate config to the handler.
         messageHandler.handleMessage(pubsubMessage)
     }
 }
