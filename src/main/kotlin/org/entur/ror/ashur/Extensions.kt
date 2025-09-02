@@ -22,7 +22,7 @@ fun PubsubMessage.getCorrelationId(): String? {
 }
 
 fun PubsubMessage.getNetexFileName(): String? {
-    return this.attributesMap["RutebankenFileHandle"]
+    return this.attributesMap["RutebankenTargetFileHandle"]
 }
 
 fun PubsubMessage.getCodespace(): String? {

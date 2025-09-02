@@ -17,10 +17,10 @@ Content-Type: application/json
   "messages": [
     {
       "attributes": {
-        "RutebankenFileHandle": "rb_hur-aggregated-netex.zip",
+        "RutebankenTargetFileHandle": "rb_hur-aggregated-netex.zip",
         "EnturFilteringProfile": "StandardImportFilter",
         "EnturDatasetReferential": "hur",
-        "RutebankenCorrelationId": "testCorrelationId1",
+        "RutebankenCorrelationId": "testCorrelationId2",
         "NetexSource": "testSource"
       }
     }
