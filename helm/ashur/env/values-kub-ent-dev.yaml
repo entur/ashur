@@ -13,8 +13,8 @@ configmap:
 
   ashur:
     netex:
-      inputPath: netex-data/input
-      outputPath: netex-data/output
+      inputPath: /tmp/netex-data/input
+      outputPath: /tmp/netex-data/output
       cleanupEnabled: true
 
   camel:
