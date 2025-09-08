@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import javax.annotation.PostConstruct
 
-@Profile("local")
+@Profile("local", "test")
 @Component
 class PubSubInitializer(
     private val appConfig: AppConfig,

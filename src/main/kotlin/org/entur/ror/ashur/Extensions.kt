@@ -33,6 +33,14 @@ fun PubsubMessage.getNetexSource(): String? {
     return this.attributesMap["NetexSource"]
 }
 
+fun PubsubMessage.getStatus(): String? {
+    return this.attributesMap["Status"]
+}
+
+fun PubsubMessage.getPathOfFilteredFile(): String? {
+    return this.attributesMap[Constants.FILTERED_NETEX_FILE_PATH_HEADER]
+}
+
 fun PubsubMessage.getFilterProfile(): FilterProfile {
     try {
         return FilterProfile.valueOf(this.attributesMap["EnturFilteringProfile"]!!)

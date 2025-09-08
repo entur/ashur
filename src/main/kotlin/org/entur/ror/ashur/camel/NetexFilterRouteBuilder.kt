@@ -26,13 +26,12 @@ class NetexFilterRouteBuilder(
         val filterSubscription = Constants.FILTER_NETEX_FILE_SUBSCRIPTION
         val statusTopic = Constants.FILTER_NETEX_FILE_STATUS_TOPIC
 
-        // This subscription resides in the ashur project
+        onException(Exception::class.java)
+            .handled(true)
+            .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message}")
+            .to("direct:filterProcessingStatusFailed")
+
         from("google-pubsub:$ashurProjectId:${filterSubscription}?synchronousPull=true")
-            .onException(Exception::class.java)
-                .handled(true)
-                .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message}")
-                .to("direct:filterProcessingStatusFailed")
-            .end()
             .log(LoggingLevel.INFO, "Received request to filter Netex from Pub/Sub topic $filterSubscription")
             .process({ exchange ->
                 val pubsubMessage = exchange.toPubsubMessage()
@@ -54,21 +53,26 @@ class NetexFilterRouteBuilder(
             .routeId("netex-filter-processing-route")
 
         from("direct:filterProcessingStatusStarted")
-            .setHeader("status", constant("STARTED"))
+            .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_STARTED))
             .log(LoggingLevel.INFO, "Publishing processing status STARTED for codespace: \${header.codespace}")
-            // This topic resides in the marduk project
             .to("google-pubsub:$mardukProjectId:$statusTopic")
 
         from("direct:filterProcessingStatusFailed")
-            .setHeader("status", constant("FAILED"))
+            .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_FAILED))
             .log(LoggingLevel.INFO, "Publishing processing status FAILED for codespace: \${header.codespace}")
-            // This topic resides in the marduk project
             .to("google-pubsub:$mardukProjectId:$statusTopic")
 
         from("direct:filterProcessingStatusSucceeded")
-            .setHeader("status", constant("SUCCEEDED"))
+            .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED))
+            .process { exchange ->
+                val existingAttributes = exchange
+                    .getIn()
+                    .getHeader("CamelGooglePubsubAttributes", Map::class.java)
+                    .toMutableMap()
+                existingAttributes[Constants.FILTERED_NETEX_FILE_PATH_HEADER] = exchange.getIn().getHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER)
+                exchange.getIn().setHeader("CamelGooglePubsubAttributes", existingAttributes)
+            }
             .log(LoggingLevel.INFO, "Publishing processing status SUCCEEDED for codespace: \${header.codespace}")
-            // This topic resides in the marduk project
             .to("google-pubsub:$mardukProjectId:$statusTopic")
     }
 }

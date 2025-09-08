@@ -2,6 +2,7 @@ package org.entur.ror.ashur.camel
 
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
+import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.pubsub.NetexFilterMessageHandler
 import org.entur.ror.ashur.toPubsubMessage
 import org.springframework.stereotype.Component
@@ -18,6 +19,7 @@ class NetexFilterMessageProcessor(
 ): Processor {
     override fun process(exchange: Exchange) {
         val pubsubMessage = exchange.toPubsubMessage()
-        messageHandler.handleMessage(pubsubMessage)
+        val pathToFilteredZipFile = messageHandler.handleMessage(pubsubMessage)
+        exchange.getIn().setHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER, pathToFilteredZipFile)
     }
 }

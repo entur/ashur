@@ -6,5 +6,5 @@ interface MessageHandler {
      *
      * @param message The Pub/Sub message to handle.
      */
-    fun handleMessage(message: com.google.pubsub.v1.PubsubMessage)
+    fun handleMessage(message: com.google.pubsub.v1.PubsubMessage): String
 }

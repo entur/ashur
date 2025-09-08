@@ -19,7 +19,7 @@ import java.io.File
 class FilterService(
     @Qualifier("ashurBucketService") private val ashurBucketService: FileService,
     @Qualifier("mardukBucketService") private val mardukBucketService: FileService,
-    private val appConfig: AppConfig
+    private val appConfig: AppConfig,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -171,6 +171,7 @@ class FilterService(
      * @param fileName The name of the file to filter.
      * @param inputDirectory The directory where the input files are located.
      * @param outputDirectory The directory where the output files will be saved.
+     * @return The path of the filtered zip file in the Ashur bucket.
      * @throws org.entur.ror.ashur.exceptions.InvalidZipFileException If the file is invalid or empty.
      */
     fun handleFilterRequestForFile(
@@ -179,7 +180,7 @@ class FilterService(
         codespace: String,
         correlationId: String,
         netexSource: String,
-    ) {
+    ): String {
         val netexInputFile = getZipFile(fileName)
         val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId, netexSource)
         val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId, netexSource)
@@ -213,5 +214,7 @@ class FilterService(
                 directoryForOutputFiles = localDirectoryForOutputFiles,
             )
         }
+
+        return filteredZipFileName
     }
 }

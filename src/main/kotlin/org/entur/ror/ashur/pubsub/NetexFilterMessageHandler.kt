@@ -25,8 +25,10 @@ class NetexFilterMessageHandler(
 
     /**
      * Performs the filtering operation on the Netex file specified in the Pub/Sub message.
+     *
+     * @return The path to the output zip file containing the filtered Netex data.
      **/
-    override fun handleMessage(message: PubsubMessage) {
+    override fun handleMessage(message: PubsubMessage): String {
         try {
             val fileName: String? = message.getNetexFileName()
             val filterProfile = message.getFilterProfile()
@@ -37,7 +39,7 @@ class NetexFilterMessageHandler(
             val filterConfig = filterConfigResolver.resolve(filterProfile)
             logger.info("Detected config matching filter profile $filterProfile: $filterConfig")
 
-            filterService.handleFilterRequestForFile(
+            return filterService.handleFilterRequestForFile(
                 fileName = fileName,
                 filterConfig = filterConfig,
                 codespace = codespace ?: "unknown",
