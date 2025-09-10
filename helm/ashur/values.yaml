@@ -36,7 +36,7 @@ common:
         name: application-config
   configmap:
     data:
-      JDK_JAVA_OPTIONS: -server -Xmx12000m -Xss512k
+      JDK_JAVA_OPTIONS: -server -Xmx12000m -Xss512k -XX:MaxGCPauseMillis=1000
         -Dspring.config.location=/etc/application-config/application.properties
         -Dfile.encoding=UTF-8
       TZ: Europe/Oslo
