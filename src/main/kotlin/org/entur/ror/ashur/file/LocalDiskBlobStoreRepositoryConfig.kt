@@ -11,10 +11,18 @@ import org.springframework.context.annotation.Scope
 @Configuration
 @Profile("local", "test")
 open class LocalDiskBlobStoreRepositoryConfig {
-    @Bean
+    @Bean("mardukBlobStoreRepository")
     @Scope("prototype")
-    open fun blobStoreRepository(
-        @Value("\${ashur.local.blobstore-path:tmp}") baseFolder: String?
+    open fun mardukBlobStoreRepository(
+        @Value("\${ashur.local.blobstore-path}") baseFolder: String
+    ): BlobStoreRepository {
+        return LocalDiskBlobStoreRepository(baseFolder)
+    }
+
+    @Bean("ashurBlobStoreRepository")
+    @Scope("prototype")
+    open fun ashurBlobStoreRepository(
+        @Value("\${ashur.local.blobstore-path}") baseFolder: String
     ): BlobStoreRepository {
         return LocalDiskBlobStoreRepository(baseFolder)
     }
