@@ -1,8 +1,8 @@
 package org.entur.ror.ashur.utils
 
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -15,19 +15,17 @@ object ZipUtils {
      * @param targetDirectory The directory where the contents of the zip file will be extracted.
      * @return A list of files that were extracted from the zip file.
      */
-    fun unzipToDirectory(zipBytes: ByteArray, targetDirectory: File) {
-        val files = mutableListOf<File>()
-        ZipInputStream(ByteArrayInputStream(zipBytes)).use { zipInputStream ->
+    fun unzipToDirectory(input: InputStream, targetDirectory: File) {
+        ZipInputStream(input).use { zipInputStream ->
             var entry = zipInputStream.nextEntry
             while (entry != null) {
                 val outFile = File(targetDirectory, entry.name)
-                files.add(outFile)
                 if (entry.isDirectory) {
                     outFile.mkdirs()
                 } else {
                     outFile.parentFile?.mkdirs()
-                    FileOutputStream(outFile).use { fileOutputStream ->
-                        zipInputStream.copyTo(fileOutputStream)
+                    FileOutputStream(outFile).use { fileOut ->
+                        zipInputStream.copyTo(fileOut)
                     }
                 }
                 zipInputStream.closeEntry()

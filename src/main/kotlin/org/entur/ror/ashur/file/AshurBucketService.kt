@@ -1,16 +1,14 @@
 package org.entur.ror.ashur.file
 
 import org.entur.ror.ashur.config.AppConfig
-import org.entur.ror.ashur.gcp.GcsClient
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
+import org.rutebanken.helper.storage.repository.BlobStoreRepository
+import org.springframework.stereotype.Service
 
-@Component("ashurBucketService")
-@Profile("gcp")
+@Service
 class AshurBucketService(
-    gcsClient: GcsClient,
-    appConfig: AppConfig
-): GcsFileService(
-    gcsClient = gcsClient,
-    bucketName = appConfig.gcp.ashurBucketName,
+    appConfig: AppConfig,
+    repository: BlobStoreRepository
+) : AbstractBlobStoreService(
+    containerName = appConfig.gcp.ashurBucketName,
+    repository = repository
 )

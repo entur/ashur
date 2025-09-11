@@ -18,21 +18,21 @@ import org.testcontainers.containers.PubSubEmulatorContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import java.io.File
 import kotlin.test.assertEquals
 
 @Testcontainers
 @CamelSpringBootTest
 @SpringBootTest(classes = [AshurApplication::class])
-class NetexFilterRouteBuilderIntegrationTest {
+class NetexFilterRouteBuilderIntegrationTest() {
+    @Autowired
+    lateinit var appConfig: AppConfig
 
     @Autowired
     lateinit var producerTemplate: ProducerTemplate
 
     @Autowired
     lateinit var consumerTemplate: ConsumerTemplate
-
-    @Autowired
-    lateinit var appConfig: AppConfig
 
     @Autowired
     lateinit var context: CamelContext
@@ -81,12 +81,36 @@ class NetexFilterRouteBuilderIntegrationTest {
 
     fun pathOfFilteredFile(fileName: String) = "${testCodespace}/${testCorrelationId}/${testSource}/filtered_${fileName}"
 
+    fun copyTestZipFileToMardukTestBucket() {
+        val resource = this::class.java.getResource("testfile.zip")  ?: throw IllegalArgumentException("Test zip file was not found on classpath")
+        val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.mardukBucketName}")
+        if (!target.exists()) {
+            target.mkdirs()
+        }
+        val targetFile = File(target, "testfile.zip")
+        if (!targetFile.exists()) {
+            targetFile.createNewFile()
+        }
+        resource.openStream().use { input ->
+            targetFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+    }
+
+    fun cleanupTestZipFiles() {
+        val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.mardukBucketName}")
+        if (target.exists()) {
+            target.deleteRecursively()
+        }
+    }
+
     @Test
     fun `test filter route processes message successfully`() {
+        copyTestZipFileToMardukTestBucket()
         val mardukProjectId = appConfig.gcp.mardukProjectId
 
-        sendFilterMessageToPubsub(netexFilePath = "src/test/resources/testfile.zip")
-
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip")
         val startedMessage = consumerTemplate.receive(
             "google-pubsub:$mardukProjectId:${Constants.FILTER_NETEX_FILE_STATUS_TOPIC}?synchronousPull=true",
             5000
@@ -105,6 +129,8 @@ class NetexFilterRouteBuilderIntegrationTest {
 
         val pathOfFilteredFile = pathOfFilteredFile("testfile.zip")
         assertEquals(pathOfFilteredFile, successMessage.toPubsubMessage().getPathOfFilteredFile())
+
+        cleanupTestZipFiles()
     }
 
     @Test

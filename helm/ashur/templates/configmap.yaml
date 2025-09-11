@@ -9,6 +9,8 @@ data:
   application.properties: |+
     ashur.gcp.marduk-project-id={{ .Values.configmap.gcp.mardukProjectId }}
     ashur.gcp.ashur-project-id={{ .Values.configmap.gcp.ashurProjectId }}
+    spring.cloud.gcp.project-id=${ashur.gcp.ashur-project-id}
+
     ashur.gcp.ashur-bucket-name={{ .Values.configmap.gcp.ashurBucketName }}
     ashur.gcp.marduk-bucket-name={{ .Values.configmap.gcp.mardukBucketName }}
     

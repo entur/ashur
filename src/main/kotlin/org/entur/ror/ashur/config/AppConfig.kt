@@ -24,7 +24,6 @@ class AppConfig(
     }
 
     class LocalConfig {
-        lateinit var ashurBucketPath: String
-        lateinit var mardukBucketPath: String
+        lateinit var blobstorePath: String
     }
 }
