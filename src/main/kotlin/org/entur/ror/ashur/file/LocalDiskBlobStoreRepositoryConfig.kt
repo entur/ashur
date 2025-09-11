@@ -14,7 +14,7 @@ open class LocalDiskBlobStoreRepositoryConfig {
     @Bean
     @Scope("prototype")
     open fun blobStoreRepository(
-        @Value("\${ashur.local.blobstorePath:tmp}") baseFolder: String?
+        @Value("\${ashur.local.blobstore-path:tmp}") baseFolder: String?
     ): BlobStoreRepository {
         return LocalDiskBlobStoreRepository(baseFolder)
     }

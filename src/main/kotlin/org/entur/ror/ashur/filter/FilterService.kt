@@ -103,6 +103,7 @@ class FilterService(
 
         logger.info("Unzipping Netex file: $netexInputFilePath")
         ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
+        unfilteredNetexZipFile.close()
 
         val (entities, refs) = FilterNetexApp(
             filterConfig = filterConfig,
@@ -211,6 +212,7 @@ class FilterService(
                 directoryForInputFiles = localDirectoryForInputFiles,
                 directoryForOutputFiles = localDirectoryForOutputFiles,
             )
+            netexInputFile.delete()
         }
 
         return filteredZipFileName
