@@ -14,7 +14,7 @@ open class GcsStorageConfig {
     @Bean("mardukBlobStoreRepository")
     @Scope("prototype")
     open fun mardukBlobStoreRepository(
-        @Value("\${marduk.gcp.marduk-project-id}") projectId: String?,
+        @Value("\${ashur.gcp.marduk-project-id}") projectId: String?,
         @Value("\${blobstore.gcs.credential.path:#{null}}") credentialPath: String?
     ): BlobStoreRepository {
         return GcsBlobStoreRepository(projectId, credentialPath)
@@ -23,7 +23,7 @@ open class GcsStorageConfig {
     @Bean("ashurBlobStoreRepository")
     @Scope("prototype")
     open fun ashurBlobStoreRepository(
-        @Value("\${ashur.gcp.marduk-project-id}") projectId: String?,
+        @Value("\${ashur.gcp.ashur-project-id}") projectId: String?,
         @Value("\${blobstore.gcs.credential.path:#{null}}") credentialPath: String?
     ): BlobStoreRepository {
         return GcsBlobStoreRepository(projectId, credentialPath)
