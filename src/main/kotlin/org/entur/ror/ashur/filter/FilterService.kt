@@ -102,8 +102,9 @@ class FilterService(
             ?: throw InvalidZipFileException("Could not retrieve file from Marduk bucket: $netexInputFilePath")
 
         logger.info("Unzipping Netex file: $netexInputFilePath")
-        ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
-        unfilteredNetexZipFile.close()
+        unfilteredNetexZipFile.use { inputStream ->
+            ZipUtils.unzipToDirectory(inputStream, inputDirectory)
+        }
 
         val (entities, refs) = FilterNetexApp(
             filterConfig = filterConfig,
@@ -201,10 +202,12 @@ class FilterService(
 
         val filteredZipFileName = "${uploadPath}/filtered_${netexInputFile.name}"
         logger.info("Uploading filtered Netex zip file to Ashur bucket")
-        ashurBucketService.uploadBlob(
-            filteredZipFileName,
-            filteredNetexZipFile.inputStream()
-        )
+        filteredNetexZipFile.inputStream().use { inputStream ->
+            ashurBucketService.uploadBlob(
+                filteredZipFileName,
+                inputStream,
+            )
+        }
         logger.info("Successfully uploaded filtered Netex zip file. Path in bucket: $filteredZipFileName")
 
         if (appConfig.netex.cleanupEnabled) {
