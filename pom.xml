@@ -13,6 +13,7 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
         <jackson.version>2.16.1</jackson.version>
+        <entur.helpers.version>5.42.0</entur.helpers.version>
         <org.apache.commons.version>3.14.0</org.apache.commons.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>2.1.21</kotlin.version>
@@ -24,7 +25,7 @@
         <logback.version>1.5.18</logback.version>
         <google-cloud-storage.version>2.54.0</google-cloud-storage.version>
         <google-pubsub.version>1.141.1</google-pubsub.version>
-        <netex-tools.version>0.0.12</netex-tools.version>
+        <netex-tools.version>0.0.13</netex-tools.version>
         <camel.version>4.10.6</camel.version>
         <slf4j.version>2.0.17</slf4j.version>
         <mockito-kotlin.version>3.2.0</mockito-kotlin.version>
@@ -251,6 +252,30 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
             <version>${micrometer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.entur.ror.helpers</groupId>
+            <artifactId>entur-google-pubsub</artifactId>
+            <version>${entur.helpers.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.entur.ror.helpers</groupId>
+            <artifactId>storage-gcp-gcs</artifactId>
+            <version>${entur.helpers.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-codec-http2</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-lite</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.mockito.kotlin</groupId>

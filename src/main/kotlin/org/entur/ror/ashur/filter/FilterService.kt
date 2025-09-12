@@ -4,11 +4,11 @@ import org.entur.netex.tools.lib.config.FilterConfig
 import org.entur.netex.tools.pipeline.app.FilterNetexApp
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.exceptions.InvalidZipFileException
-import org.entur.ror.ashur.file.FileService
+import org.entur.ror.ashur.file.AshurBucketService
+import org.entur.ror.ashur.file.MardukBucketService
 import org.entur.ror.ashur.utils.FileUtils
 import org.entur.ror.ashur.utils.ZipUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 import java.io.File
 
@@ -17,8 +17,8 @@ import java.io.File
  */
 @Component
 class FilterService(
-    @Qualifier("ashurBucketService") private val ashurBucketService: FileService,
-    @Qualifier("mardukBucketService") private val mardukBucketService: FileService,
+    private val ashurBucketService: AshurBucketService,
+    private val mardukBucketService: MardukBucketService,
     private val appConfig: AppConfig,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -71,14 +71,14 @@ class FilterService(
         refs: Set<String>,
         uploadPath: String,
     ) {
-        ashurBucketService.uploadFile(
+        ashurBucketService.uploadBlob(
             "${uploadPath}/entities.txt",
-            entities.sorted().joinToString("\n").toByteArray()
+            entities.sorted().joinToString("\n").byteInputStream()
         )
 
-        ashurBucketService.uploadFile(
+        ashurBucketService.uploadBlob(
             "${uploadPath}/refs.txt",
-            refs.sorted().joinToString("\n").toByteArray()
+            refs.sorted().joinToString("\n").byteInputStream()
         )
     }
 
@@ -98,13 +98,13 @@ class FilterService(
         uploadPath: String,
     ): File {
         val netexInputFilePath = netexInputFile.path
-        val unfilteredNetexZipFile = mardukBucketService.getFileAsByteArray(netexInputFilePath)
-        if (unfilteredNetexZipFile.isEmpty()) {
-            throw InvalidZipFileException("Zip file is empty: $netexInputFilePath")
-        }
+        val unfilteredNetexZipFile = mardukBucketService.getBlob(netexInputFilePath)
+            ?: throw InvalidZipFileException("Could not retrieve file from Marduk bucket: $netexInputFilePath")
 
         logger.info("Unzipping Netex file: $netexInputFilePath")
-        ZipUtils.unzipToDirectory(unfilteredNetexZipFile, inputDirectory)
+        unfilteredNetexZipFile.use { inputStream ->
+            ZipUtils.unzipToDirectory(inputStream, inputDirectory)
+        }
 
         val (entities, refs) = FilterNetexApp(
             filterConfig = filterConfig,
@@ -154,7 +154,7 @@ class FilterService(
         if (fileName == null || fileName.isBlank() || fileName.isEmpty()) {
             throw InvalidZipFileException("File name cannot be null or blank")
         }
-        if (!mardukBucketService.fileExists(fileName)) {
+        if (!mardukBucketService.exists(fileName)) {
             throw InvalidZipFileException("File does not exist: $fileName")
         }
         return File(fileName)
@@ -202,10 +202,12 @@ class FilterService(
 
         val filteredZipFileName = "${uploadPath}/filtered_${netexInputFile.name}"
         logger.info("Uploading filtered Netex zip file to Ashur bucket")
-        ashurBucketService.uploadFile(
-            filteredZipFileName,
-            filteredNetexZipFile.readBytes()
-        )
+        filteredNetexZipFile.inputStream().use { inputStream ->
+            ashurBucketService.uploadBlob(
+                filteredZipFileName,
+                inputStream,
+            )
+        }
         logger.info("Successfully uploaded filtered Netex zip file. Path in bucket: $filteredZipFileName")
 
         if (appConfig.netex.cleanupEnabled) {
@@ -213,6 +215,7 @@ class FilterService(
                 directoryForInputFiles = localDirectoryForInputFiles,
                 directoryForOutputFiles = localDirectoryForOutputFiles,
             )
+            netexInputFile.delete()
         }
 
         return filteredZipFileName

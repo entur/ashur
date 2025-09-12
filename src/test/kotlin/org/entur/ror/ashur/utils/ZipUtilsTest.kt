@@ -63,7 +63,7 @@ class ZipUtilsTest {
             file1.delete()
             file2.delete()
 
-            ZipUtils.unzipToDirectory(zipFile.readBytes(), targetDirectory)
+            ZipUtils.unzipToDirectory(zipFile.inputStream(), targetDirectory)
             val unzippedFile1 = File(targetDirectory, "file1.txt")
             val unzippedFile2 = File(targetDirectory, "file2.txt")
             assertTrue(unzippedFile1.exists(), "file1.txt should be unzipped")
