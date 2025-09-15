@@ -10,7 +10,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         FilterConfigBuilder()
             .withPeriod(TimePeriod(
                 start = LocalDate.now().minusDays(2),
-                end = null
+                end = LocalDate.now().plusYears(1)
             ))
             .withSkipElements(listOf("VehicleScheduleFrame", "DeadRun"))
             .withRemovePrivateData(true)

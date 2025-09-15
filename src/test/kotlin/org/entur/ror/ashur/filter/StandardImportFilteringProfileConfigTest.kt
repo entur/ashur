@@ -11,7 +11,7 @@ class StandardImportFilteringProfileConfigTest {
     fun testStandardImportFilteringProfileConfig() {
         val config = StandardImportFilteringProfileConfig().build()
         assertTrue(config.period.start!!.isEqual(LocalDate.now().minusDays(2)))
-        assertNull(config.period.end)
+        assertTrue(config.period.end!!.isEqual(LocalDate.now().plusYears(1)))
         assertTrue(config.skipElements.containsAll(listOf("VehicleScheduleFrame", "DeadRun")))
         assertTrue(config.removePrivateData)
         assertTrue(config.preserveComments)
