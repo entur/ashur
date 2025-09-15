@@ -71,15 +71,13 @@ class FilterService(
         refs: Set<String>,
         uploadPath: String,
     ) {
-        ashurBucketService.uploadBlob(
-            "${uploadPath}/entities.txt",
-            entities.sorted().joinToString("\n").byteInputStream()
-        )
+        entities.sorted().joinToString("\n").byteInputStream().use { stream ->
+            ashurBucketService.uploadBlob("${uploadPath}/entities.txt", stream)
+        }
 
-        ashurBucketService.uploadBlob(
-            "${uploadPath}/refs.txt",
-            refs.sorted().joinToString("\n").byteInputStream()
-        )
+        refs.sorted().joinToString("\n").byteInputStream().use { stream ->
+            ashurBucketService.uploadBlob("${uploadPath}/refs.txt", stream)
+        }
     }
 
     /**
