@@ -23,15 +23,16 @@ Once the emulator is running, you can start Ashur by running the main method of 
 
 Sample of `application.properties` file:
 ```properties
-ashur.netex.input-path=netex-data/input
-ashur.netex.output-path=netex-data/output
+ashur.netex.input-path=/tmp/netex-data/input
+ashur.netex.output-path=/tmp/netex-data/output
 ashur.netex.cleanup-enabled=false
 
+ashur.gcp.ashur-bucket-name=ashur-internal
+ashur.gcp.marduk-bucket-name=marduk-exchange
 ashur.gcp.ashur-project-id=test
 ashur.gcp.marduk-project-id=test
 
-ashur.local.ashur-bucket-path=/path/to/my/local/ashur/bucket
-ashur.local.marduk-bucket-path=/path/to/my/local/marduk/bucket
+ashur.local.blobstore-path=/path/to/my/local/blobstore
 
 camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
@@ -39,6 +40,7 @@ camel.component.google-pubsub.projectId=test
 
 spring.profiles.active=local
 management.endpoints.web.exposure.include=prometheus
+spring.cloud.gcp.project-id=test
 ```
 
 Sample of `logback.xml` file:
