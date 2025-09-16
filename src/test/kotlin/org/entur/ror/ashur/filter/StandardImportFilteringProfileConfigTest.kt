@@ -12,12 +12,31 @@ class StandardImportFilteringProfileConfigTest {
         val config = StandardImportFilteringProfileConfig().build()
         assertTrue(config.period.start!!.isEqual(LocalDate.now().minusDays(2)))
         assertTrue(config.period.end!!.isEqual(LocalDate.now().plusYears(1)))
-        assertTrue(config.skipElements.containsAll(listOf("VehicleScheduleFrame", "DeadRun")))
+        assertTrue(config.skipElements.containsAll(
+            listOf(
+                "VehicleScheduleFrame",
+                "DeadRun",
+                "SiteFrame",
+                "DataSource",
+                "TrainComponent",
+                "TrainNumber",
+                "Train",
+                "TrainInCompoundTrain",
+                "CompoundTrain",
+                "JourneyPart"
+            )
+        ))
         assertTrue(config.removePrivateData)
         assertTrue(config.preserveComments)
         assertTrue(config.pruneReferences)
         assertTrue(config.referencesToExcludeFromPruning.contains("QuayRef"))
-        assertTrue(config.unreferencedEntitiesToPrune.containsAll(listOf("JourneyPattern", "Route", "Line")))
+        assertTrue(config.unreferencedEntitiesToPrune.containsAll(
+            listOf(
+                "JourneyPattern",
+                "Route",
+                "Line"
+            ))
+        )
         assertFalse(config.useSelfClosingTagsWhereApplicable)
     }
 }

@@ -12,7 +12,20 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                 start = LocalDate.now().minusDays(2),
                 end = LocalDate.now().plusYears(1)
             ))
-            .withSkipElements(listOf("VehicleScheduleFrame", "DeadRun"))
+            .withSkipElements(
+                listOf(
+                    "VehicleScheduleFrame",
+                    "DeadRun",
+                    "SiteFrame",
+                    "DataSource",
+                    "TrainComponent",
+                    "TrainNumber",
+                    "Train",
+                    "TrainInCompoundTrain",
+                    "CompoundTrain",
+                    "JourneyPart"
+                )
+            )
             .withRemovePrivateData(true)
             .withPreserveComments(true)
             .withUseSelfClosingTagsWhereApplicable(false)
