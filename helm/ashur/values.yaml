@@ -15,8 +15,8 @@ common:
     image: <+artifacts.primary.image>
     forceReplicas: 1
     cpu: 5
-    memory: 13000
-    memoryLimit: 15000
+    memory: 7000
+    memoryLimit: 7000
     probes:
       liveness:
         path: /actuator/health/liveness
@@ -36,7 +36,7 @@ common:
         name: application-config
   configmap:
     data:
-      JDK_JAVA_OPTIONS: -server -Xmx12000m -Xss512k -XX:MaxGCPauseMillis=1000 -XX:InitiatingHeapOccupancyPercent=30
+      JDK_JAVA_OPTIONS: -server -Xmx6000m -Xss512k -XX:MaxGCPauseMillis=1000
         -Dspring.config.location=/etc/application-config/application.properties
         -Dfile.encoding=UTF-8
       TZ: Europe/Oslo
