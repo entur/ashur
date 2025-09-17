@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 
 class StandardImportFilteringProfileConfigTest {
     @Test
@@ -24,7 +23,8 @@ class StandardImportFilteringProfileConfigTest {
                 "Train",
                 "TrainInCompoundTrain",
                 "CompoundTrain",
-                "JourneyPart"
+                "JourneyPart",
+                "serviceFacilitySets"
             )
         ))
         assertTrue(config.removePrivateData)
@@ -38,6 +38,8 @@ class StandardImportFilteringProfileConfigTest {
                 "Network",
                 "Line",
                 "Operator",
+                "Notice",
+                "DestinationDisplay",
             ))
         )
         assertFalse(config.useSelfClosingTagsWhereApplicable)

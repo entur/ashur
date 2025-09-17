@@ -24,7 +24,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "Train",
                     "TrainInCompoundTrain",
                     "CompoundTrain",
-                    "JourneyPart"
+                    "JourneyPart",
+                    "serviceFacilitySets"
                 )
             )
             .withRemovePrivateData(true)
@@ -39,6 +40,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "Network",
                     "Line",
                     "Operator",
+                    "Notice",
+                    "DestinationDisplay",
                 )
             )
             .build()
