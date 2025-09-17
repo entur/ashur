@@ -35,7 +35,9 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                 setOf(
                     "JourneyPattern",
                     "Route",
-                    "Line"
+                    "Network",
+                    "Line",
+                    "Operator",
                 )
             )
             .build()

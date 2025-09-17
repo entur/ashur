@@ -34,7 +34,9 @@ class StandardImportFilteringProfileConfigTest {
             listOf(
                 "JourneyPattern",
                 "Route",
-                "Line"
+                "Network",
+                "Line",
+                "Operator",
             ))
         )
         assertFalse(config.useSelfClosingTagsWhereApplicable)
