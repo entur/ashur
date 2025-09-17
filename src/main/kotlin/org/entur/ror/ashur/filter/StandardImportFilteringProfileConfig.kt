@@ -19,6 +19,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "SiteFrame",
                     "DataSource",
                     "TrainComponent",
+                    "TrainElement",
                     "TrainNumber",
                     "Train",
                     "TrainInCompoundTrain",
@@ -27,7 +28,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                 )
             )
             .withRemovePrivateData(true)
-            .withPreserveComments(true)
+            .withPreserveComments(false)
             .withUseSelfClosingTagsWhereApplicable(false)
             .withPruneReferences(true)
             .withReferencesToExcludeFromPruning(setOf("QuayRef"))

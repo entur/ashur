@@ -19,6 +19,7 @@ class StandardImportFilteringProfileConfigTest {
                 "SiteFrame",
                 "DataSource",
                 "TrainComponent",
+                "TrainElement",
                 "TrainNumber",
                 "Train",
                 "TrainInCompoundTrain",
@@ -27,7 +28,7 @@ class StandardImportFilteringProfileConfigTest {
             )
         ))
         assertTrue(config.removePrivateData)
-        assertTrue(config.preserveComments)
+        assertFalse(config.preserveComments)
         assertTrue(config.pruneReferences)
         assertTrue(config.referencesToExcludeFromPruning.contains("QuayRef"))
         assertTrue(config.unreferencedEntitiesToPrune.containsAll(
