@@ -40,6 +40,7 @@ class StandardImportFilteringProfileConfigTest {
                 "Operator",
                 "Notice",
                 "DestinationDisplay",
+                "ServiceLink",
             ))
         )
         assertFalse(config.useSelfClosingTagsWhereApplicable)

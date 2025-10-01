@@ -42,6 +42,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "Operator",
                     "Notice",
                     "DestinationDisplay",
+                    "ServiceLink",
                 )
             )
             .build()
