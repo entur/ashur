@@ -5,6 +5,7 @@ import org.apache.camel.test.spring.junit5.CamelSpringBootTest
 import org.entur.ror.ashur.AshurApplication
 import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
+import org.entur.ror.ashur.config.PubSubEmulatorTestBase
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getPathOfFilteredFile
 import org.entur.ror.ashur.getStatus
@@ -12,19 +13,14 @@ import org.entur.ror.ashur.toPubsubMessage
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
-import org.testcontainers.containers.PubSubEmulatorContainer
-import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 import java.io.File
 import kotlin.test.assertEquals
 
 @Testcontainers
 @CamelSpringBootTest
 @SpringBootTest(classes = [AshurApplication::class])
-class NetexFilterRouteBuilderIntegrationTest() {
+class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     @Autowired
     lateinit var appConfig: AppConfig
 
@@ -41,27 +37,6 @@ class NetexFilterRouteBuilderIntegrationTest() {
     private val testCodespace = "test-codespace"
     private val testSource = "test-source"
     private val testFilteringProfile = "StandardImportFilter"
-
-    companion object {
-        @Container
-        val pubsubEmulator = PubSubEmulatorContainer(
-            DockerImageName.parse("gcr.io/google.com/cloudsdktool/cloud-sdk:emulators")
-        )
-
-        @JvmStatic
-        @DynamicPropertySource
-        fun registerPubSubProperties(registry: DynamicPropertyRegistry) {
-            pubsubEmulator.start()
-            registry.add(
-                "spring.cloud.gcp.pubsub.emulator-host",
-                { pubsubEmulator.emulatorEndpoint }
-            )
-            registry.add(
-                "camel.component.google-pubsub.endpoint",
-                { pubsubEmulator.emulatorEndpoint }
-            )
-        }
-    }
 
     fun sendFilterMessageToPubsub(netexFilePath: String) {
         val ashurProjectId = appConfig.gcp.ashurProjectId
