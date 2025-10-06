@@ -15,8 +15,6 @@ class StandardImportFilteringProfileConfigTest {
             listOf(
                 "VehicleScheduleFrame",
                 "DeadRun",
-                "SiteFrame",
-                "DataSource",
                 "TrainComponent",
                 "TrainElement",
                 "TrainNumber",
@@ -43,6 +41,6 @@ class StandardImportFilteringProfileConfigTest {
                 "ServiceLink",
             ))
         )
-        assertFalse(config.useSelfClosingTagsWhereApplicable)
+        assertTrue(config.useSelfClosingTagsWhereApplicable)
     }
 }

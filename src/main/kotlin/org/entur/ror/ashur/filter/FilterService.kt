@@ -70,8 +70,8 @@ class FilterService(
         uploadPath: String,
     ) {
         val filesToKeep = findFilesToKeep(filterReport)
-        val entities = filterReport.getAllEntityIdsByFiles(filesToKeep)
-        entities.joinToString("\n").byteInputStream().use { stream ->
+        val entityIds = filterReport.getAllEntityIdsByFiles(filesToKeep)
+        entityIds.joinToString("\n").byteInputStream().use { stream ->
             ashurBucketService.uploadBlob("${uploadPath}/entities.txt", stream)
         }
     }
