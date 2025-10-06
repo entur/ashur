@@ -16,8 +16,6 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                 listOf(
                     "VehicleScheduleFrame",
                     "DeadRun",
-                    "SiteFrame",
-                    "DataSource",
                     "TrainComponent",
                     "TrainElement",
                     "TrainNumber",
@@ -30,7 +28,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
             )
             .withRemovePrivateData(true)
             .withPreserveComments(false)
-            .withUseSelfClosingTagsWhereApplicable(false)
+            .withUseSelfClosingTagsWhereApplicable(true)
             .withPruneReferences(true)
             .withReferencesToExcludeFromPruning(setOf("QuayRef"))
             .withUnreferencedEntitiesToPrune(
