@@ -16,6 +16,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                 listOf(
                     "VehicleScheduleFrame",
                     "DeadRun",
+                    "DataSource",
                     "TrainComponent",
                     "TrainElement",
                     "TrainNumber",
