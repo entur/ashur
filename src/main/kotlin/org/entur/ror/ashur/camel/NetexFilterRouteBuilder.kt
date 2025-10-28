@@ -28,7 +28,7 @@ class NetexFilterRouteBuilder(
 
         onException(Exception::class.java)
             .handled(true)
-            .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message}")
+            .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message} \${exception.stacktrace}")
             .to("direct:filterProcessingStatusFailed")
 
         from("google-pubsub:$ashurProjectId:${filterSubscription}?synchronousPull=true")

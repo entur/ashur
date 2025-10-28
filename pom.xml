@@ -17,7 +17,7 @@
         <org.apache.commons.version>3.14.0</org.apache.commons.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>2.2.20</kotlin.version>
-        <kotlinx.serialization.version>1.8.1</kotlinx.serialization.version>
+        <kotlinx.serialization.version>1.9.0</kotlinx.serialization.version>
         <junit.version>5.10.2</junit.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -25,12 +25,12 @@
         <logback.version>1.5.18</logback.version>
         <google-cloud-storage.version>2.54.0</google-cloud-storage.version>
         <google-pubsub.version>1.141.1</google-pubsub.version>
-        <netex-tools.version>0.0.16</netex-tools.version>
-        <camel.version>4.10.6</camel.version>
+        <netex-tools.version>0.0.24</netex-tools.version>
+        <camel.version>4.15.0</camel.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <mockito-kotlin.version>3.2.0</mockito-kotlin.version>
-        <spring-boot.version>3.3.1</spring-boot.version>
-        <micrometer.version>1.14.10</micrometer.version>
+        <mockito-kotlin.version>6.1.0</mockito-kotlin.version>
+        <spring-boot.version>3.5.7</spring-boot.version>
+        <micrometer.version>1.15.5</micrometer.version>
     </properties>
 
     <repositories>

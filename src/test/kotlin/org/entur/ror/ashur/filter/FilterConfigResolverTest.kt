@@ -17,4 +17,12 @@ class FilterConfigResolverTest {
         val config = resolver.resolve(FilterProfile.AsIsImportFilter)
         assertNotNull(config)
     }
+
+    @Test
+    fun testFilterConfigsAreRebuiltWhenResolved() {
+        val resolver = FilterConfigResolver()
+        val config1 = resolver.resolve(FilterProfile.StandardImportFilter)
+        val config2 = resolver.resolve(FilterProfile.StandardImportFilter)
+        assertNotSame(config1, config2, "Expected different instances for each resolve call")
+    }
 }
