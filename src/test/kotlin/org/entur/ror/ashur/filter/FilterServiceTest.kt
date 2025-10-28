@@ -5,14 +5,12 @@ import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.PubSubEmulatorTestBase
 import org.entur.ror.ashur.file.AshurBucketService
 import org.entur.ror.ashur.file.MardukBucketService
-import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import java.io.File
 import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertTrue
 
 @SpringBootTest
 class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmulatorTestBase() {
@@ -47,9 +45,9 @@ class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmu
         )
 
         filterService.removeLineFilesToRemove(filterReport)
-        assertTrue(file1.exists())
-        assertFalse(file2.exists())
-        assertTrue(sharedFile.exists())
+        Assertions.assertTrue(file1.exists())
+        Assertions.assertFalse(file2.exists())
+        Assertions.assertTrue(sharedFile.exists())
     }
 
     @Test
@@ -69,10 +67,10 @@ class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmu
         )
 
         val filesToRemove = filterService.findLineFilesToRemove(filterReport)
-        assertContains(filesToRemove, file3)
-        assertFalse(filesToRemove.contains(file1))
-        assertFalse(filesToRemove.contains(file2))
-        assertFalse(filesToRemove.contains(sharedFile))
+        Assertions.assertTrue(filesToRemove.contains(file3))
+        Assertions.assertFalse(filesToRemove.contains(file1))
+        Assertions.assertFalse(filesToRemove.contains(file2))
+        Assertions.assertFalse(filesToRemove.contains(sharedFile))
     }
 
     @Test
@@ -92,10 +90,10 @@ class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmu
         )
 
         val filesToKeep = filterService.findFilesToKeep(filterReport)
-        assertContains(filesToKeep, file1)
-        assertContains(filesToKeep, file2)
-        assertContains(filesToKeep, sharedFile)
-        assertFalse(filesToKeep.contains(file3))
+        Assertions.assertTrue(filesToKeep.contains(file1))
+        Assertions.assertTrue(filesToKeep.contains(file2))
+        Assertions.assertTrue(filesToKeep.contains(sharedFile))
+        Assertions.assertFalse(filesToKeep.contains(file3))
     }
 
     @Test
@@ -112,14 +110,14 @@ class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmu
             emptyMap(),
         )
 
-        assertFalse(filterService.hasNoJourneyInFile(filterReport, file1))
-        assertFalse(filterService.hasNoJourneyInFile(filterReport, file2))
-        assertTrue(filterService.hasNoJourneyInFile(filterReport, file3))
+        Assertions.assertFalse(filterService.hasNoJourneyInFile(filterReport, file1))
+        Assertions.assertFalse(filterService.hasNoJourneyInFile(filterReport, file2))
+        Assertions.assertTrue(filterService.hasNoJourneyInFile(filterReport, file3))
     }
 
     @Test
     fun testIsLineFile() {
-        assertTrue(filterService.isLineFile(File("line1.xml")))
-        assertFalse(filterService.isLineFile(File("_shared.xml")))
+        Assertions.assertTrue(filterService.isLineFile(File("line1.xml")))
+        Assertions.assertFalse(filterService.isLineFile(File("_shared.xml")))
     }
 }

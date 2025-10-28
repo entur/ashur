@@ -1,17 +1,16 @@
 package org.entur.ror.ashur.filter
 
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.test.assertFalse
 
 class StandardImportFilteringProfileConfigTest {
     @Test
     fun testStandardImportFilteringProfileConfig() {
         val config = StandardImportFilteringProfileConfig().build()
-        assertTrue(config.period.start!!.isEqual(LocalDate.now().minusDays(2)))
-        assertTrue(config.period.end!!.isEqual(LocalDate.now().plusYears(1)))
-        assertTrue(config.skipElements.containsAll(
+        Assertions.assertTrue(config.period.start!!.isEqual(LocalDate.now().minusDays(2)))
+        Assertions.assertTrue(config.period.end!!.isEqual(LocalDate.now().plusYears(1)))
+        Assertions.assertTrue(config.skipElements.containsAll(
             listOf(
                 "/PublicationDelivery/dataObjects/CompositeFrame/frames/VehicleScheduleFrame",
                 "/PublicationDelivery/dataObjects/VehicleScheduleFrame",
@@ -33,11 +32,11 @@ class StandardImportFilteringProfileConfigTest {
                 "/PublicationDelivery/dataObjects/ResourceFrame/vehicles",
             )
         ))
-        assertTrue(config.removePrivateData)
-        assertFalse(config.preserveComments)
-        assertTrue(config.pruneReferences)
-        assertTrue(config.referencesToExcludeFromPruning.contains("QuayRef"))
-        assertTrue(config.unreferencedEntitiesToPrune.containsAll(
+        Assertions.assertTrue(config.removePrivateData)
+        Assertions.assertFalse(config.preserveComments)
+        Assertions.assertTrue(config.pruneReferences)
+        Assertions.assertTrue(config.referencesToExcludeFromPruning.contains("QuayRef"))
+        Assertions.assertTrue(config.unreferencedEntitiesToPrune.containsAll(
             listOf(
                 "JourneyPattern",
                 "Route",
@@ -49,6 +48,6 @@ class StandardImportFilteringProfileConfigTest {
                 "ServiceLink",
             ))
         )
-        assertTrue(config.useSelfClosingTagsWhereApplicable)
+        Assertions.assertTrue(config.useSelfClosingTagsWhereApplicable)
     }
 }
