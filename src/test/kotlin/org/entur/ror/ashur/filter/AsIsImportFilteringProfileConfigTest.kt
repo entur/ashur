@@ -1,8 +1,7 @@
 package org.entur.ror.ashur.filter
 
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 
 class AsIsImportFilteringProfileConfigTest {
@@ -10,12 +9,12 @@ class AsIsImportFilteringProfileConfigTest {
     fun testAsIsImportFilteringProfileConfig() {
         val config = AsIsImportFilteringProfileConfig().build()
         assertNotNull(config)
-        assertTrue(config.skipElements.isEmpty())
-        assertTrue(config.referencesToExcludeFromPruning.isEmpty())
-        assertTrue(config.unreferencedEntitiesToPrune.isEmpty())
-        assertTrue(config.preserveComments)
-        assertFalse(config.removePrivateData)
-        assertFalse(config.pruneReferences)
-        assertFalse(config.useSelfClosingTagsWhereApplicable)
+        Assertions.assertTrue(config.skipElements.isEmpty())
+        Assertions.assertTrue(config.referencesToExcludeFromPruning.isEmpty())
+        Assertions.assertTrue(config.unreferencedEntitiesToPrune.isEmpty())
+        Assertions.assertTrue(config.preserveComments)
+        Assertions.assertFalse(config.removePrivateData)
+        Assertions.assertFalse(config.pruneReferences)
+        Assertions.assertFalse(config.useSelfClosingTagsWhereApplicable)
     }
 }
