@@ -42,4 +42,3 @@ common:
       TZ: Europe/Oslo
     enabled: true
     toEnv: true
-q
