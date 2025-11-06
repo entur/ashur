@@ -7,7 +7,7 @@ import kotlin.test.assertNotNull
 class AsIsImportFilteringProfileConfigTest {
     @Test
     fun testAsIsImportFilteringProfileConfig() {
-        val config = AsIsImportFilteringProfileConfig().build()
+        val config = AsIsImportFilteringProfileConfig().build("TST")
         assertNotNull(config)
         Assertions.assertTrue(config.skipElements.isEmpty())
         Assertions.assertTrue(config.referencesToExcludeFromPruning.isEmpty())

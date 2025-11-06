@@ -14,10 +14,10 @@ class FilterConfigResolver(
      * @param filterProfile The filtering profile to resolve a configuration for.
      * @return The corresponding filter profile configuration.
      */
-    fun resolve(filterProfile: FilterProfile): FilterConfig {
+    fun resolve(filterProfile: FilterProfile, codespace: String): FilterConfig {
         return when (filterProfile) {
-            FilterProfile.StandardImportFilter -> standardImportFilterConfig.build()
-            FilterProfile.AsIsImportFilter -> asIsImportFilterConfig.build()
+            FilterProfile.StandardImportFilter -> standardImportFilterConfig.build(codespace)
+            FilterProfile.AsIsImportFilter -> asIsImportFilterConfig.build(codespace)
         }
     }
 }

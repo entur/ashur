@@ -36,7 +36,7 @@ class NetexFilterMessageHandler(
             val correlationId = message.getCorrelationId()
             val netexSource = message.getNetexSource()
 
-            val filterConfig = filterConfigResolver.resolve(filterProfile)
+            val filterConfig = filterConfigResolver.resolve(filterProfile, codespace ?: "")
             logger.info("Detected config matching filter profile $filterProfile: $filterConfig")
 
             return filterService.handleFilterRequestForFile(
