@@ -16,7 +16,7 @@ common:
     forceReplicas: 1
     cpu: 5
     memory: 8000
-    memoryLimit: 8000
+    memoryLimit: 9000
     probes:
       liveness:
         path: /actuator/health/liveness
