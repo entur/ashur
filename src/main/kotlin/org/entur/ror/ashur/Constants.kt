@@ -8,5 +8,7 @@ object Constants {
     val FILTER_NETEX_FILE_STATUS_SUCCEEDED = "SUCCESS"
     val FILTER_NETEX_FILE_STATUS_FAILED = "FAILED"
 
+    val FILE_CREATED_TIMESTAMP_HEADER = "FileCreatedTimestamp"
+
     val FILTERED_NETEX_FILE_PATH_HEADER = "FilteredNetexFilePath"
 }

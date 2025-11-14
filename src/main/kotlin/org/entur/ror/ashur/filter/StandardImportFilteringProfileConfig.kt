@@ -5,15 +5,22 @@ import org.entur.netex.tools.lib.config.FilterConfigBuilder
 import org.entur.netex.tools.lib.config.TimePeriod
 import org.entur.netex.tools.lib.output.SkipElementHandler
 import org.entur.netex.tools.lib.output.XMLElementHandler
+import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
 import org.entur.ror.ashur.sax.handlers.DefaultLocaleHandler
 import org.entur.ror.ashur.sax.handlers.QuayRefHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenToDateHandler
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
-    private fun customElementHandlers(period: TimePeriod, codespace: String): Map<String, XMLElementHandler> {
+    private fun customElementHandlers(
+        period: TimePeriod,
+        codespace: String,
+        fileCreatedAt: LocalDateTime?
+    ): Map<String, XMLElementHandler> {
+        val compositeFrameHandler = CompositeFrameHandler(fileCreatedAt)
         val skipElementHandler = SkipElementHandler()
         val validBetweenHandler = ValidBetweenHandler(codespace)
         val quayRefHandler = QuayRefHandler()
@@ -21,6 +28,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
         val defaultLocaleHandler = DefaultLocaleHandler()
         return mapOf(
+            "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
             "/PublicationDelivery/dataObjects/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar/FromDate" to skipElementHandler,
@@ -58,13 +66,15 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         "/PublicationDelivery/dataObjects/SiteFrame"
     )
 
-    override fun build(codespace: String): FilterConfig {
+    override fun build(filterContext: FilterContext): FilterConfig {
         val timePeriod = TimePeriod(
             start = LocalDate.now().minusDays(2),
             end = LocalDate.now().plusYears(1)
         )
+        val codespace = filterContext.codespace
+        val fileCreatedAt = filterContext.fileCreatedAt
         return FilterConfigBuilder()
-            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace))
+            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt))
             .withPeriod(timePeriod)
             .withSkipElements(skipElements())
             .withRenameFiles(true)
