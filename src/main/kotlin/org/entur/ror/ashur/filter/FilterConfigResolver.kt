@@ -14,10 +14,11 @@ class FilterConfigResolver(
      * @param filterProfile The filtering profile to resolve a configuration for.
      * @return The corresponding filter profile configuration.
      */
-    fun resolve(filterProfile: FilterProfile, codespace: String): FilterConfig {
+    fun resolve(filterContext: FilterContext): FilterConfig {
+        val filterProfile = filterContext.profile
         return when (filterProfile) {
-            FilterProfile.StandardImportFilter -> standardImportFilterConfig.build(codespace)
-            FilterProfile.AsIsImportFilter -> asIsImportFilterConfig.build(codespace)
+            FilterProfile.StandardImportFilter -> standardImportFilterConfig.build(filterContext)
+            FilterProfile.AsIsImportFilter -> asIsImportFilterConfig.build(filterContext)
         }
     }
 }

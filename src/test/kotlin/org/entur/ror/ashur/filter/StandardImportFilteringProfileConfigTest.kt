@@ -7,7 +7,8 @@ import java.time.LocalDate
 class StandardImportFilteringProfileConfigTest {
     @Test
     fun testStandardImportFilteringProfileConfig() {
-        val config = StandardImportFilteringProfileConfig().build("TST")
+        val filterContext = FilterContext(profile = FilterProfile.StandardImportFilter, codespace = "TST")
+        val config = StandardImportFilteringProfileConfig().build(filterContext)
         Assertions.assertTrue(config.period.start!!.isEqual(LocalDate.now().minusDays(2)))
         Assertions.assertTrue(config.period.end!!.isEqual(LocalDate.now().plusYears(1)))
         Assertions.assertTrue(config.skipElements.containsAll(

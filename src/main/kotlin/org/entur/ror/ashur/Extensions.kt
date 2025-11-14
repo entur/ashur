@@ -3,9 +3,11 @@ package org.entur.ror.ashur
 import com.google.protobuf.ByteString
 import com.google.pubsub.v1.PubsubMessage
 import org.apache.camel.Exchange
+import org.entur.ror.ashur.Constants.FILE_CREATED_TIMESTAMP_HEADER
 import org.entur.ror.ashur.exceptions.InvalidFilterProfileException
 import org.entur.ror.ashur.filter.FilterProfile
 import java.io.File
+import java.time.LocalDateTime
 
 fun File.createFileWithDirectories(): File {
     if (!this.exists()) {
@@ -35,6 +37,15 @@ fun PubsubMessage.getNetexSource(): String? {
 
 fun PubsubMessage.getStatus(): String? {
     return this.attributesMap["Status"]
+}
+
+fun PubsubMessage.getFileCreatedTimestamp(): LocalDateTime? {
+    val headerAsString = this.attributesMap[FILE_CREATED_TIMESTAMP_HEADER]
+    return if (headerAsString != null) {
+        LocalDateTime.parse(headerAsString)
+    } else {
+        null
+    }
 }
 
 fun PubsubMessage.getPathOfFilteredFile(): String? {
