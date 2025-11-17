@@ -4,7 +4,7 @@ import org.entur.netex.tools.lib.config.FilterConfig
 import org.entur.netex.tools.lib.config.FilterConfigBuilder
 
 class AsIsImportFilteringProfileConfig: FilterProfileConfiguration {
-    override fun build(codespace: String): FilterConfig =
+    override fun build(filterContext: FilterContext): FilterConfig =
         FilterConfigBuilder()
             .withSkipElements(listOf())
             .withRemovePrivateData(false)

@@ -3,9 +3,11 @@ package org.entur.ror.ashur.pubsub
 import com.google.pubsub.v1.PubsubMessage
 import org.entur.ror.ashur.filter.FilterService
 import org.entur.ror.ashur.filter.FilterConfigResolver
+import org.entur.ror.ashur.filter.FilterContext
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getNetexFileName
 import org.entur.ror.ashur.getCodespace
+import org.entur.ror.ashur.getFileCreatedTimestamp
 import org.entur.ror.ashur.getFilterProfile
 import org.entur.ror.ashur.getNetexSource
 import org.slf4j.LoggerFactory
@@ -35,14 +37,16 @@ class NetexFilterMessageHandler(
             val codespace = message.getCodespace()
             val correlationId = message.getCorrelationId()
             val netexSource = message.getNetexSource()
+            val fileCreatedTimestamp = message.getFileCreatedTimestamp()
 
-            val filterConfig = filterConfigResolver.resolve(filterProfile, codespace ?: "")
+            val filterContext = FilterContext(profile = filterProfile, codespace = codespace!!, fileCreatedAt = fileCreatedTimestamp)
+            val filterConfig = filterConfigResolver.resolve(filterContext)
             logger.info("Detected config matching filter profile $filterProfile: $filterConfig")
 
             return filterService.handleFilterRequestForFile(
                 fileName = fileName,
                 filterConfig = filterConfig,
-                codespace = codespace ?: "unknown",
+                codespace = codespace,
                 correlationId = correlationId ?: "unknown",
                 netexSource = netexSource ?: "unknown",
             )
