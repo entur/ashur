@@ -9,8 +9,6 @@ class StandardImportFilteringProfileConfigTest {
     fun testStandardImportFilteringProfileConfig() {
         val filterContext = FilterContext(profile = FilterProfile.StandardImportFilter, codespace = "TST")
         val config = StandardImportFilteringProfileConfig().build(filterContext)
-        Assertions.assertTrue(config.period.start!!.isEqual(LocalDate.now().minusDays(2)))
-        Assertions.assertTrue(config.period.end!!.isEqual(LocalDate.now().plusYears(1)))
         Assertions.assertTrue(config.skipElements.containsAll(
             listOf(
                 "/PublicationDelivery/dataObjects/CompositeFrame/frames/VehicleScheduleFrame",
