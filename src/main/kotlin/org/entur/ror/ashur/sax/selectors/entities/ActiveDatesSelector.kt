@@ -2,16 +2,17 @@ package org.entur.ror.ashur.sax.selectors.entities
 
 import org.entur.netex.tools.lib.config.TimePeriod
 import org.entur.netex.tools.lib.model.Entity
-import org.entur.netex.tools.lib.model.EntityModel
 import org.entur.netex.tools.lib.selections.EntitySelection
 import org.entur.netex.tools.lib.selectors.entities.EntitySelector
+import org.entur.netex.tools.lib.selectors.entities.EntitySelectorContext
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesCalculator
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
 import kotlin.collections.forEach
 
 class ActiveDatesSelector(val activeDatesRepository: ActiveDatesRepository, val period: TimePeriod): EntitySelector {
-    override fun selectEntities(model: EntityModel, currentEntitySelection: EntitySelection?): EntitySelection {
+    override fun selectEntities(context: EntitySelectorContext): EntitySelection {
         val calculator = ActiveDatesCalculator(activeDatesRepository)
+        val model = context.entityModel
         val activeEntities = calculator.activeDateEntitiesInPeriod(period, model)
         val activeEntitiesMap = mutableMapOf<String, MutableMap<String, Entity>>()
 

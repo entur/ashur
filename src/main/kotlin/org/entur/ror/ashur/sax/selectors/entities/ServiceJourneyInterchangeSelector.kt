@@ -1,13 +1,15 @@
 package org.entur.ror.ashur.sax.selectors.entities
 
 import org.entur.netex.tools.lib.model.Entity
-import org.entur.netex.tools.lib.model.EntityModel
 import org.entur.netex.tools.lib.selections.EntitySelection
 import org.entur.netex.tools.lib.selectors.entities.EntitySelector
+import org.entur.netex.tools.lib.selectors.entities.EntitySelectorContext
 
 class ServiceJourneyInterchangeSelector: EntitySelector {
-    override fun selectEntities(model: EntityModel, currentEntitySelection: EntitySelection?): EntitySelection {
-        val entitySelection = currentEntitySelection!!
+    override fun selectEntities(context: EntitySelectorContext): EntitySelection {
+        val model = context.entityModel
+        val entitySelection = context.currentEntitySelection!!
+
         val serviceJourneyInterchangeEntities = model.getEntitiesOfType("ServiceJourneyInterchange").toSet()
 
         val serviceJourneyInterchangesToKeep = serviceJourneyInterchangeEntities

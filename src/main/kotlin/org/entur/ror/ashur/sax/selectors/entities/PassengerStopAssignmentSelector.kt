@@ -5,6 +5,7 @@ import org.entur.netex.tools.lib.model.EntityModel
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.selections.EntitySelection
 import org.entur.netex.tools.lib.selectors.entities.EntitySelector
+import org.entur.netex.tools.lib.selectors.entities.EntitySelectorContext
 
 /**
  * Filters PassengerStopAssignment and ScheduledStopPoint entities when the only reference made to a
@@ -47,8 +48,11 @@ class PassengerStopAssignmentSelector: EntitySelector {
         }
     }
 
-    override fun selectEntities(model: EntityModel, currentEntitySelection: EntitySelection?): EntitySelection {
-        val entitySelection = currentEntitySelection!!.copy()
+    override fun selectEntities(context: EntitySelectorContext): EntitySelection {
+        val model = context.entityModel
+        val currentEntitySelection = context.currentEntitySelection!!
+
+        val entitySelection = currentEntitySelection.copy()
 
         val passengerStopAssignmentsToKeep = findPassengerStopAssignmentsToKeep(model, entitySelection)
         val passengerStopAssignmentMap = mutableMapOf<String, Entity>()

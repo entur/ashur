@@ -1,6 +1,7 @@
 package org.entur.ror.ashur.sax.selectors.entities
 
 import org.entur.netex.tools.lib.model.Ref
+import org.entur.netex.tools.lib.selectors.entities.EntitySelectorContext
 import org.entur.ror.ashur.data.TestDataFactory
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -30,8 +31,9 @@ class ServiceJourneyInterchangeSelectorTest {
         entityModel.addRef(Ref("FromJourneyRef", interchange1, serviceJourney1.id))
         entityModel.addRef(Ref("ToJourneyRef", interchange1, serviceJourney2.id))
 
+        val context = EntitySelectorContext(entityModel, entitySelection)
         val selector = ServiceJourneyInterchangeSelector()
-        val selection = selector.selectEntities(entityModel, entitySelection)
+        val selection = selector.selectEntities(context)
 
         assertTrue(selection.isSelected(interchange1))
         assertFalse(selection.isSelected(interchange2))

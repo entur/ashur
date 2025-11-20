@@ -2,6 +2,7 @@ package org.entur.ror.ashur.sax.selectors.entities
 
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.model.Ref
+import org.entur.netex.tools.lib.selectors.entities.EntitySelectorContext
 import org.entur.ror.ashur.data.TestDataFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.*
@@ -31,6 +32,11 @@ class PassengerStopAssignmentSelectorTest {
         )
     )
 
+    val context = EntitySelectorContext(
+        entityModel = entityModel,
+        currentEntitySelection = entitySelection,
+    )
+
     @BeforeEach
     fun setUp() {
         entityModel.addEntity(passengerStopAssignment1)
@@ -46,14 +52,14 @@ class PassengerStopAssignmentSelectorTest {
 
     @Test
     fun testSelectorExcludesStopPointsWhenOnlyPassengerStopAssignmentsReferToIt() {
-        val selection = PassengerStopAssignmentSelector().selectEntities(entityModel, entitySelection)
+        val selection = PassengerStopAssignmentSelector().selectEntities(context)
         assertFalse(selection.includes(passengerStopAssignment2))
         assertFalse(selection.includes(stopReferredFromAssignmentOnly))
     }
 
     @Test
     fun testSelectorIncludesStopPointWhenOthersThanPassengerStopAssignmentsReferToIt() {
-        val selection = PassengerStopAssignmentSelector().selectEntities(entityModel, entitySelection)
+        val selection = PassengerStopAssignmentSelector().selectEntities(context)
         Assertions.assertTrue(selection.includes(passengerStopAssignment1))
         Assertions.assertTrue(selection.includes(stopReferredFromAssignmentAndJourneyPattern))
     }
