@@ -1,5 +1,6 @@
 package org.entur.ror.ashur.sax.selectors.entities
 
+import org.entur.netex.tools.lib.model.Entity
 import org.entur.netex.tools.lib.model.EntityModel
 import org.entur.netex.tools.lib.selections.EntitySelection
 import org.entur.netex.tools.lib.selectors.entities.EntitySelector
@@ -18,11 +19,14 @@ class ServiceJourneyInterchangeSelector: EntitySelector {
                 hasRefToFromJourney && hasRefToToJourney
             }
 
-        entitySelection.selection["ServiceJourneyInterchange"] = mutableMapOf()
+        val serviceJourneyInterchangeMap = mutableMapOf<String, Entity>()
         serviceJourneyInterchangesToKeep.forEach { interchange ->
-            entitySelection.selection["ServiceJourneyInterchange"]!![interchange.id] = interchange
+            serviceJourneyInterchangeMap[interchange.id] = interchange
         }
 
-        return entitySelection
+        return entitySelection.withReplaced(
+            "ServiceJourneyInterchange",
+            serviceJourneyInterchangeMap
+        )
     }
 }

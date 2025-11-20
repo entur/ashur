@@ -21,11 +21,11 @@ class ActiveDatesSelector(val activeDatesRepository: ActiveDatesRepository, val 
                 val idsOfActiveEntitiesWithType = activeEntities[type]
                 val entitiesToKeep = entities.filter { idsOfActiveEntitiesWithType?.contains(it.key) == true  }
                 if (entitiesToKeep.isNotEmpty()) {
-                    activeEntitiesMap.put(type, entitiesToKeep.toMutableMap())
+                    activeEntitiesMap[type] = entitiesToKeep.toMutableMap()
                 }
             } else {
                 // If no active entities for this type, keep all entities of this type
-                activeEntitiesMap.put(type, entities.toMutableMap())
+                activeEntitiesMap[type] = entities.toMutableMap()
             }
         }
         return EntitySelection(activeEntitiesMap, model)

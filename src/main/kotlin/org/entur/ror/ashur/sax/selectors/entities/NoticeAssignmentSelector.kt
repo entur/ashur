@@ -17,12 +17,14 @@ class NoticeAssignmentSelector: EntitySelector {
     }
 
     override fun selectEntities(model: EntityModel, currentEntitySelection: EntitySelection?): EntitySelection {
-        val entitySelection: EntitySelection = currentEntitySelection!!
-        val noticeAssignmentsToKeep = findNoticeAssignmentsToKeep(model, entitySelection)
-        entitySelection.selection[NetexTypes.NOTICE_ASSIGNMENT] = mutableMapOf()
+        val noticeAssignmentsToKeep = findNoticeAssignmentsToKeep(model, currentEntitySelection!!)
+        val noticeAssignmentMap = mutableMapOf<String, Entity>()
         noticeAssignmentsToKeep.forEach { noticeAssignment ->
-            entitySelection.selection[NetexTypes.NOTICE_ASSIGNMENT]!![noticeAssignment.id] = noticeAssignment
+            noticeAssignmentMap[noticeAssignment.id] = noticeAssignment
         }
-        return entitySelection
+        return currentEntitySelection.withReplaced(
+            NetexTypes.NOTICE_ASSIGNMENT,
+            noticeAssignmentMap
+        )
     }
 }

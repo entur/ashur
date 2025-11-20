@@ -51,17 +51,19 @@ class PassengerStopAssignmentSelector: EntitySelector {
         val entitySelection = currentEntitySelection!!.copy()
 
         val passengerStopAssignmentsToKeep = findPassengerStopAssignmentsToKeep(model, entitySelection)
-        entitySelection.selection[NetexTypes.PASSENGER_STOP_ASSIGNMENT] = mutableMapOf()
+        val passengerStopAssignmentMap = mutableMapOf<String, Entity>()
         passengerStopAssignmentsToKeep.forEach { psaToKeep ->
-            entitySelection.selection[NetexTypes.PASSENGER_STOP_ASSIGNMENT]!![psaToKeep.id] = psaToKeep
+            passengerStopAssignmentMap[psaToKeep.id] = psaToKeep
         }
 
         val scheduledStopPointsToKeep = findScheduledStopPointsToKeep(model, currentEntitySelection)
-        entitySelection.selection[NetexTypes.SCHEDULED_STOP_POINT] = mutableMapOf()
+        val scheduledStopPointsMap = mutableMapOf<String, Entity>()
         scheduledStopPointsToKeep.forEach { sspToKeep ->
-            entitySelection.selection[NetexTypes.SCHEDULED_STOP_POINT]!![sspToKeep.id] = sspToKeep
+            scheduledStopPointsMap[sspToKeep.id] = sspToKeep
         }
 
         return entitySelection
+            .withReplaced(NetexTypes.PASSENGER_STOP_ASSIGNMENT, passengerStopAssignmentMap)
+            .withReplaced(NetexTypes.SCHEDULED_STOP_POINT, scheduledStopPointsMap)
     }
 }
