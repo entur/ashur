@@ -11,6 +11,15 @@ import org.entur.ror.ashur.sax.handlers.QuayRefHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenToDateHandler
+import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesPlugin
+import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
+import org.entur.ror.ashur.sax.plugins.filenames.FileNamePlugin
+import org.entur.ror.ashur.sax.plugins.filenames.FileNameRepository
+import org.entur.ror.ashur.sax.selectors.entities.ActiveDatesSelector
+import org.entur.ror.ashur.sax.selectors.entities.NoticeAssignmentSelector
+import org.entur.ror.ashur.sax.selectors.entities.PassengerStopAssignmentSelector
+import org.entur.ror.ashur.sax.selectors.entities.ServiceJourneyInterchangeSelector
+import org.entur.ror.ashur.sax.selectors.refs.ActiveDatesRefSelector
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -73,13 +82,11 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         )
         val codespace = filterContext.codespace
         val fileCreatedAt = filterContext.fileCreatedAt
+        val activeDatesRepository = ActiveDatesRepository()
+        val fileNameRepository = FileNameRepository()
         return FilterConfigBuilder()
             .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt))
-            .withPeriod(timePeriod)
             .withSkipElements(skipElements())
-            .withRenameFiles(true)
-            .withRemoveInterchangesWithoutServiceJourneys(true)
-            .withRemovePassengerStopAssignmentsWithUnreferredScheduledStopPoint(true)
             .withRemovePrivateData(true)
             .withPreserveComments(false)
             .withUseSelfClosingTagsWhereApplicable(true)
@@ -95,6 +102,32 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "Notice",
                     "DestinationDisplay",
                     "ServiceLink",
+                )
+            )
+            .withPlugins(
+                listOf(
+                    ActiveDatesPlugin(activeDatesRepository),
+                    FileNamePlugin(fileNameRepository = fileNameRepository)
+                )
+            )
+            .withFileNameMap(fileNameRepository.filesToRename)
+            .withEntitySelectors(
+                listOf(
+                    ActiveDatesSelector(
+                        activeDatesRepository = activeDatesRepository,
+                        period = timePeriod
+                    ),
+                    NoticeAssignmentSelector(),
+                    PassengerStopAssignmentSelector(),
+                    ServiceJourneyInterchangeSelector()
+                )
+            )
+            .withRefSelectors(
+                listOf(
+                    ActiveDatesRefSelector(
+                        activeDatesRepository = activeDatesRepository,
+                        period = timePeriod
+                    ),
                 )
             )
             .build()
