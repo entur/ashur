@@ -3,11 +3,11 @@ package org.entur.ror.ashur.sax.plugins.activedates.handlers
 import org.entur.netex.tools.lib.model.Entity
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesParsingContext
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
-import org.entur.ror.ashur.sax.plugins.activedates.NetexDataCollector
+import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesDataCollector
 
 class DayTypeAssignmentHandler(
     val activeDatesRepository: ActiveDatesRepository
-) : NetexDataCollector() {
+) : ActiveDatesDataCollector() {
 
     override fun endElement(context: ActiveDatesParsingContext, currentEntity: Entity) {
         if (context.currentDayTypeAssignmentDayTypeRef == null) {

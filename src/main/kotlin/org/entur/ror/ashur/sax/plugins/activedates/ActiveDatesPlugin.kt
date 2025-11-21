@@ -34,7 +34,7 @@ class ActiveDatesPlugin (
     private val parsingContext : ActiveDatesParsingContext = ActiveDatesParsingContext()
     
     // Map of element handlers - delegating to existing collector implementations
-    private val elementHandlers: Map<String, NetexDataCollector> by lazy {
+    private val elementHandlers: Map<String, ActiveDatesDataCollector> by lazy {
         mapOf(
             NetexTypes.CALENDAR_DATE to CalendarDateHandler(activeDatesRepository),
             NetexTypes.DAY_TYPE_ASSIGNMENT to DayTypeAssignmentHandler(activeDatesRepository),

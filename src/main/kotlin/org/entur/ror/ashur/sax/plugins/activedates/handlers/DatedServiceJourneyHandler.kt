@@ -3,9 +3,9 @@ package org.entur.ror.ashur.sax.plugins.activedates.handlers
 import org.entur.netex.tools.lib.model.Entity
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesParsingContext
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
-import org.entur.ror.ashur.sax.plugins.activedates.NetexDataCollector
+import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesDataCollector
 
-class DatedServiceJourneyHandler(val activeDatesRepository: ActiveDatesRepository): NetexDataCollector() {
+class DatedServiceJourneyHandler(val activeDatesRepository: ActiveDatesRepository): ActiveDatesDataCollector() {
 
     override fun endElement(context: ActiveDatesParsingContext, currentEntity: Entity) {
         if (context.currentServiceJourneyRef != null && context.currentOperatingDayRef != null) {

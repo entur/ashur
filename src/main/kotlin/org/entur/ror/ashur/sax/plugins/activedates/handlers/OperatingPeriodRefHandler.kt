@@ -4,10 +4,10 @@ import org.entur.netex.tools.lib.model.Entity
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesParsingContext
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
-import org.entur.ror.ashur.sax.plugins.activedates.NetexDataCollector
+import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesDataCollector
 import org.xml.sax.Attributes
 
-class OperatingPeriodRefHandler(val activeDatesRepository: ActiveDatesRepository) : NetexDataCollector() {
+class OperatingPeriodRefHandler(val activeDatesRepository: ActiveDatesRepository) : ActiveDatesDataCollector() {
     override fun startElement(
         context: ActiveDatesParsingContext,
         attributes: Attributes?,

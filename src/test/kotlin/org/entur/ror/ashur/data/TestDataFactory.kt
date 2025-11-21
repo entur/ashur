@@ -16,12 +16,13 @@ object TestDataFactory {
     fun defaultEntity(
         id: String,
         type: String = "testType",
-        publication: String = PublicationEnumeration.PUBLIC.toString().lowercase()
+        publication: String = PublicationEnumeration.PUBLIC.toString().lowercase(),
+        parent: Entity? = null
     ): Entity = Entity(
         id = id,
         type = type,
         publication = publication,
-        parent = null,
+        parent = parent,
     )
 
     fun defaultRef(id: String): Ref = Ref(

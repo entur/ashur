@@ -3,12 +3,12 @@ package org.entur.ror.ashur.sax.plugins.activedates.handlers
 import org.entur.netex.tools.lib.model.Entity
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesParsingContext
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
-import org.entur.ror.ashur.sax.plugins.activedates.NetexDataCollector
+import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesDataCollector
 import org.xml.sax.Attributes
 import java.time.DayOfWeek
 import java.util.*
 
-class DaysOfWeekHandler(val activeDatesRepository: ActiveDatesRepository): NetexDataCollector() {
+class DaysOfWeekHandler(val activeDatesRepository: ActiveDatesRepository): ActiveDatesDataCollector() {
     private val stringBuilder = StringBuilder()
 
     override fun startElement(context: ActiveDatesParsingContext, attributes: Attributes?, currentEntity: Entity) {
