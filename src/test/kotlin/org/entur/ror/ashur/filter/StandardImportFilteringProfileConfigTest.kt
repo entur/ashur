@@ -2,7 +2,6 @@ package org.entur.ror.ashur.filter
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 
 class StandardImportFilteringProfileConfigTest {
     @Test
@@ -39,7 +38,6 @@ class StandardImportFilteringProfileConfigTest {
             listOf(
                 "JourneyPattern",
                 "Route",
-                "Network",
                 "Line",
                 "Operator",
                 "Notice",

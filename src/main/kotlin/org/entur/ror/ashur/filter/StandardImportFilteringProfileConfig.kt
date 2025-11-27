@@ -95,7 +95,6 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                 setOf(
                     "JourneyPattern",
                     "Route",
-                    "Network",
                     "Line",
                     "Operator",
                     "Notice",
