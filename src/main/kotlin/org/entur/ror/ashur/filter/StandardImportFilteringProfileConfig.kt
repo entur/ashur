@@ -16,7 +16,6 @@ import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
 import org.entur.ror.ashur.sax.plugins.filenames.FileNamePlugin
 import org.entur.ror.ashur.sax.plugins.filenames.FileNameRepository
 import org.entur.ror.ashur.sax.selectors.entities.ActiveDatesSelector
-import org.entur.ror.ashur.sax.selectors.entities.NoticeAssignmentSelector
 import org.entur.ror.ashur.sax.selectors.entities.PassengerStopAssignmentSelector
 import org.entur.ror.ashur.sax.selectors.entities.ServiceJourneyInterchangeSelector
 import org.entur.ror.ashur.sax.selectors.refs.ActiveDatesRefSelector
@@ -104,6 +103,11 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "ServiceLink",
                 )
             )
+            .withElementsRequiredChildren(
+                mapOf(
+                    "NoticeAssignment" to listOf("NoticeRef", "NoticedObjectRef")
+                )
+            )
             .withPlugins(
                 listOf(
                     ActiveDatesPlugin(activeDatesRepository),
@@ -117,7 +121,6 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                         activeDatesRepository = activeDatesRepository,
                         period = timePeriod
                     ),
-                    NoticeAssignmentSelector(),
                     PassengerStopAssignmentSelector(),
                     ServiceJourneyInterchangeSelector()
                 )
