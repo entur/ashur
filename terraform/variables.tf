@@ -14,6 +14,15 @@ variable "service_account" {
   description = "Service account for Ashur to use for IAM roles."
 }
 
+variable "ashur_exchange_storage_bucket" {
+  description = "The name of the Ashur exchange bucket in GCP"
+}
+
+variable "marduk_service_account_exchange_bucket_role" {
+  description = "Role of the Service Account - more about roles https://cloud.google.com/storage/docs/access-control/iam-roles"
+  default     = "roles/storage.objectViewer"
+}
+
 variable "service_account_pubsub_subscriber_role" {
   description = "Role of the Service Account - more about roles https://cloud.google.com/pubsub/docs/access-control"
   default     = "roles/pubsub.subscriber"

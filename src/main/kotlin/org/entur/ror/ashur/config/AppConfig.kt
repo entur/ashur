@@ -19,6 +19,7 @@ class AppConfig(
     class GcpConfig {
         lateinit var ashurProjectId: String
         lateinit var ashurBucketName: String
+        lateinit var ashurExchangeBucketName: String
         lateinit var mardukProjectId: String
         lateinit var mardukBucketName: String
     }

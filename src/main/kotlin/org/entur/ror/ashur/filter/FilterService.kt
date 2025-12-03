@@ -213,9 +213,13 @@ class FilterService(
      * Handles the filtering request for a file.
      *
      * @param fileName The name of the file to filter.
-     * @param inputDirectory The directory where the input files are located.
-     * @param outputDirectory The directory where the output files will be saved.
-     * @return The path of the filtered zip file in the Ashur bucket.
+     * @param filterConfig The filtering config to use.
+     * @param codespace The codespace that the dataset belongs to.
+     * @param correlationId The correlation ID.
+     * @param netexSource The source of the request (e.g. marduk).
+     *
+     * @return The path of the filtered zip file in the Ashur exchange bucket.
+     *
      * @throws org.entur.ror.ashur.exceptions.InvalidZipFileException If the file is invalid or empty.
      */
     fun handleFilterRequestForFile(
@@ -259,6 +263,13 @@ class FilterService(
             )
         }
         logger.info("Successfully uploaded filtered Netex zip file. Path in bucket: $filteredZipFileName")
+
+        logger.info("Copying filtered Netex zip file to Ashur exchange bucket")
+        ashurBucketService.copyToAshurExchangeBucket(
+            filteredZipFileName,
+            filteredZipFileName
+        )
+        logger.info("Successfully copied Netex zip file to Ashur exchange bucket. Path in bucket: $filteredZipFileName")
 
         if (appConfig.netex.cleanupEnabled) {
             cleanUpFiles(
