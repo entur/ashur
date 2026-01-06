@@ -5,6 +5,10 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.xml.sax.Attributes
 import org.xml.sax.helpers.AttributesImpl
 
+/**
+ * Handler that injects default locale information into the XML.
+ * Specifically, it adds "TimeZone" and "DefaultLanguage" elements with predefined values.
+ */
 class DefaultLocaleHandler: XMLElementHandler {
     override fun startElement(
         uri: String?,

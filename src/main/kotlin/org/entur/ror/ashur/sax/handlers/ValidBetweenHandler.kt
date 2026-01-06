@@ -8,6 +8,12 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.xml.sax.Attributes
 import org.xml.sax.helpers.AttributesImpl
 
+/**
+ * Handler that transforms ValidBetween elements into AvailabilityCondition elements
+ * with generated IDs and version attributes.
+ *
+ * @param codespace The codespace used for generating codespace prefixed IDs.
+ */
 class ValidBetweenHandler(private val codespace: String): XMLElementHandler {
     override fun startElement(
         uri: String?,

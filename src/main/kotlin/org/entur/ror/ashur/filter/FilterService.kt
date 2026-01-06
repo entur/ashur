@@ -79,10 +79,12 @@ class FilterService(
     /**
      * Filters a Netex file from a zip archive and returns the filtered zip file.
      *
-     * @param inputNetexFileName Name of the Netex file to filter.
+     * @param netexInputFile Name of the Netex file to filter.
      * @param inputDirectory The directory where the input files will be extracted.
      * @param outputDirectory The directory where the filtered output files will be saved.
-     * @return The filtered zip file containing the processed Netex data.
+     * @param filterConfig The filtering configuration to use.
+     *
+     * @return A pair containing the filtered zip file and the filter report.
      */
     private fun filterNetexToZipFile(
         netexInputFile: File,
@@ -122,6 +124,8 @@ class FilterService(
      *
      * @param codespace The codespace identifier
      * @param correlationId The correlation ID
+     * @param netexSource The source of the request (e.g. marduk).
+     *
      * @return The path of the input directory for the specified message.
      */
     fun getPathForNetexInputFiles(codespace: String, correlationId: String, netexSource: String): String {
@@ -133,6 +137,8 @@ class FilterService(
      *
      * @param codespace The codespace identifier
      * @param correlationId The correlation ID
+     * @param netexSource The source of the request (e.g. marduk).
+     *
      * @return The path of the output directory for the specified message.
      */
     fun getPathForNetexOutputFiles(codespace: String, correlationId: String, netexSource: String): String {

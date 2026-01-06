@@ -11,7 +11,7 @@ class FilterConfigResolver(
     /**
      * Resolves the appropriate filter configuration based on the provided filtering profile.
      *
-     * @param filterProfile The filtering profile to resolve a configuration for.
+     * @param filterContext The context containing the filtering profile.
      * @return The corresponding filter profile configuration.
      */
     fun resolve(filterContext: FilterContext): FilterConfig {

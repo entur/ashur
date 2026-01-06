@@ -9,12 +9,11 @@ import java.util.zip.ZipOutputStream
 
 object ZipUtils {
     /**
-     * Unzips a byte array containing a zip file into a specified directory.
+     * Unzips the contents of a zip input stream into a specified directory.
      *
-     * @param zipBytes The byte array containing the zip file.
+     * @param input The input stream containing the zip file data.
      * @param targetDirectory The directory where the contents of the zip file will be extracted.
-     * @return A list of files that were extracted from the zip file.
-     */
+     * */
     fun unzipToDirectory(input: InputStream, targetDirectory: File) {
         ZipInputStream(input).use { zipInputStream ->
             var entry = zipInputStream.nextEntry

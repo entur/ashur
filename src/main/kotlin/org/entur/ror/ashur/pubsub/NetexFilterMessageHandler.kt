@@ -16,7 +16,8 @@ import org.springframework.stereotype.Component
 /**
  * Handles incoming messages from a Pub/Sub topic and processes Netex files based on a filter configuration.
  *
- * @param config The configuration properties for the message handler.
+ * @param filterService Service responsible for filtering Netex files.
+ * @param filterConfigResolver Resolver for obtaining filter configurations based on the filter context.
  */
 @Component
 class NetexFilterMessageHandler(
@@ -28,6 +29,7 @@ class NetexFilterMessageHandler(
     /**
      * Performs the filtering operation on the Netex file specified in the Pub/Sub message.
      *
+     * @param message The Pub/Sub message containing details about the Netex file to be filtered.
      * @return The path to the output zip file containing the filtered Netex data.
      **/
     override fun handleMessage(message: PubsubMessage): String {

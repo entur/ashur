@@ -6,6 +6,10 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.xml.sax.Attributes
 import org.xml.sax.helpers.AttributesImpl
 
+/**
+ * Handler that removes all attributes except "ref" from the QuayRef elements.
+ * This is needed to conform to the expected XML schema.
+ * */
 class QuayRefHandler: XMLElementHandler {
     override fun startElement(
         uri: String?,
