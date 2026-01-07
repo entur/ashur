@@ -18,6 +18,10 @@ variable "ashur_exchange_storage_bucket" {
   description = "The name of the Ashur exchange bucket in GCP"
 }
 
+variable "marduk_service_account" {
+  description = "The service account of the marduk application"
+}
+
 variable "marduk_service_account_exchange_bucket_role" {
   description = "Role of the Service Account - more about roles https://cloud.google.com/storage/docs/access-control/iam-roles"
   default     = "roles/storage.objectViewer"
