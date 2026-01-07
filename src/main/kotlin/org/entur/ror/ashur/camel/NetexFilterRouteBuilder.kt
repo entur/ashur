@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 /**
  * Entry point for the Camel route that processes messages from a Google Pub/Sub topic.
  *
- * Aggregates messages by codespace and processes them sequentially to filter Netex data.
+ * Processes messages sequentially to filter Netex data.
  **/
 @Component
 class NetexFilterRouteBuilder(

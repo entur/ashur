@@ -7,6 +7,12 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.xml.sax.Attributes
 import java.time.LocalDateTime
 
+/**
+ * Handler that adds a "created" attribute to the start element if a creation timestamp is provided.
+ * Used to annotate CompositeFrame elements with their creation time.
+ *
+ * @param fileCreatedAt The creation timestamp to be added as an attribute. If null, the element will be written as is.
+ */
 class CompositeFrameHandler(
     private val fileCreatedAt: LocalDateTime?
 ): XMLElementHandler {

@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component
 /**
  * NetexFilterMessageProcessor is a Camel processor that handles messages for filtering Netex.
  * It uses the NetexFilterMessageHandler to process the incoming Pub/Sub messages.
- *
- * @param config Properties containing configuration settings such as input and output directories.
  */
 @Component
 class NetexFilterMessageProcessor(

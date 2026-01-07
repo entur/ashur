@@ -22,4 +22,17 @@ abstract class AbstractBlobStoreService protected constructor(
     fun uploadBlob(name: String, inputStream: InputStream) {
         repository.uploadBlob(name, inputStream)
     }
+
+    fun copyBlob(
+        sourceObjectName: String,
+        targetContainerName: String,
+        targetObjectNam: String
+    ) {
+        repository.copyBlob(
+            containerName,
+            sourceObjectName,
+            targetContainerName,
+            targetObjectNam
+        )
+    }
 }

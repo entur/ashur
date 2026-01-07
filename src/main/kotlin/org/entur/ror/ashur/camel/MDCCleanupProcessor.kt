@@ -14,7 +14,7 @@ import org.slf4j.MDC
  */
 class MDCCleanupProcessor : Processor {
     override fun process(exchange: Exchange) {
-        MDC.remove("correlationId",)
+        MDC.remove("correlationId")
         MDC.remove("codespace")
     }
 }

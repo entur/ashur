@@ -6,6 +6,11 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.xml.sax.Attributes
 import java.time.LocalDate
 
+/**
+ * Handler that writes the ToDate of a ValidBetween element in ISO 8601 format.
+ *
+ * @param toDate The LocalDate to be written as the ToDate.
+ */
 class ValidBetweenToDateHandler(val toDate: LocalDate): XMLElementHandler {
     override fun startElement(
         uri: String?,

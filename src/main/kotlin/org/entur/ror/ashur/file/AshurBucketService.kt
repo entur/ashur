@@ -7,9 +7,17 @@ import org.springframework.stereotype.Service
 
 @Service
 class AshurBucketService(
-    appConfig: AppConfig,
+    val appConfig: AppConfig,
     @Qualifier("ashurBlobStoreRepository") repository: BlobStoreRepository
 ) : AbstractBlobStoreService(
     containerName = appConfig.gcp.ashurBucketName,
     repository = repository
-)
+) {
+    fun copyToAshurExchangeBucket(sourceObjectName: String, destination: String) {
+        copyBlob(
+            sourceObjectName = sourceObjectName,
+            targetContainerName = appConfig.gcp.ashurExchangeBucketName,
+            targetObjectNam = destination,
+        )
+    }
+}
