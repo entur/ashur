@@ -16,7 +16,7 @@ resource "google_storage_bucket" "storage_bucket" {
   }
 }
 
-resource "google_storage_bucket" "storage_bucket" {
+resource "google_storage_bucket" "exchange_bucket" {
   name                        = "ror-ashur-exchange-gcp-${var.bucket_instance_suffix}"
   force_destroy               = var.force_destroy
   location                    = var.location
