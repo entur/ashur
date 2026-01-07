@@ -18,7 +18,8 @@ class FileNamePluginTest {
         context = FileNamePluginContext()
         fileNamePlugin = FileNamePlugin(
             fileNameRepository = repo,
-            context = context
+            context = context,
+            codespace = "tst",
         )
     }
 
@@ -63,10 +64,6 @@ class FileNamePluginTest {
         val privateCodeChars = "PrivateCodeTest".toCharArray()
         fileNamePlugin.characters("PrivateCode", privateCodeChars, 0, privateCodeChars.size)
         assertEquals("PrivateCodeTest", context.linePrivateCode.toString())
-
-        val codespaceChars = "TST".toCharArray()
-        fileNamePlugin.characters("ParticipantRef", codespaceChars, 0, codespaceChars.size)
-        assertEquals("TST", context.codespace.toString())
     }
 
     @Test
@@ -95,9 +92,6 @@ class FileNamePluginTest {
         val privateCodeChars = "PrivateCodeTest".toCharArray()
         fileNamePlugin.characters("PrivateCode", privateCodeChars, 0, privateCodeChars.size)
 
-        val codespaceChars = "TST".toCharArray()
-        fileNamePlugin.characters("ParticipantRef", codespaceChars, 0, codespaceChars.size)
-
         fileNamePlugin.endDocument(File("test.xml"))
 
         val expectedFileName = "TST_TST-Line-PrivateCodeTest_PublicCodeTest_TestName.xml"
@@ -107,7 +101,6 @@ class FileNamePluginTest {
         assertEquals("", context.lineName.toString())
         assertEquals("", context.linePublicCode.toString())
         assertEquals("", context.linePrivateCode.toString())
-        assertEquals("", context.codespace.toString())
     }
 
     @Test
@@ -120,7 +113,6 @@ class FileNamePluginTest {
                 NetexTypes.NAME,
                 NetexTypes.PUBLIC_CODE,
                 NetexTypes.PRIVATE_CODE,
-                NetexTypes.PARTICIPANT_REF
             )
         ))
     }

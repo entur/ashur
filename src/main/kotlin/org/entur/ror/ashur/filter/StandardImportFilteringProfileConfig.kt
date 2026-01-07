@@ -110,7 +110,10 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
             .withPlugins(
                 listOf(
                     ActiveDatesPlugin(activeDatesRepository),
-                    FileNamePlugin(fileNameRepository = fileNameRepository)
+                    FileNamePlugin(
+                        fileNameRepository = fileNameRepository,
+                        codespace = codespace
+                    )
                 )
             )
             .withFileNameMap(fileNameRepository.filesToRename)

@@ -8,6 +8,7 @@ import java.io.File
 
 class FileNamePlugin(
     private val fileNameRepository: FileNameRepository,
+    private val codespace: String,
     private val context: FileNamePluginContext = FileNamePluginContext()
 ): NetexPlugin {
     var currentEntityType: String? = null
@@ -29,9 +30,6 @@ class FileNamePlugin(
                 "PrivateCode" -> context.linePrivateCode.append(String(ch!!, start, length))
             }
         }
-        if (elementName == "ParticipantRef") {
-            context.codespace.append(String(ch!!, start, length))
-        }
     }
 
     override fun endElement(elementName: String, currentEntity: Entity?) {
@@ -42,7 +40,7 @@ class FileNamePlugin(
 
     override fun endDocument(currentFile: File) {
         if (currentFile.name.startsWith("_")) {
-            fileNameRepository.addFileToRename(currentFile.name, "_${context.codespace}_shared_data.xml")
+            fileNameRepository.addFileToRename(currentFile.name, "_${codespace.uppercase()}_shared_data.xml")
             context.reset()
             return
         }
@@ -52,7 +50,7 @@ class FileNamePlugin(
             .withLinePublicCode(context.linePublicCode.toString())
             .withLinePrivateCode(context.linePrivateCode.toString())
             .withLineType(context.lineType)
-            .withCodespace(context.codespace.toString())
+            .withCodespace(codespace.uppercase())
             .build()
 
         fileNameRepository.addFileToRename(currentFile.name, newFileName)
@@ -76,7 +74,6 @@ class FileNamePlugin(
             NetexTypes.NAME,
             NetexTypes.PUBLIC_CODE,
             NetexTypes.PRIVATE_CODE,
-            NetexTypes.PARTICIPANT_REF
         )
     }
 }
