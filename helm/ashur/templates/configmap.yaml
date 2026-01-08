@@ -12,6 +12,7 @@ data:
     spring.cloud.gcp.project-id=${ashur.gcp.ashur-project-id}
 
     ashur.gcp.ashur-bucket-name={{ .Values.configmap.gcp.ashurBucketName }}
+    ashur.gcp.ashur-exchange-bucket-name={{ .Values.configmap.gcp.ashurExchangeBucketName }}
     ashur.gcp.marduk-bucket-name={{ .Values.configmap.gcp.mardukBucketName }}
     
     ashur.netex.input-path={{ .Values.configmap.ashur.netex.inputPath }}
