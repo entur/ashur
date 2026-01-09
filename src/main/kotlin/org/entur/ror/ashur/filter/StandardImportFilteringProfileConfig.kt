@@ -6,7 +6,6 @@ import org.entur.netex.tools.lib.config.TimePeriod
 import org.entur.netex.tools.lib.output.SkipElementHandler
 import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
-import org.entur.ror.ashur.sax.handlers.DefaultLocaleHandler
 import org.entur.ror.ashur.sax.handlers.QuayRefHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenHandler
@@ -34,9 +33,9 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val quayRefHandler = QuayRefHandler()
         val validBetweenFromDateHandler = ValidBetweenFromDateHandler(fromDate = period.start!!)
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
-        val defaultLocaleHandler = DefaultLocaleHandler()
         return mapOf(
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
+            "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults" to skipElementHandler,
             "/PublicationDelivery/dataObjects/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar/FromDate" to skipElementHandler,
@@ -45,9 +44,6 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween" to validBetweenHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween/FromDate" to validBetweenFromDateHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween/ToDate" to validBetweenToDateHandler,
-            "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults/DefaultLocale/TimeZone" to skipElementHandler,
-            "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults/DefaultLocale/DefaultLanguage" to skipElementHandler,
-            "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults/DefaultLocale" to defaultLocaleHandler,
         )
     }
 
