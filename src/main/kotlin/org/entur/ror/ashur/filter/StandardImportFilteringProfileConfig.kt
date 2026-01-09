@@ -5,6 +5,7 @@ import org.entur.netex.tools.lib.config.FilterConfigBuilder
 import org.entur.netex.tools.lib.config.TimePeriod
 import org.entur.netex.tools.lib.output.SkipElementHandler
 import org.entur.netex.tools.lib.output.XMLElementHandler
+import org.entur.ror.ashur.sax.handlers.CodespacesHandler
 import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
 import org.entur.ror.ashur.sax.handlers.QuayRefHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
@@ -31,10 +32,12 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val skipElementHandler = SkipElementHandler()
         val validBetweenHandler = ValidBetweenHandler(codespace)
         val quayRefHandler = QuayRefHandler()
+        val codespacesHandler = CodespacesHandler()
         val validBetweenFromDateHandler = ValidBetweenFromDateHandler(fromDate = period.start!!)
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
         return mapOf(
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
+            "/PublicationDelivery/dataObjects/CompositeFrame/codespaces" to codespacesHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults" to skipElementHandler,
             "/PublicationDelivery/dataObjects/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,

@@ -30,22 +30,6 @@ class CompositeFrameHandler(
         } else {
             writer.startElement(uri, localName, qName, attributes)
         }
-
-        writer.startElement("", "", "FrameDefaults", null)
-        writer.startElement("", "", "DefaultLocale", null)
-
-        val timezone = "CET"
-        writer.startElement("", "", "TimeZone", null)
-        writer.characters(timezone.toCharArray(), 0, timezone.length)
-        writer.endElement("", "", "TimeZone")
-
-        val defaultLanguage = "no"
-        writer.startElement("", "", "DefaultLanguage", null)
-        writer.characters(defaultLanguage.toCharArray(), 0, defaultLanguage.length)
-        writer.endElement("", "", "DefaultLanguage")
-
-        writer.endElement("", "", "DefaultLocale")
-        writer.endElement("", "", "FrameDefaults")
     }
 
     override fun characters(
