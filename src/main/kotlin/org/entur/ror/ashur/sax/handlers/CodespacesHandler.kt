@@ -35,7 +35,7 @@ class CodespacesHandler: XMLElementHandler {
         writer.startElement("", "", "FrameDefaults", null)
         writer.startElement("", "", "DefaultLocale", null)
 
-        val timezone = "CET"
+        val timezone = "Europe/Oslo"
         writer.startElement("", "", "TimeZone", null)
         writer.characters(timezone.toCharArray(), 0, timezone.length)
         writer.endElement("", "", "TimeZone")
