@@ -1,0 +1,24 @@
+common:
+  env: tst
+  ingress:
+    host:
+      ashur.tst.entur.io
+
+configmap:
+  gcp:
+    mardukProjectId: ent-marduk-tst
+    mardukBucketName: marduk-exchange-test
+    ashurProjectId: ent-ashur-tst
+    ashurBucketName: ror-ashur-internal-gcp-tst
+    ashurExchangeBucketName: ror-ashur-exchange-gcp-tst
+
+  ashur:
+    netex:
+      inputPath: /tmp/netex-data/input
+      outputPath: /tmp/netex-data/output
+      cleanupEnabled: true
+
+  camel:
+    component:
+      googlePubsub:
+        projectId: ent-marduk-tst

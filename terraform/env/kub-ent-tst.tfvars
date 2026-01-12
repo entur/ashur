@@ -1,0 +1,7 @@
+ashur_project = "ent-ashur-tst"
+pubsub_topic_project = "ent-marduk-tst"
+gcs_bucket_project = "ent-ashur-tst"
+bucket_instance_suffix="tst"
+service_account = "serviceAccount:application@ent-ashur-tst.iam.gserviceaccount.com"
+marduk_service_account = "serviceAccount:application@ent-marduk-tst.iam.gserviceaccount.com"
+ashur_exchange_storage_bucket="ror-ashur-exchange-gcp-tst"
