@@ -1,0 +1,7 @@
+ashur_project = "ent-ashur-prd"
+pubsub_topic_project = "ent-marduk-prd"
+gcs_bucket_project = "ent-ashur-prd"
+bucket_instance_suffix="prd"
+service_account = "serviceAccount:application@ent-ashur-prd.iam.gserviceaccount.com"
+marduk_service_account = "serviceAccount:application@ent-marduk-prd.iam.gserviceaccount.com"
+ashur_exchange_storage_bucket="ror-ashur-exchange-gcp-prd"

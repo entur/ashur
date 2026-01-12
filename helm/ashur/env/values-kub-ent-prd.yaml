@@ -1,0 +1,24 @@
+common:
+  env: prd
+  ingress:
+    host:
+      ashur.prd.entur.io
+
+configmap:
+  gcp:
+    mardukProjectId: ent-marduk-prd
+    mardukBucketName: marduk-exchange-production
+    ashurProjectId: ent-ashur-prd
+    ashurBucketName: ror-ashur-internal-gcp-prd
+    ashurExchangeBucketName: ror-ashur-exchange-gcp-prd
+
+  ashur:
+    netex:
+      inputPath: /tmp/netex-data/input
+      outputPath: /tmp/netex-data/output
+      cleanupEnabled: true
+
+  camel:
+    component:
+      googlePubsub:
+        projectId: ent-marduk-prd
