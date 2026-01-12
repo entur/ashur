@@ -43,20 +43,6 @@ class CompositeFrameHandlerTest {
         val attrs = AttributesImpl()
         handler.startElement("", "", "", attrs, writer)
         verify(writer).startElement("", "", "", attrs)
-//
-//        verify(writer).startElement("", "", "FrameDefaults", null)
-//        verify(writer).startElement("", "", "DefaultLocale", null)
-//
-//        verify(writer).startElement("", "", "TimeZone", null)
-//        verify(writer).characters("CET".toCharArray(), 0, "CET".length)
-//        verify(writer).endElement("", "", "TimeZone")
-//
-//        verify(writer).startElement("", "", "DefaultLanguage", null)
-//        verify(writer).characters("no".toCharArray(), 0, "no".length)
-//        verify(writer).endElement("", "", "DefaultLanguage")
-//
-//        verify(writer).endElement("", "", "DefaultLocale")
-//        verify(writer).endElement("", "", "FrameDefaults")
     }
 
     @Test
