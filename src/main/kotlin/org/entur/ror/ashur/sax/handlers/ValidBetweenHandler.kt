@@ -5,6 +5,7 @@ import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
 import org.entur.netex.tools.lib.output.NetexIdGenerator
 import org.entur.netex.tools.lib.output.XMLElementHandler
+import org.entur.ror.ashur.utils.removeRbPrefix
 import org.xml.sax.Attributes
 import org.xml.sax.helpers.AttributesImpl
 
@@ -23,7 +24,8 @@ class ValidBetweenHandler(private val codespace: String): XMLElementHandler {
         writer: DelegatingXMLElementWriter
     ) {
         val newAttributes = AttributesImpl()
-        val id = NetexIdGenerator.next(codespace.uppercase(), NetexTypes.AVAILABILITY_CONDITION)
+        val codespaceWithoutRbPrefix = removeRbPrefix(codespace)
+        val id = NetexIdGenerator.next(codespaceWithoutRbPrefix.uppercase(), NetexTypes.AVAILABILITY_CONDITION)
         newAttributes.addNewAttribute("id", id)
         newAttributes.addNewAttribute("version", "1")
         writer.startElement(uri, NetexTypes.AVAILABILITY_CONDITION, NetexTypes.AVAILABILITY_CONDITION, newAttributes)

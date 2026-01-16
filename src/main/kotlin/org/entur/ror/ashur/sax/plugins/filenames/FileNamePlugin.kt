@@ -3,6 +3,7 @@ package org.entur.ror.ashur.sax.plugins.filenames
 import org.entur.netex.tools.lib.model.Entity
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.plugin.NetexPlugin
+import org.entur.ror.ashur.utils.removeRbPrefix
 import org.xml.sax.Attributes
 import java.io.File
 
@@ -40,7 +41,7 @@ class FileNamePlugin(
 
     override fun endDocument(currentFile: File) {
         if (currentFile.name.startsWith("_")) {
-            fileNameRepository.addFileToRename(currentFile.name, "_${codespace.uppercase()}_shared_data.xml")
+            fileNameRepository.addFileToRename(currentFile.name, "_${removeRbPrefix(codespace).uppercase()}_shared_data.xml")
             context.reset()
             return
         }
@@ -50,7 +51,7 @@ class FileNamePlugin(
             .withLinePublicCode(context.linePublicCode.toString())
             .withLinePrivateCode(context.linePrivateCode.toString())
             .withLineType(context.lineType)
-            .withCodespace(codespace.uppercase())
+            .withCodespace(removeRbPrefix(codespace).uppercase())
             .build()
 
         fileNameRepository.addFileToRename(currentFile.name, newFileName)

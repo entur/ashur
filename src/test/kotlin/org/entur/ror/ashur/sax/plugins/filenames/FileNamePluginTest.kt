@@ -19,7 +19,7 @@ class FileNamePluginTest {
         fileNamePlugin = FileNamePlugin(
             fileNameRepository = repo,
             context = context,
-            codespace = "tst",
+            codespace = "rb_tst",
         )
     }
 
