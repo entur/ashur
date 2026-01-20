@@ -20,23 +20,27 @@ fun File.createFileWithDirectories(): File {
 }
 
 fun PubsubMessage.getCorrelationId(): String? {
-    return this.attributesMap["RutebankenCorrelationId"]
+    return this.attributesMap[Constants.CORRELATION_ID_HEADER]
 }
 
 fun PubsubMessage.getNetexFileName(): String? {
-    return this.attributesMap["RutebankenTargetFileHandle"]
+    return this.attributesMap[Constants.NETEX_FILE_NAME_HEADER]
 }
 
 fun PubsubMessage.getCodespace(): String? {
-    return this.attributesMap["EnturDatasetReferential"]
+    return this.attributesMap[Constants.CODESPACE_HEADER]
 }
 
 fun PubsubMessage.getNetexSource(): String? {
-    return this.attributesMap["NetexSource"]
+    return this.attributesMap[Constants.NETEX_SOURCE_HEADER]
 }
 
 fun PubsubMessage.getStatus(): String? {
-    return this.attributesMap["Status"]
+    return this.attributesMap[Constants.FILTERING_REPORT_STATUS_HEADER]
+}
+
+fun PubsubMessage.getReason(): String? {
+    return this.attributesMap[Constants.FILTERING_FAILURE_REASON_HEADER]
 }
 
 fun PubsubMessage.getFileCreatedTimestamp(): LocalDateTime? {
@@ -54,10 +58,10 @@ fun PubsubMessage.getPathOfFilteredFile(): String? {
 
 fun PubsubMessage.getFilterProfile(): FilterProfile {
     try {
-        return FilterProfile.valueOf(this.attributesMap["EnturFilteringProfile"]!!)
+        return FilterProfile.valueOf(this.attributesMap[Constants.FILTERING_PROFILE_HEADER]!!)
     } catch (_: Exception) {
         throw InvalidFilterProfileException(
-            "Invalid or missing FilteringProfile attribute in PubsubMessage: ${this.attributesMap["EnturFilteringProfile"]}",
+            "Invalid or missing FilteringProfile attribute in PubsubMessage: ${this.attributesMap[Constants.FILTERING_PROFILE_HEADER]}",
         )
     }
 }
@@ -82,9 +86,15 @@ fun Exchange.toPubsubMessage(): PubsubMessage {
     val bodyAsString = this.getIn().getBody(String::class.java)
     val attributes = this.getPubsubAttributes()
 
+    val data = if (bodyAsString != null) {
+        ByteString.copyFromUtf8(bodyAsString)
+    } else {
+        ByteString.EMPTY
+    }
+
     return PubsubMessage
         .newBuilder()
-        .setData(ByteString.copyFromUtf8(bodyAsString))
+        .setData(data)
         .putAllAttributes(attributes)
         .build()
 }

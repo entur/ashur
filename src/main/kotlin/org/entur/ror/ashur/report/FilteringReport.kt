@@ -1,6 +1,6 @@
 package org.entur.ror.ashur.report
 
-import org.threeten.bp.LocalDateTime
+import java.time.LocalDateTime
 
 data class FilteringReport(
     val created: LocalDateTime,

@@ -6,6 +6,7 @@ import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.getCodespace
 import org.entur.ror.ashur.getCorrelationId
+import org.entur.ror.ashur.report.CreateFilteringReportProcessor
 import org.entur.ror.ashur.toPubsubMessage
 import org.springframework.stereotype.Component
 
@@ -17,7 +18,8 @@ import org.springframework.stereotype.Component
 @Component
 class NetexFilterRouteBuilder(
     private val appConfig: AppConfig,
-    private val netexFilterMessageProcessor: NetexFilterMessageProcessor
+    private val netexFilterMessageProcessor: NetexFilterMessageProcessor,
+    private val createFilteringReportProcessor: CreateFilteringReportProcessor,
 ): RouteBuilder() {
     override fun configure() {
         val ashurProjectId = appConfig.gcp.ashurProjectId
@@ -59,11 +61,13 @@ class NetexFilterRouteBuilder(
 
         from("direct:filterProcessingStatusFailed")
             .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_FAILED))
+            .process(createFilteringReportProcessor)
             .log(LoggingLevel.INFO, "Publishing processing status FAILED for codespace: \${header.codespace}")
             .to("google-pubsub:$mardukProjectId:$statusTopic")
 
         from("direct:filterProcessingStatusSucceeded")
             .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED))
+            .process(createFilteringReportProcessor)
             .process { exchange ->
                 val existingAttributes = exchange
                     .getIn()

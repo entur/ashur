@@ -34,29 +34,31 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     @Autowired
     lateinit var context: CamelContext
 
-    private val testCorrelationId = "test-correlation-id"
     private val testCodespace = "test-codespace"
     private val testSource = "test-source"
     private val testFilteringProfile = "StandardImportFilter"
 
-    fun sendFilterMessageToPubsub(netexFilePath: String) {
+    fun sendFilterMessageToPubsub(
+        netexFilePath: String,
+        correlationId: String,
+    ) {
         val ashurProjectId = appConfig.gcp.ashurProjectId
         producerTemplate.requestBodyAndHeader(
             "google-pubsub:$ashurProjectId:${Constants.FILTER_NETEX_FILE_SUBSCRIPTION}",
             "",
             "CamelGooglePubsubAttributes",
             mapOf(
-                "EnturDatasetReferential" to testCodespace,
-                "RutebankenCorrelationId" to testCorrelationId,
-                "EnturFilteringProfile" to testFilteringProfile,
-                "RutebankenTargetFileHandle" to netexFilePath,
-                "NetexSource" to testSource,
+                Constants.CODESPACE_HEADER to testCodespace,
+                Constants.CORRELATION_ID_HEADER to correlationId,
+                Constants.FILTERING_PROFILE_HEADER to testFilteringProfile,
+                Constants.NETEX_FILE_NAME_HEADER to netexFilePath,
+                Constants.NETEX_SOURCE_HEADER to testSource,
             )
         )
     }
 
-    fun pathOfFilteredFile(fileName: String) = "${testCodespace}/${testCorrelationId}/${testSource}/filtered_${fileName}"
-    fun pathOfFilteringReport() = "reports/${testCodespace}/filtering-report-${testCorrelationId}.json"
+    fun pathOfFilteredFile(fileName: String, correlationId: String) = "${testCodespace}/${correlationId}/${testSource}/filtered_${fileName}"
+    fun pathOfFilteringReport(correlationId: String) = "reports/${testCodespace}/filtering-report-${correlationId}.json"
 
     fun fileExistsInAshurInternalBucket(filePath: String): Boolean {
         val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.ashurBucketName}/$filePath")
@@ -91,8 +93,12 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     fun `test filter route processes message successfully`() {
         copyTestZipFileToMardukTestBucket()
         val mardukProjectId = appConfig.gcp.mardukProjectId
+        val correlationId = "success-correlation-id"
 
-        sendFilterMessageToPubsub(netexFilePath = "testfile.zip")
+        sendFilterMessageToPubsub(
+            netexFilePath = "testfile.zip",
+            correlationId = correlationId,
+        )
         val startedMessage = consumerTemplate.receive(
             "google-pubsub:$mardukProjectId:${Constants.FILTER_NETEX_FILE_STATUS_TOPIC}?synchronousPull=true",
             5000
@@ -103,16 +109,16 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
             10000
         )
 
-        assertEquals(testCorrelationId, startedMessage.toPubsubMessage().getCorrelationId())
-        assertEquals(testCorrelationId, successMessage.toPubsubMessage().getCorrelationId())
+        assertEquals(correlationId, startedMessage.toPubsubMessage().getCorrelationId())
+        assertEquals(correlationId, successMessage.toPubsubMessage().getCorrelationId())
 
         assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, startedMessage.toPubsubMessage().getStatus())
         assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, successMessage.toPubsubMessage().getStatus())
 
-        val pathOfFilteredFile = pathOfFilteredFile("testfile.zip")
+        val pathOfFilteredFile = pathOfFilteredFile("testfile.zip", correlationId)
         assertEquals(pathOfFilteredFile, successMessage.toPubsubMessage().getPathOfFilteredFile())
 
-        val expectedFilteringReportPath = pathOfFilteringReport()
+        val expectedFilteringReportPath = pathOfFilteringReport(correlationId)
         assertTrue(fileExistsInAshurInternalBucket(expectedFilteringReportPath))
 
         cleanupTestZipFiles()
@@ -121,8 +127,9 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     @Test
     fun `test filter route processes message but fails because file does not exist`() {
         val mardukProjectId = appConfig.gcp.mardukProjectId
+        val failingCorrelationId = "failing-correlation-id"
 
-        sendFilterMessageToPubsub(netexFilePath = "unknown-file.zip")
+        sendFilterMessageToPubsub(netexFilePath = "unknown-file.zip", correlationId = failingCorrelationId)
 
         val startedMessage = consumerTemplate.receive(
             "google-pubsub:$mardukProjectId:${Constants.FILTER_NETEX_FILE_STATUS_TOPIC}?synchronousPull=true",
@@ -134,13 +141,15 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
             10000
         )
 
-        assertEquals(testCorrelationId, startedMessage.toPubsubMessage().getCorrelationId())
-        assertEquals(testCorrelationId, failedMessage.toPubsubMessage().getCorrelationId())
+        assertEquals(failingCorrelationId, startedMessage.toPubsubMessage().getCorrelationId())
+        assertEquals(failingCorrelationId, failedMessage.toPubsubMessage().getCorrelationId())
 
-        val expectedFilteringReportPath = pathOfFilteringReport()
+        val expectedFilteringReportPath = pathOfFilteringReport(failingCorrelationId)
         assertTrue(fileExistsInAshurInternalBucket(expectedFilteringReportPath))
 
         assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, startedMessage.toPubsubMessage().getStatus())
         assertEquals(Constants.FILTER_NETEX_FILE_STATUS_FAILED, failedMessage.toPubsubMessage().getStatus())
+
+        cleanupTestZipFiles()
     }
 }

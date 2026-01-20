@@ -1,6 +1,7 @@
 package org.entur.ror.ashur.report
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.support.DefaultExchange
 import org.apache.camel.test.spring.junit5.CamelSpringBootTest
@@ -8,6 +9,7 @@ import org.entur.ror.ashur.AshurApplication
 import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.PubSubEmulatorTestBase
+import org.entur.ror.ashur.file.AshurBucketService
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -25,10 +27,12 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
     @Autowired
     lateinit var appConfig: AppConfig
 
-    private val testCorrelationId = "test-correlation-id"
+    @Autowired
+    lateinit var ashurBucketService: AshurBucketService
+
     private val testCodespace = "test-codespace"
 
-    fun pathToFilteringReport() = "reports/${testCodespace}/filtering-report-${testCorrelationId}.json"
+    fun pathToFilteringReport(correlationId: String) = "reports/${testCodespace}/filtering-report-${correlationId}.json"
 
     fun fileExistsInAshurInternalBucket(filePath: String): Boolean {
         val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.ashurBucketName}/$filePath")
@@ -37,26 +41,31 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
 
     fun getReport(filePath: String): FilteringReport {
         val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.ashurBucketName}/$filePath")
-        val objectMapper = ObjectMapper()
+        val objectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
         return objectMapper.readValue(target, FilteringReport::class.java)
     }
 
     @Test
     fun testFilteringReportCreationOnSuccess() {
         val exchange = DefaultExchange(DefaultCamelContext())
+
+        val succeedingCorrelationId = "succeeding-correlation-id"
+        val reportPath = pathToFilteringReport(succeedingCorrelationId)
+
         exchange.getIn().setHeader("CamelGooglePubsubAttributes", mapOf(
-            Constants.CORRELATION_ID_HEADER to testCorrelationId,
+            Constants.CORRELATION_ID_HEADER to succeedingCorrelationId,
+            Constants.CODESPACE_HEADER to testCodespace,
             Constants.FILTERING_REPORT_STATUS_HEADER to Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED
         ))
-        CreateFilteringReportProcessor().process(exchange)
+        CreateFilteringReportProcessor(ashurBucketService).process(exchange)
 
-        val reportFileExists = fileExistsInAshurInternalBucket(pathToFilteringReport())
+        val reportFileExists = fileExistsInAshurInternalBucket(reportPath)
         assertTrue(reportFileExists)
 
         if (reportFileExists) {
-            val report = getReport(pathToFilteringReport())
+            val report = getReport(reportPath)
             assertNotNull(report.created)
-            assertEquals(testCorrelationId, report.correlationId)
+            assertEquals(succeedingCorrelationId, report.correlationId)
             assertEquals(testCodespace, report.codespace)
             assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, report.status)
             assertNull(report.reason)
@@ -66,21 +75,26 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
     @Test
     fun testFilteringReportCreationOnFailure() {
         val exchange = DefaultExchange(DefaultCamelContext())
+
+        val failingCorrelationId = "failing-correlation-id"
         val reasonForFailure = "Some failure reason"
+        val reportPath = pathToFilteringReport(failingCorrelationId)
+
         exchange.getIn().setHeader("CamelGooglePubsubAttributes", mapOf(
-            Constants.CORRELATION_ID_HEADER to testCorrelationId,
+            Constants.CORRELATION_ID_HEADER to failingCorrelationId,
+            Constants.CODESPACE_HEADER to testCodespace,
             Constants.FILTERING_REPORT_STATUS_HEADER to Constants.FILTER_NETEX_FILE_STATUS_FAILED,
             Constants.FILTERING_FAILURE_REASON_HEADER to reasonForFailure
         ))
-        CreateFilteringReportProcessor().process(exchange)
+        CreateFilteringReportProcessor(ashurBucketService).process(exchange)
 
-        val reportFileExists = fileExistsInAshurInternalBucket(pathToFilteringReport())
+        val reportFileExists = fileExistsInAshurInternalBucket(reportPath)
         assertTrue(reportFileExists)
 
         if (reportFileExists) {
-            val report = getReport(pathToFilteringReport())
+            val report = getReport(reportPath)
             assertNotNull(report.created)
-            assertEquals(testCorrelationId, report.correlationId)
+            assertEquals(failingCorrelationId, report.correlationId)
             assertEquals(testCodespace, report.codespace)
             assertEquals(Constants.FILTER_NETEX_FILE_STATUS_FAILED, report.status)
             assertEquals(reasonForFailure, report.reason)
