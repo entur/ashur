@@ -10,6 +10,7 @@ import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getPathOfFilteredFile
 import org.entur.ror.ashur.getStatus
 import org.entur.ror.ashur.toPubsubMessage
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -55,6 +56,12 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     }
 
     fun pathOfFilteredFile(fileName: String) = "${testCodespace}/${testCorrelationId}/${testSource}/filtered_${fileName}"
+    fun pathOfFilteringReport() = "reports/${testCodespace}/filtering-report-${testCorrelationId}.json"
+
+    fun fileExistsInAshurInternalBucket(filePath: String): Boolean {
+        val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.ashurBucketName}/$filePath")
+        return target.exists()
+    }
 
     fun copyTestZipFileToMardukTestBucket() {
         val resource = this::class.java.getResource("testfile.zip")  ?: throw IllegalArgumentException("Test zip file was not found on classpath")
@@ -105,6 +112,9 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         val pathOfFilteredFile = pathOfFilteredFile("testfile.zip")
         assertEquals(pathOfFilteredFile, successMessage.toPubsubMessage().getPathOfFilteredFile())
 
+        val expectedFilteringReportPath = pathOfFilteringReport()
+        assertTrue(fileExistsInAshurInternalBucket(expectedFilteringReportPath))
+
         cleanupTestZipFiles()
     }
 
@@ -126,6 +136,9 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
 
         assertEquals(testCorrelationId, startedMessage.toPubsubMessage().getCorrelationId())
         assertEquals(testCorrelationId, failedMessage.toPubsubMessage().getCorrelationId())
+
+        val expectedFilteringReportPath = pathOfFilteringReport()
+        assertTrue(fileExistsInAshurInternalBucket(expectedFilteringReportPath))
 
         assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, startedMessage.toPubsubMessage().getStatus())
         assertEquals(Constants.FILTER_NETEX_FILE_STATUS_FAILED, failedMessage.toPubsubMessage().getStatus())

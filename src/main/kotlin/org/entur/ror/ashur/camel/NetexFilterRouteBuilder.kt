@@ -45,7 +45,7 @@ class NetexFilterRouteBuilder(
 
         from("direct:filterProcessingQueue")
             .process(MDCSetupProcessor())
-            .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $filterSubscription...")
+            .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $filterSubscription")
             .process(netexFilterMessageProcessor)
             .log(LoggingLevel.INFO, "Done processing message from Pub/Sub topic $filterSubscription")
             .onCompletion()
