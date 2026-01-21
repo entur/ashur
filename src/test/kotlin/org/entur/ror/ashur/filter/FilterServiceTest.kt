@@ -97,6 +97,20 @@ class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmu
     }
 
     @Test
+    fun testHasNoJourneysInFilteredDataset() {
+        val file1 = File("file1.xml")
+        val file2 = File("file2.xml")
+        val filterReport = FilterReport(
+            mapOf(
+                file1 to mutableMapOf(),
+                file2 to mutableMapOf()
+            ),
+            emptyMap(),
+        )
+        Assertions.assertTrue(filterService.hasNoJourneysInFilteredDataset(filterReport))
+    }
+
+    @Test
     fun testHasNoJourneyInFile() {
         val file1 = File("file1.xml")
         val file2 = File("file2.xml")

@@ -70,6 +70,8 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
             assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, report.status)
             assertNull(report.reason)
         }
+
+        cleanupTestZipFiles()
     }
 
     @Test
@@ -98,6 +100,15 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
             assertEquals(testCodespace, report.codespace)
             assertEquals(Constants.FILTER_NETEX_FILE_STATUS_FAILED, report.status)
             assertEquals(reasonForFailure, report.reason)
+        }
+
+        cleanupTestZipFiles()
+    }
+
+    fun cleanupTestZipFiles() {
+        val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.mardukBucketName}")
+        if (target.exists()) {
+            target.deleteRecursively()
         }
     }
 }

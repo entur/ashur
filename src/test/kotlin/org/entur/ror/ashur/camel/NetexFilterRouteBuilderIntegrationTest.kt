@@ -36,7 +36,7 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
 
     private val testCodespace = "test-codespace"
     private val testSource = "test-source"
-    private val testFilteringProfile = "StandardImportFilter"
+    private val testFilteringProfile = "AsIsImportFilter"
 
     fun sendFilterMessageToPubsub(
         netexFilePath: String,

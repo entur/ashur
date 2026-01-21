@@ -5,6 +5,6 @@ abstract class AshurException(
     cause: Throwable? = null
 ) : Exception(message, cause)
 
-class InvalidZipFileException(message: String) : AshurException(message)
-class InvalidFilterProfileException(message: String) : AshurException(message)
+class InvalidZipFileException(message: String): Exception(message)
+class InvalidFilterProfileException(message: String) : Exception(message)
 class NoJourneysInNetexFileException(message: String) : AshurException(message)
