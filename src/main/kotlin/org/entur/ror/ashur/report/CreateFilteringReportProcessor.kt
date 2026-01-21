@@ -10,6 +10,7 @@ import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getReason
 import org.entur.ror.ashur.getStatus
 import org.entur.ror.ashur.toPubsubMessage
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.InputStream
 import java.time.LocalDateTime
@@ -17,7 +18,9 @@ import java.time.LocalDateTime
 @Component
 class CreateFilteringReportProcessor(
     private val ashurBucketService: AshurBucketService,
-): Processor {
+) : Processor {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     fun toJsonInputStream(report: FilteringReport): InputStream {
         val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
         val json = mapper.writeValueAsString(report)
@@ -34,9 +37,13 @@ class CreateFilteringReportProcessor(
             created = LocalDateTime.now(),
         )
 
+        val filteringReportPath = "reports/${report.codespace}/filtering-report-${report.correlationId}.json"
+
+        logger.info("Uploading filtering report to path $filteringReportPath")
         ashurBucketService.uploadBlob(
-            "reports/${report.codespace}/filtering-report-${report.correlationId}.json",
+            filteringReportPath,
             toJsonInputStream(report)
         )
+        logger.info("Uploaded filtering report successfully")
     }
 }

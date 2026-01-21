@@ -98,3 +98,10 @@ fun Exchange.toPubsubMessage(): PubsubMessage {
         .putAllAttributes(attributes)
         .build()
 }
+
+fun Exchange.addPubsubAttribute(key: String, value: String) {
+    val existingAttributes =
+        this.getIn().getHeader("CamelGooglePubsubAttributes", Map::class.java)?.toMutableMap() ?: mutableMapOf()
+    existingAttributes[key] = value
+    this.getIn().setHeader("CamelGooglePubsubAttributes", existingAttributes)
+}
