@@ -1,11 +1,12 @@
 package org.entur.ror.ashur.camel
 
 import org.apache.camel.LoggingLevel
-import org.apache.camel.builder.RouteBuilder
 import org.entur.ror.ashur.Constants
+import org.entur.ror.ashur.addPubsubAttribute
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.getCodespace
 import org.entur.ror.ashur.getCorrelationId
+import org.entur.ror.ashur.report.CreateFilteringReportProcessor
 import org.entur.ror.ashur.toPubsubMessage
 import org.springframework.stereotype.Component
 
@@ -16,20 +17,12 @@ import org.springframework.stereotype.Component
  **/
 @Component
 class NetexFilterRouteBuilder(
-    private val appConfig: AppConfig,
-    private val netexFilterMessageProcessor: NetexFilterMessageProcessor
-): RouteBuilder() {
+    appConfig: AppConfig,
+    netexFilterMessageProcessor: NetexFilterMessageProcessor,
+    createFilteringReportProcessor: CreateFilteringReportProcessor,
+) : BaseRouteBuilder(appConfig, netexFilterMessageProcessor, createFilteringReportProcessor) {
     override fun configure() {
-        val ashurProjectId = appConfig.gcp.ashurProjectId
-        val mardukProjectId = appConfig.gcp.mardukProjectId
-
-        val filterSubscription = Constants.FILTER_NETEX_FILE_SUBSCRIPTION
-        val statusTopic = Constants.FILTER_NETEX_FILE_STATUS_TOPIC
-
-        onException(Exception::class.java)
-            .handled(true)
-            .log(LoggingLevel.ERROR, "Error processing message from Pub/Sub topic $filterSubscription: \${exception.message} \${exception.stacktrace}")
-            .to("direct:filterProcessingStatusFailed")
+        super.configure()
 
         from("google-pubsub:$ashurProjectId:${filterSubscription}?synchronousPull=true")
             .log(LoggingLevel.INFO, "Received request to filter Netex from Pub/Sub topic $filterSubscription")
@@ -45,7 +38,7 @@ class NetexFilterRouteBuilder(
 
         from("direct:filterProcessingQueue")
             .process(MDCSetupProcessor())
-            .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $filterSubscription...")
+            .log(LoggingLevel.INFO, "Processing request to filter Netex from Pub/Sub topic $filterSubscription")
             .process(netexFilterMessageProcessor)
             .log(LoggingLevel.INFO, "Done processing message from Pub/Sub topic $filterSubscription")
             .onCompletion()
@@ -57,20 +50,14 @@ class NetexFilterRouteBuilder(
             .log(LoggingLevel.INFO, "Publishing processing status STARTED for codespace: \${header.codespace}")
             .to("google-pubsub:$mardukProjectId:$statusTopic")
 
-        from("direct:filterProcessingStatusFailed")
-            .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_FAILED))
-            .log(LoggingLevel.INFO, "Publishing processing status FAILED for codespace: \${header.codespace}")
-            .to("google-pubsub:$mardukProjectId:$statusTopic")
-
         from("direct:filterProcessingStatusSucceeded")
             .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED))
+            .process(createFilteringReportProcessor)
             .process { exchange ->
-                val existingAttributes = exchange
-                    .getIn()
-                    .getHeader("CamelGooglePubsubAttributes", Map::class.java)
-                    .toMutableMap()
-                existingAttributes[Constants.FILTERED_NETEX_FILE_PATH_HEADER] = exchange.getIn().getHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER)
-                exchange.getIn().setHeader("CamelGooglePubsubAttributes", existingAttributes)
+                exchange.addPubsubAttribute(
+                    Constants.FILTERED_NETEX_FILE_PATH_HEADER,
+                    exchange.getIn().getHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER, String::class.java)
+                )
             }
             .log(LoggingLevel.INFO, "Publishing processing status SUCCEEDED for codespace: \${header.codespace}")
             .to("google-pubsub:$mardukProjectId:$statusTopic")

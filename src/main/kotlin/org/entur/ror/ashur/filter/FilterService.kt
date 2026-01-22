@@ -5,6 +5,7 @@ import org.entur.netex.tools.lib.report.FilterReport
 import org.entur.netex.tools.pipeline.app.FilterNetexApp
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.exceptions.InvalidZipFileException
+import org.entur.ror.ashur.exceptions.NoJourneysInNetexFileException
 import org.entur.ror.ashur.file.AshurBucketService
 import org.entur.ror.ashur.file.MardukBucketService
 import org.entur.ror.ashur.utils.FileUtils
@@ -107,6 +108,11 @@ class FilterService(
             target = outputDirectory,
         ).run()
 
+        if (hasNoJourneysInFilteredDataset(filterReport)) {
+            logger.warn("No journeys found in filtered dataset for file: ${netexInputFile.name}")
+            throw NoJourneysInNetexFileException("No journeys found in filtered dataset")
+        }
+
         removeLineFilesToRemove(filterReport)
 
         val outputZipFile = File("$outputDirectory/filtered_${netexInputFile.name}")
@@ -158,6 +164,12 @@ class FilterService(
     private fun getZipFile(fileName: String?): File {
         val file = validateZipFile(fileName)
         return file
+    }
+
+    fun hasNoJourneysInFilteredDataset(filterReport: FilterReport): Boolean {
+        val totalDatedServiceJourneys = filterReport.getNumberOfElementsOfType("DatedServiceJourney")
+        val totalServiceJourneys = filterReport.getNumberOfElementsOfType("ServiceJourney")
+        return totalDatedServiceJourneys == 0 && totalServiceJourneys == 0
     }
 
     /**

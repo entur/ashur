@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component
 class NetexFilterMessageHandler(
     private val filterService: FilterService,
     private val filterConfigResolver: FilterConfigResolver
-): MessageHandler {
+) : MessageHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     /**
@@ -33,28 +33,28 @@ class NetexFilterMessageHandler(
      * @return The path to the output zip file containing the filtered Netex data.
      **/
     override fun handleMessage(message: PubsubMessage): String {
-        try {
-            val fileName: String? = message.getNetexFileName()
-            val filterProfile = message.getFilterProfile()
-            val codespace = message.getCodespace()
-            val correlationId = message.getCorrelationId()
-            val netexSource = message.getNetexSource()
-            val fileCreatedTimestamp = message.getFileCreatedTimestamp()
+        val fileName: String? = message.getNetexFileName()
+        val filterProfile = message.getFilterProfile()
+        val codespace = message.getCodespace()
+        val correlationId = message.getCorrelationId()
+        val netexSource = message.getNetexSource()
+        val fileCreatedTimestamp = message.getFileCreatedTimestamp()
 
-            val filterContext = FilterContext(profile = filterProfile, codespace = codespace!!, fileCreatedAt = fileCreatedTimestamp)
-            val filterConfig = filterConfigResolver.resolve(filterContext)
-            logger.info("Detected config matching filter profile $filterProfile: $filterConfig")
+        val filterContext = FilterContext(
+            profile = filterProfile,
+            codespace = codespace!!,
+            fileCreatedAt = fileCreatedTimestamp
+        )
 
-            return filterService.handleFilterRequestForFile(
-                fileName = fileName,
-                filterConfig = filterConfig,
-                codespace = codespace,
-                correlationId = correlationId ?: "unknown",
-                netexSource = netexSource ?: "unknown",
-            )
-        } catch (e: Exception) {
-            logger.error("Exception occurred while processing message", e)
-            throw e
-        }
+        val filterConfig = filterConfigResolver.resolve(filterContext)
+        logger.info("Detected config matching filter profile $filterProfile: $filterConfig")
+
+        return filterService.handleFilterRequestForFile(
+            fileName = fileName,
+            filterConfig = filterConfig,
+            codespace = codespace,
+            correlationId = correlationId ?: "unknown",
+            netexSource = netexSource ?: "unknown",
+        )
     }
 }
