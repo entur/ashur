@@ -1,3 +1,5 @@
+package org.entur.ror.ashur.camel
+
 import org.apache.camel.CamelContext
 import org.apache.camel.ConsumerTemplate
 import org.apache.camel.ProducerTemplate
@@ -16,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.io.File
+import java.nio.file.Paths
+import kotlin.io.path.inputStream
 import kotlin.test.assertEquals
 
 @Testcontainers
@@ -66,7 +70,7 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     }
 
     fun copyTestZipFileToMardukTestBucket() {
-        val resource = this::class.java.getResource("testfile.zip")  ?: throw IllegalArgumentException("Test zip file was not found on classpath")
+        val resource = Paths.get("src/test/resources/testfile.zip").inputStream()
         val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.mardukBucketName}")
         if (!target.exists()) {
             target.mkdirs()
@@ -75,7 +79,7 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         if (!targetFile.exists()) {
             targetFile.createNewFile()
         }
-        resource.openStream().use { input ->
+        resource.use { input ->
             targetFile.outputStream().use { output ->
                 input.copyTo(output)
             }
