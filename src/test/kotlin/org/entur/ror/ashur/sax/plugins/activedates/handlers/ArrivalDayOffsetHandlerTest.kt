@@ -5,7 +5,7 @@ import org.entur.ror.ashur.data.TestDataFactory
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesParsingContext
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
 import org.entur.ror.ashur.sax.plugins.activedates.data.VehicleJourneyData
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class ArrivalDayOffsetHandlerTest {
