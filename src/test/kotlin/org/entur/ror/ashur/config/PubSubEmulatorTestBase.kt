@@ -4,27 +4,25 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PubSubEmulatorContainer
 import org.testcontainers.junit.jupiter.Container
+import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 
+@Testcontainers
 abstract class PubSubEmulatorTestBase {
+
     companion object {
-        @Container
-        val pubsubEmulator = PubSubEmulatorContainer(
-            DockerImageName.parse("gcr.io/google.com/cloudsdktool/cloud-sdk:emulators")
-        )
 
         @JvmStatic
         @DynamicPropertySource
         fun registerPubSubProperties(registry: DynamicPropertyRegistry) {
-            pubsubEmulator.start()
-            registry.add(
-                "spring.cloud.gcp.pubsub.emulator-host",
-                { pubsubEmulator.emulatorEndpoint }
-            )
-            registry.add(
-                "camel.component.google-pubsub.endpoint",
-                { pubsubEmulator.emulatorEndpoint }
-            )
+            val container = PubSubEmulatorSingleton.container
+
+            registry.add("spring.cloud.gcp.pubsub.emulator-host") {
+                container.emulatorEndpoint
+            }
+            registry.add("camel.component.google-pubsub.endpoint") {
+                container.emulatorEndpoint
+            }
         }
     }
 }
