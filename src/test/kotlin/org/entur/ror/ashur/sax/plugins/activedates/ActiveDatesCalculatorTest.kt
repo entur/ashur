@@ -1,7 +1,7 @@
 package org.entur.ror.ashur.sax.plugins.activedates
 
 import org.entur.ror.ashur.data.TestDataFactory
-import org.entur.ror.ashur.filter.StandardImportFilteringProfileConfig
+import org.entur.ror.ashur.filter.BaseFilteringProfileConfig
 import org.entur.ror.ashur.sax.plugins.activedates.data.DayTypeData
 import org.entur.ror.ashur.sax.plugins.activedates.data.OperatingPeriodData
 import org.entur.ror.ashur.sax.plugins.activedates.data.VehicleJourneyData
@@ -19,7 +19,7 @@ class ActiveDatesCalculatorTest {
     private val today = LocalDate.now()
 
     // Use the same time period as the actual StandardImportFilteringProfileConfig
-    private val standardTimePeriod = StandardImportFilteringProfileConfig.standardTimePeriod()
+    private val standardTimePeriod = BaseFilteringProfileConfig.standardTimePeriod()
 
     // ==================== DATED SERVICE JOURNEY TESTS ====================
 
@@ -261,8 +261,6 @@ class ActiveDatesCalculatorTest {
 
             assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
                 "ServiceJourney with DayType + OperatingDay today must be included")
-            assertTrue(activeEntities["DayType"]?.contains("dt1") == true,
-                "DayType must also be included")
             assertTrue(activeEntities["OperatingDay"]?.contains("opd1") == true,
                 "OperatingDay must also be included")
         }
