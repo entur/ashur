@@ -1,6 +1,7 @@
 package org.entur.ror.ashur.sax.plugins.activedates
 
 import org.entur.netex.tools.lib.config.TimePeriod
+import org.entur.ror.ashur.data.TestDataFactory
 import org.entur.ror.ashur.sax.plugins.activedates.data.VehicleJourneyData
 import org.entur.ror.ashur.sax.plugins.activedates.helper.ActiveEntitiesCollector
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -23,7 +24,13 @@ class ActiveDatesCalculatorTest {
         val collector = ActiveEntitiesCollector()
 
         collector.addServiceJourney("sj1")
-        collector.addOperatingDay("opd1")
+        calculator.activeDateEntitiesInPeriod(
+            timePeriod = TimePeriod(
+                start = LocalDate.now().minusDays(2),
+                end = LocalDate.now().plusYears(1)
+            ),
+            entityModel = TestDataFactory.defaultEntityModel()
+        )
 
         val result = calculator.shouldIncludeDatedServiceJourney(
             "sj1",
@@ -47,7 +54,6 @@ class ActiveDatesCalculatorTest {
         val collector = ActiveEntitiesCollector()
 
         collector.addServiceJourney("sj1")
-        collector.addOperatingDay("opd1")
 
         val result = calculator.shouldIncludeDatedServiceJourney(
             "sj1",

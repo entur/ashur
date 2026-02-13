@@ -11,7 +11,11 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 
 class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
-    
+
+    val activeDayTypes: MutableSet<String> = mutableSetOf()
+    val activeOperatingDays: MutableSet<String> = mutableSetOf()
+    val activeOperatingPeriods: MutableSet<String> = mutableSetOf()
+
     fun activeDateEntitiesInPeriod(timePeriod: TimePeriod, entityModel: EntityModel): Map<String, Set<String>> {
         val activeEntities = ActiveEntitiesCollector()
 
@@ -77,13 +81,13 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
         val hasActiveOperatingDaysForDTA = dayTypeAssignmentEntity.let {
             val operatingDayRefs = entityModel.getRefsOfTypeFrom(it.id, NetexTypes.OPERATING_DAY_REF)
             val operatingDayRefValues = operatingDayRefs.map { ref -> ref.ref }
-            operatingDayRefValues.any( activeEntities.operatingDays()::contains )
+            operatingDayRefValues.any( activeOperatingDays::contains )
         }
 
         val hasActiveOperatingPeriodsForDTA = dayTypeAssignmentEntity.let {
             val operatingPeriodRefs = entityModel.getRefsOfTypeFrom(it.id, NetexTypes.OPERATING_PERIOD_REF)
             val operatingPeriodRefValues = operatingPeriodRefs.map { ref -> ref.ref }
-            operatingPeriodRefValues.any( activeEntities.operatingPeriods()::contains )
+            operatingPeriodRefValues.any( activeOperatingPeriods::contains )
         }
 
         val dateForDTA = repository.getDayTypeAssignmentDate(dayTypeAssignmentEntity.id)
@@ -111,7 +115,7 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
         }
         val dayTypeRefs = entityModel.getRefsOfTypeFrom(dayTypeAssignmentEntity.id, NetexTypes.DAY_TYPE_REF)
         val dayTypeRefValues = dayTypeRefs.map { it.ref }
-        return dayTypeRefValues.any( activeEntities.dayTypes()::contains )
+        return dayTypeRefValues.any( activeDayTypes::contains )
     }
 
     fun shouldIncludeDatedServiceJourney(
@@ -120,7 +124,7 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
         activeEntities: ActiveEntitiesCollector,
         timePeriod: TimePeriod
     ): Boolean {
-        if (serviceJourneyId in activeEntities.serviceJourneys() && operatingDayId in activeEntities.operatingDays()) {
+        if (serviceJourneyId in activeEntities.serviceJourneys() && operatingDayId in activeOperatingDays) {
             val operatingDayDate = repository.operatingDays.get(operatingDayId)
             val finalArrivalDayOffsetForServiceJourney = repository.serviceJourneys.get(serviceJourneyId)?.finalArrivalDayOffset
             if (operatingDayDate == null || finalArrivalDayOffsetForServiceJourney == null) {
@@ -200,7 +204,7 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
         // Process operating days
         dayTypeData.operatingDays.forEach { operatingDayId ->
             processOperatingDay(serviceJourneyId, operatingDayId, dayOffset, timePeriod, activeEntities, isDeadRun) {
-                activeEntities.addDayType(dayTypeId)
+                activeDayTypes.add(dayTypeId)
             }
         }
         
@@ -212,7 +216,7 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
                 } else {
                     activeEntities.addServiceJourney(serviceJourneyId)
                 }
-                activeEntities.addDayType(dayTypeId)
+                activeDayTypes.add(dayTypeId)
             }
         }
     }
@@ -236,13 +240,13 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
             } else {
                 activeEntities.addServiceJourney(vehicleJourneyId)
             }
-            activeEntities.addDayType(dayTypeId)
-            activeEntities.addOperatingPeriod(operatingPeriodId)
+            activeDayTypes.add(dayTypeId)
+            activeOperatingPeriods.add(operatingPeriodId)
             
             // Add referenced operating days
             repository.operatingPeriods[operatingPeriodId]?.let { opPeriodData ->
-                opPeriodData.fromDateId?.let { activeEntities.addOperatingDay(it) }
-                opPeriodData.toDateId?.let { activeEntities.addOperatingDay(it) }
+                opPeriodData.fromDateId?.let { activeOperatingDays.add(it) }
+                opPeriodData.toDateId?.let { activeOperatingDays.add(it) }
             }
         }
     }
@@ -264,7 +268,7 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
             } else {
                 activeEntities.addServiceJourney(vehicleJourneyId)
             }
-            activeEntities.addOperatingDay(operatingDayId)
+            activeOperatingDays.add(operatingDayId)
             additionalAction?.invoke()
         }
     }

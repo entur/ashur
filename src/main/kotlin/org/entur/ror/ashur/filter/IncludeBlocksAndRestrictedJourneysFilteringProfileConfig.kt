@@ -16,6 +16,7 @@ import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
 import org.entur.ror.ashur.sax.plugins.filenames.FileNamePlugin
 import org.entur.ror.ashur.sax.plugins.filenames.FileNameRepository
 import org.entur.ror.ashur.sax.selectors.entities.ActiveDatesSelector
+import org.entur.ror.ashur.sax.selectors.entities.BlockSelector
 import org.entur.ror.ashur.sax.selectors.entities.PassengerStopAssignmentSelector
 import org.entur.ror.ashur.sax.selectors.entities.ServiceJourneyInterchangeSelector
 import org.entur.ror.ashur.sax.selectors.refs.ActiveDatesRefSelector
@@ -97,11 +98,15 @@ class IncludeBlocksAndRestrictedJourneysFilteringProfileConfig: FilterProfileCon
                     "Notice",
                     "DestinationDisplay",
                     "ServiceLink",
+                    "DayType",
+                    "OperatingPeriod",
+                    "OperatingDay",
                 )
             )
             .withElementsRequiredChildren(
                 mapOf(
-                    "NoticeAssignment" to listOf("NoticeRef", "NoticedObjectRef")
+                    "NoticeAssignment" to listOf("NoticeRef", "NoticedObjectRef"),
+                    "VehicleScheduleFrame" to listOf("blocks"),
                 )
             )
             .withPlugins(
@@ -121,7 +126,8 @@ class IncludeBlocksAndRestrictedJourneysFilteringProfileConfig: FilterProfileCon
                         period = timePeriod
                     ),
                     PassengerStopAssignmentSelector(),
-                    ServiceJourneyInterchangeSelector()
+                    ServiceJourneyInterchangeSelector(),
+                    BlockSelector(),
                 )
             )
             .withRefSelectors(

@@ -99,6 +99,9 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "Notice",
                     "DestinationDisplay",
                     "ServiceLink",
+                    "DayType",
+                    "OperatingPeriod",
+                    "OperatingDay",
                 )
             )
             .withElementsRequiredChildren(
