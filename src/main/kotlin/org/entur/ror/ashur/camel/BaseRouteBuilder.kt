@@ -25,10 +25,12 @@ open class BaseRouteBuilder(
             .handled(true)
             .process { exchange ->
                 val exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, AshurException::class.java)
-                exchange.addPubsubAttribute(
-                    Constants.FILTERING_FAILURE_REASON_HEADER,
-                    exception.message ?: "Ashur processing error"
-                )
+                if (exception.errorCode != null) {
+                    exchange.addPubsubAttribute(
+                        Constants.FILTERING_ERROR_CODE_HEADER,
+                        exception.errorCode
+                    )
+                }
             }
             .log(
                 LoggingLevel.ERROR,
