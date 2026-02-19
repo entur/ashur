@@ -27,6 +27,12 @@ class BlockSelector: EntitySelector {
             blocksToKeep[block.id] = block
         }
 
-        return entitySelection.withReplaced("Block", blocksToKeep)
+        return if (blocksToKeep.isEmpty()) {
+            entitySelection.withReplaced("Block", blocksToKeep)
+        } else {
+            entitySelection
+                .withReplaced("Block", blocksToKeep)
+                .withReplaced("VehicleScheduleFrame", mapOf())
+        }
     }
 }
