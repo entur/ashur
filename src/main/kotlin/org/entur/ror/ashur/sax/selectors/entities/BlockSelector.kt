@@ -28,11 +28,11 @@ class BlockSelector: EntitySelector {
         }
 
         return if (blocksToKeep.isEmpty()) {
-            entitySelection.withReplaced("Block", blocksToKeep)
-        } else {
             entitySelection
                 .withReplaced("Block", blocksToKeep)
                 .withReplaced("VehicleScheduleFrame", mapOf())
+        } else {
+            entitySelection.withReplaced("Block", blocksToKeep)
         }
     }
 }
