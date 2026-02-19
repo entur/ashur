@@ -81,3 +81,7 @@ camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
 camel.component.google-pubsub.project-id=test
 ```
+
+# Deployment
+
+EnTur deploys Ashur using [Harness](https://app.harness.io/ng/account/8VwWgE0WRK67_PWDpkooNA/all/cd/orgs/entur/projects/ror/services/ashur)
