@@ -76,3 +76,8 @@ variable "log_bucket" {
   description = "The bucket's Access & Storage Logs configuration"
   default     = "false"
 }
+
+variable "bucket_retention_period" {
+  description = "Retention period for GCS objects, in days"
+  default     = "90"
+}
