@@ -38,7 +38,6 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         return mapOf(
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/codespaces" to codespacesHandler,
-            "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults" to skipElementHandler,
             "/PublicationDelivery/dataObjects/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar/FromDate" to skipElementHandler,
@@ -53,6 +52,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
     private fun skipElements(): List<String> = listOf(
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/VehicleScheduleFrame",
         "/PublicationDelivery/dataObjects/VehicleScheduleFrame",
+        "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults",
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/lines/Line/routes",
         "/PublicationDelivery/dataObjects/ServiceFrame/lines/Line/routes",
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/DeadRun",
