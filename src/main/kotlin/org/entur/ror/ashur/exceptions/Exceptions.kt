@@ -15,3 +15,8 @@ class NoJourneysInNetexFileException(message: String) : AshurException(
     message = message,
     errorCode = Constants.NO_JOURNEYS_IN_NETEX_DATASET_ERROR_CODE,
 )
+
+class UnauthorizedFilterProfileException(message: String) : AshurException(
+    message = message,
+    errorCode = Constants.UNAUTHORIZED_FILTER_PROFILE_ERROR_CODE,
+)

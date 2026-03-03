@@ -9,6 +9,7 @@ class AppConfig(
     var netex: NetexConfig = NetexConfig(),
     var gcp: GcpConfig = GcpConfig(),
     var local: LocalConfig = LocalConfig(),
+    var profileSecurity: ProfileSecurityConfig = ProfileSecurityConfig(),
 ) {
     class NetexConfig {
         lateinit var inputPath: String
@@ -26,5 +27,10 @@ class AppConfig(
 
     class LocalConfig {
         lateinit var blobstorePath: String
+    }
+
+    class ProfileSecurityConfig {
+        var blockExportAllowedCodespaces: List<String> = emptyList()
+        var asIsImportAllowedCodespaces: List<String> = emptyList()
     }
 }
