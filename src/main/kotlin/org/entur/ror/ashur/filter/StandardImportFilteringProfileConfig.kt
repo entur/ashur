@@ -99,6 +99,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     "Notice",
                     "DestinationDisplay",
                     "ServiceLink",
+                    "ScheduledStopPoint",
+                    "RoutePoint",
                 )
             )
             .withElementsRequiredChildren(
