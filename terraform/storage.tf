@@ -8,7 +8,7 @@ resource "google_storage_bucket" "storage_bucket" {
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
   versioning {
-    enabled = false
+    enabled = true
   }
   logging {
     log_bucket        = var.log_bucket
@@ -16,7 +16,7 @@ resource "google_storage_bucket" "storage_bucket" {
   }
   lifecycle_rule {
     condition {
-      age = var.bucket_retention_period
+      age        = var.bucket_retention_period
       with_state = "ANY"
     }
     action {
@@ -35,7 +35,7 @@ resource "google_storage_bucket" "exchange_bucket" {
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
   versioning {
-    enabled = false
+    enabled = true
   }
   logging {
     log_bucket        = var.log_bucket
@@ -43,7 +43,7 @@ resource "google_storage_bucket" "exchange_bucket" {
   }
   lifecycle_rule {
     condition {
-      age = var.bucket_retention_period
+      age        = var.bucket_retention_period
       with_state = "ANY"
     }
     action {

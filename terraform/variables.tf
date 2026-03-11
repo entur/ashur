@@ -78,6 +78,6 @@ variable "log_bucket" {
 }
 
 variable "bucket_retention_period" {
-  description = "Retention period for GCS objects, in days"
+  description = "Retention period for GCS objects (both current and non-current versions), in days"
   default     = "90"
 }
