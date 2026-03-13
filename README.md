@@ -44,6 +44,7 @@ spring.cloud.gcp.project-id=test
 spring.mvc.throw-exception-if-no-handler-found=true
 spring.web.resources.add-mappings=false
 
+camel.component.google-pubsub.synchronous-pull-retryable-codes=DEADLINE_EXCEEDED
 ```
 
 Sample of `logback.xml` file:

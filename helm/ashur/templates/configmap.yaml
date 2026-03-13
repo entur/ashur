@@ -26,3 +26,5 @@ data:
     management.endpoints.web.exposure.include=info, health, prometheus, env, metrics, loggers
     management.endpoints.prometheus.enabled=true
     management.metrics.endpoint.export.prometheus.enabled=true
+
+    camel.component.google-pubsub.synchronous-pull-retryable-codes=DEADLINE_EXCEEDED
