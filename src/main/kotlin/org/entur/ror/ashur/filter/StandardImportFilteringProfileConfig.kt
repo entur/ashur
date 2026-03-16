@@ -8,6 +8,7 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.entur.ror.ashur.sax.handlers.CodespacesHandler
 import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
 import org.entur.ror.ashur.sax.handlers.QuayRefHandler
+import org.entur.ror.ashur.sax.handlers.ServiceJourneyNameHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenToDateHandler
@@ -15,6 +16,8 @@ import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesPlugin
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
 import org.entur.ror.ashur.sax.plugins.filenames.FileNamePlugin
 import org.entur.ror.ashur.sax.plugins.filenames.FileNameRepository
+import org.entur.ror.ashur.sax.plugins.servicejourneynaming.ServiceJourneyNamePlugin
+import org.entur.ror.ashur.sax.plugins.servicejourneynaming.ServiceJourneyNameRepository
 import org.entur.ror.ashur.sax.selectors.entities.ActiveDatesSelector
 import org.entur.ror.ashur.sax.selectors.entities.PassengerStopAssignmentSelector
 import org.entur.ror.ashur.sax.selectors.entities.ServiceJourneyInterchangeSelector
@@ -26,7 +29,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
     private fun customElementHandlers(
         period: TimePeriod,
         codespace: String,
-        fileCreatedAt: LocalDateTime?
+        fileCreatedAt: LocalDateTime?,
+        serviceJourneyNameRepository: ServiceJourneyNameRepository
     ): Map<String, XMLElementHandler> {
         val compositeFrameHandler = CompositeFrameHandler(fileCreatedAt)
         val skipElementHandler = SkipElementHandler()
@@ -35,6 +39,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val codespacesHandler = CodespacesHandler()
         val validBetweenFromDateHandler = ValidBetweenFromDateHandler(fromDate = period.start!!)
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
+        val serviceJourneyNameHandler = ServiceJourneyNameHandler(serviceJourneyNameRepository)
         return mapOf(
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/codespaces" to codespacesHandler,
@@ -46,6 +51,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween" to validBetweenHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween/FromDate" to validBetweenFromDateHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween/ToDate" to validBetweenToDateHandler,
+            "/PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney" to serviceJourneyNameHandler,
+            "/PublicationDelivery/dataObjects/TimetableFrame/vehicleJourneys/ServiceJourney" to serviceJourneyNameHandler,
         )
     }
 
@@ -82,8 +89,9 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val fileCreatedAt = filterContext.fileCreatedAt
         val activeDatesRepository = ActiveDatesRepository()
         val fileNameRepository = FileNameRepository()
+        val serviceJourneyNameRepository = ServiceJourneyNameRepository()
         return FilterConfigBuilder()
-            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt))
+            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt, serviceJourneyNameRepository))
             .withSkipElements(skipElements())
             .withRemovePrivateData(true)
             .withPreserveComments(false)
@@ -114,7 +122,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     FileNamePlugin(
                         fileNameRepository = fileNameRepository,
                         codespace = codespace
-                    )
+                    ),
+                    ServiceJourneyNamePlugin(serviceJourneyNameRepository)
                 )
             )
             .withFileNameMap(fileNameRepository.filesToRename)
