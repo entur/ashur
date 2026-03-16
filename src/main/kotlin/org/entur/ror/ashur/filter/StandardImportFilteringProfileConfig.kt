@@ -23,6 +23,14 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
+
+    companion object {
+        fun standardTimePeriod(): TimePeriod = TimePeriod(
+            start = LocalDate.now().minusDays(2),
+            end = LocalDate.now().plusYears(1)
+        )
+    }
+
     private fun customElementHandlers(
         period: TimePeriod,
         codespace: String,
@@ -74,10 +82,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
     )
 
     override fun build(filterContext: FilterContext): FilterConfig {
-        val timePeriod = TimePeriod(
-            start = LocalDate.now().minusDays(2),
-            end = LocalDate.now().plusYears(1)
-        )
+        val timePeriod = standardTimePeriod()
         val codespace = filterContext.codespace
         val fileCreatedAt = filterContext.fileCreatedAt
         val activeDatesRepository = ActiveDatesRepository()
