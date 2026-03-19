@@ -7,6 +7,7 @@ import org.entur.netex.tools.lib.output.SkipElementHandler
 import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.entur.ror.ashur.sax.handlers.CodespacesHandler
 import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
+import org.entur.ror.ashur.sax.handlers.JourneyPatternWithNameHandler
 import org.entur.ror.ashur.sax.handlers.QuayRefHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenHandler
@@ -15,6 +16,8 @@ import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesPlugin
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
 import org.entur.ror.ashur.sax.plugins.filenames.FileNamePlugin
 import org.entur.ror.ashur.sax.plugins.filenames.FileNameRepository
+import org.entur.ror.ashur.sax.plugins.journeypatternname.JourneyPatternNamePlugin
+import org.entur.ror.ashur.sax.plugins.journeypatternname.JourneyPatternNameRepository
 import org.entur.ror.ashur.sax.selectors.entities.ActiveDatesSelector
 import org.entur.ror.ashur.sax.selectors.entities.PassengerStopAssignmentSelector
 import org.entur.ror.ashur.sax.selectors.entities.ServiceJourneyInterchangeSelector
@@ -34,7 +37,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
     private fun customElementHandlers(
         period: TimePeriod,
         codespace: String,
-        fileCreatedAt: LocalDateTime?
+        fileCreatedAt: LocalDateTime?,
+        journeyPatternNameRepository: JourneyPatternNameRepository
     ): Map<String, XMLElementHandler> {
         val compositeFrameHandler = CompositeFrameHandler(fileCreatedAt)
         val skipElementHandler = SkipElementHandler()
@@ -43,6 +47,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val codespacesHandler = CodespacesHandler()
         val validBetweenFromDateHandler = ValidBetweenFromDateHandler(fromDate = period.start!!)
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
+        val journeyPatternWithNameHandler = JourneyPatternWithNameHandler(journeyPatternNameRepository)
         return mapOf(
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/codespaces" to codespacesHandler,
@@ -54,6 +59,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween" to validBetweenHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween/FromDate" to validBetweenFromDateHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween/ToDate" to validBetweenToDateHandler,
+            "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/JourneyPattern" to journeyPatternWithNameHandler,
+            "/PublicationDelivery/dataObjects/ServiceFrame/journeyPatterns/JourneyPattern" to journeyPatternWithNameHandler,
         )
     }
 
@@ -87,8 +94,9 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val fileCreatedAt = filterContext.fileCreatedAt
         val activeDatesRepository = ActiveDatesRepository()
         val fileNameRepository = FileNameRepository()
+        val journeyPatternNameRepository = JourneyPatternNameRepository()
         return FilterConfigBuilder()
-            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt))
+            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt, journeyPatternNameRepository))
             .withSkipElements(skipElements())
             .withRemovePrivateData(true)
             .withPreserveComments(false)
@@ -119,7 +127,8 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
                     FileNamePlugin(
                         fileNameRepository = fileNameRepository,
                         codespace = codespace
-                    )
+                    ),
+                    JourneyPatternNamePlugin(journeyPatternNameRepository)
                 )
             )
             .withFileNameMap(fileNameRepository.filesToRename)
