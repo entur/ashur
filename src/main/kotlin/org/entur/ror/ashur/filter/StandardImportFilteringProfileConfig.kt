@@ -8,6 +8,7 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.entur.ror.ashur.sax.handlers.CodespacesHandler
 import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
 import org.entur.ror.ashur.sax.handlers.JourneyPatternWithNameHandler
+import org.entur.ror.ashur.sax.handlers.PublicationDeliveryHandler
 import org.entur.ror.ashur.sax.handlers.QuayRefHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenHandler
@@ -40,6 +41,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         fileCreatedAt: LocalDateTime?,
         journeyPatternNameRepository: JourneyPatternNameRepository
     ): Map<String, XMLElementHandler> {
+        val publicationDeliveryHandler = PublicationDeliveryHandler()
         val compositeFrameHandler = CompositeFrameHandler(fileCreatedAt)
         val skipElementHandler = SkipElementHandler()
         val validBetweenHandler = ValidBetweenHandler(codespace)
@@ -49,6 +51,7 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
         val journeyPatternWithNameHandler = JourneyPatternWithNameHandler(journeyPatternNameRepository)
         return mapOf(
+            "/PublicationDelivery" to publicationDeliveryHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/codespaces" to codespacesHandler,
             "/PublicationDelivery/dataObjects/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
