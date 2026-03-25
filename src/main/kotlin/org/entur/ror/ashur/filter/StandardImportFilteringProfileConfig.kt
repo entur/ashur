@@ -68,6 +68,11 @@ class StandardImportFilteringProfileConfig: FilterProfileConfiguration {
     }
 
     private fun skipElements(): List<String> = listOf(
+        "/PublicationDelivery/dataObjects/ResourceFrame/organisations/Operator/ContactDetails/Email",
+        "/PublicationDelivery/dataObjects/CompositeFrame/frames/ResourceFrame/organisations/Operator/ContactDetails/Email",
+        "/PublicationDelivery/dataObjects/ResourceFrame/organisations/Authority/ContactDetails/Email",
+        "/PublicationDelivery/dataObjects/CompositeFrame/frames/ResourceFrame/organisations/Authority/ContactDetails/Email",
+        "/PublicationDelivery/dataObjects/CompositeFrame/codespaces/Codespace/Description",
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/InfrastructureFrame",
         "/PublicationDelivery/dataObjects/InfrastructureFrame",
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/VehicleScheduleFrame",
