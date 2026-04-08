@@ -41,6 +41,7 @@ class CreateFilteringReportProcessor(
     override fun process(exchange: Exchange) {
         val pubsubMessage = exchange.toPubsubMessage()
         val filterReport = exchange.getIn().getHeader(Constants.FILTER_REPORT_HEADER, FilterReport::class.java)
+        exchange.getIn().removeHeader(Constants.FILTER_REPORT_HEADER)
         val filterProfile = exchange.getIn().getHeader(Constants.FILTERING_PROFILE_HEADER, String::class.java)
         val report = FilteringReport(
             correlationId = pubsubMessage.getCorrelationId() ?: "unknown",
