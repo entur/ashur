@@ -1,13 +1,20 @@
 package org.entur.ror.ashur.filter
 
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class FilterConfigResolverTest {
+    private lateinit var resolver: FilterConfigResolver
+
+    @BeforeEach
+    fun setUp() {
+        resolver = FilterConfigResolver()
+    }
+
     @Test
     fun testResolveStandardImportFilter() {
         val filterContext = FilterContext(profile = FilterProfile.StandardImportFilter, codespace = "TST")
-        val resolver = FilterConfigResolver()
         val config = resolver.resolve(filterContext)
         assertNotNull(config)
     }
@@ -15,14 +22,22 @@ class FilterConfigResolverTest {
     @Test
     fun testResolveAsIsImportFilter() {
         val filterContext = FilterContext(profile = FilterProfile.AsIsImportFilter, codespace = "TST")
-        val resolver = FilterConfigResolver()
+        val config = resolver.resolve(filterContext)
+        assertNotNull(config)
+    }
+
+    @Test
+    fun testResolveIncludeBlocksFilter() {
+        val filterContext = FilterContext(
+            profile = FilterProfile.IncludeBlocksAndRestrictedJourneysFilter,
+            codespace = "TST"
+        )
         val config = resolver.resolve(filterContext)
         assertNotNull(config)
     }
 
     @Test
     fun testFilterConfigsAreRebuiltWhenResolved() {
-        val resolver = FilterConfigResolver()
         val filterContext = FilterContext(profile = FilterProfile.StandardImportFilter, codespace = "TST")
         val config1 = resolver.resolve(filterContext)
         val config2 = resolver.resolve(filterContext)

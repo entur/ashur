@@ -1,15 +1,16 @@
 package org.entur.ror.ashur.pubsub
 
 import com.google.pubsub.v1.PubsubMessage
-import org.entur.ror.ashur.filter.FilterService
 import org.entur.ror.ashur.filter.FilterConfigResolver
 import org.entur.ror.ashur.filter.FilterContext
+import org.entur.ror.ashur.filter.FilterResult
+import org.entur.ror.ashur.filter.FilterService
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getNetexFileName
 import org.entur.ror.ashur.getCodespace
 import org.entur.ror.ashur.getFileCreatedTimestamp
 import org.entur.ror.ashur.getFilterProfile
-import org.entur.ror.ashur.getNetexSource
+
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -32,12 +33,11 @@ class NetexFilterMessageHandler(
      * @param message The Pub/Sub message containing details about the Netex file to be filtered.
      * @return The path to the output zip file containing the filtered Netex data.
      **/
-    override fun handleMessage(message: PubsubMessage): String {
+    override fun handleMessage(message: PubsubMessage): FilterResult {
         val fileName: String? = message.getNetexFileName()
         val filterProfile = message.getFilterProfile()
         val codespace = message.getCodespace()
         val correlationId = message.getCorrelationId()
-        val netexSource = message.getNetexSource()
         val fileCreatedTimestamp = message.getFileCreatedTimestamp()
 
         val filterContext = FilterContext(
@@ -54,7 +54,6 @@ class NetexFilterMessageHandler(
             filterConfig = filterConfig,
             codespace = codespace,
             correlationId = correlationId ?: "unknown",
-            netexSource = netexSource ?: "unknown",
         )
     }
 }

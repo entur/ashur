@@ -30,6 +30,8 @@ class NetexFilterRouteBuilder(
                 val pubsubMessage = exchange.toPubsubMessage()
                 exchange.message.setHeader("codespace", pubsubMessage.getCodespace())
                 exchange.message.setHeader("correlationId", pubsubMessage.getCorrelationId())
+                exchange.message.setHeader(Constants.FILTERING_PROFILE_HEADER,
+                    pubsubMessage.attributesMap[Constants.FILTERING_PROFILE_HEADER])
             })
             .to("direct:filterProcessingStatusStarted")
             .to("direct:filterProcessingQueue")

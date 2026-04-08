@@ -17,6 +17,11 @@ class SetFilteringStatusProcessor(val status: String): Processor {
             .getHeader("CamelGooglePubsubAttributes", Map::class.java)
             .toMutableMap()
         existingAttributes[Constants.FILTERING_REPORT_STATUS_HEADER] = status
+        val filteringProfile = existingAttributes[Constants.FILTERING_PROFILE_HEADER]?.toString()
+            ?: exchange.getIn().getHeader(Constants.FILTERING_PROFILE_HEADER, String::class.java)
+        if (filteringProfile != null) {
+            existingAttributes[Constants.FILTERING_PROFILE_HEADER] = filteringProfile
+        }
         exchange.getIn().setHeader("CamelGooglePubsubAttributes", existingAttributes)
     }
 }
