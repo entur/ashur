@@ -8,11 +8,20 @@ resource "google_storage_bucket" "storage_bucket" {
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
   versioning {
-    enabled = false
+    enabled = true
   }
   logging {
     log_bucket        = var.log_bucket
     log_object_prefix = "ror-ashur-internal-gcp-${var.bucket_instance_suffix}"
+  }
+  lifecycle_rule {
+    condition {
+      age        = var.bucket_retention_period
+      with_state = "ANY"
+    }
+    action {
+      type = "Delete"
+    }
   }
 }
 
@@ -26,10 +35,19 @@ resource "google_storage_bucket" "exchange_bucket" {
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
   versioning {
-    enabled = false
+    enabled = true
   }
   logging {
     log_bucket        = var.log_bucket
     log_object_prefix = "ror-ashur-exchange-gcp-${var.bucket_instance_suffix}"
+  }
+  lifecycle_rule {
+    condition {
+      age        = var.bucket_retention_period
+      with_state = "ANY"
+    }
+    action {
+      type = "Delete"
+    }
   }
 }

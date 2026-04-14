@@ -1,7 +1,7 @@
 package org.entur.ror.ashur.sax.handlers
 
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.verify
 
