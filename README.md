@@ -1,8 +1,6 @@
 # Ashur
 
-Ashur performs a filtering job of NeTEx datasets, using a set of rules currently defined in the [netex-tools](https://github.com/entur/netex-tools) repository.
-
-This component is still a work in progress and is not yet used in any environments.
+Ashur performs a filtering and normalization job of NeTEx datasets, using a set of API's and rules currently defined in the [netex-tools](https://github.com/entur/netex-tools) repository.
 
 ## How it works
 
@@ -28,6 +26,7 @@ ashur.netex.output-path=/tmp/netex-data/output
 ashur.netex.cleanup-enabled=false
 
 ashur.gcp.ashur-bucket-name=ashur-internal
+ashur.gcp.ashur-exchange-bucket-name=ashur-exchange
 ashur.gcp.marduk-bucket-name=marduk-exchange
 ashur.gcp.ashur-project-id=test
 ashur.gcp.marduk-project-id=test
@@ -41,6 +40,11 @@ camel.component.google-pubsub.projectId=test
 spring.profiles.active=local
 management.endpoints.web.exposure.include=prometheus
 spring.cloud.gcp.project-id=test
+
+spring.mvc.throw-exception-if-no-handler-found=true
+spring.web.resources.add-mappings=false
+
+camel.component.google-pubsub.synchronous-pull-retryable-codes=DEADLINE_EXCEEDED
 ```
 
 Sample of `logback.xml` file:
@@ -81,3 +85,7 @@ camel.component.google-pubsub.endpoint=localhost:8085
 camel.component.google-pubsub.authenticate=false
 camel.component.google-pubsub.project-id=test
 ```
+
+# Deployment
+
+EnTur deploys Ashur using [Harness](https://app.harness.io/ng/account/8VwWgE0WRK67_PWDpkooNA/all/cd/orgs/entur/projects/ror/services/ashur)

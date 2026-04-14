@@ -16,6 +16,10 @@ object Constants {
     val CODESPACE_HEADER = "EnturDatasetReferential"
     val NETEX_SOURCE_HEADER = "NetexSource"
 
+    val FILTER_REPORT_HEADER = "FilterReport"
     val FILTERING_REPORT_STATUS_HEADER = "Status"
     val FILTERING_FAILURE_REASON_HEADER = "FilteringFailureReason"
+    val FILTERING_ERROR_CODE_HEADER = "FilteringErrorCode"
+
+    val NO_JOURNEYS_IN_NETEX_DATASET_ERROR_CODE = "NO_JOURNEYS_IN_NETEX_DATASET"
 }

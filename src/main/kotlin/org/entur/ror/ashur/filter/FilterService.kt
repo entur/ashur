@@ -14,6 +14,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
 
+data class FilterResult(
+    val filteredZipFilePath: String,
+    val filterReport: FilterReport,
+)
+
 /**
  * Service for filtering Netex files from a zip archive.
  */
@@ -58,23 +63,6 @@ class FilterService(
             file.delete()
         }
         logger.info("Successfully cleaned up files in local file system.")
-    }
-
-    /**
-     * Uploads the kept entities to a .txt file through fileService
-     *
-     * @param filterReport The filter report containing information about the entities and references.
-     * @param uploadPath The path in the Ashur bucket where the files will be uploaded
-     */
-    fun uploadKeptEntitiesReport(
-        filterReport: FilterReport,
-        uploadPath: String,
-    ) {
-        val filesToKeep = findFilesToKeep(filterReport)
-        val entityIds = filterReport.getAllEntityIdsByFiles(filesToKeep)
-        entityIds.joinToString("\n").byteInputStream().use { stream ->
-            ashurBucketService.uploadBlob("${uploadPath}/entities.txt", stream)
-        }
     }
 
     /**
@@ -134,8 +122,8 @@ class FilterService(
      *
      * @return The path of the input directory for the specified message.
      */
-    fun getPathForNetexInputFiles(codespace: String, correlationId: String, netexSource: String): String {
-        return "${appConfig.netex.inputPath}/${codespace}/${correlationId}/${netexSource}"
+    fun getPathForNetexInputFiles(codespace: String, correlationId: String): String {
+        return "${appConfig.netex.inputPath}/${codespace}/${correlationId}"
     }
 
     /**
@@ -147,8 +135,8 @@ class FilterService(
      *
      * @return The path of the output directory for the specified message.
      */
-    fun getPathForNetexOutputFiles(codespace: String, correlationId: String, netexSource: String): String {
-        return "${appConfig.netex.outputPath}/${codespace}/${correlationId}/${netexSource}"
+    fun getPathForNetexOutputFiles(codespace: String, correlationId: String): String {
+        return "${appConfig.netex.outputPath}/${codespace}/${correlationId}"
     }
 
     private fun validateZipFile(fileName: String?): File {
@@ -236,7 +224,7 @@ class FilterService(
      * @param correlationId The correlation ID.
      * @param netexSource The source of the request (e.g. marduk).
      *
-     * @return The path of the filtered zip file in the Ashur exchange bucket.
+     * @return A [FilterResult] containing the path of the filtered zip file and the filter report.
      *
      * @throws org.entur.ror.ashur.exceptions.InvalidZipFileException If the file is invalid or empty.
      */
@@ -245,11 +233,10 @@ class FilterService(
         filterConfig: FilterConfig,
         codespace: String,
         correlationId: String,
-        netexSource: String,
-    ): String {
+    ): FilterResult {
         val netexInputFile = getZipFile(fileName)
-        val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId, netexSource)
-        val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId, netexSource)
+        val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId)
+        val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId)
         val (localDirectoryForInputFiles, localDirectoryForOutputFiles) = createDirectories(
             localPathForInputFiles,
             localPathForOutputFiles
@@ -264,14 +251,7 @@ class FilterService(
         )
         logger.info("Filtering process for file ${netexInputFile.name} was successful")
 
-        logger.info("Uploading file with ids of kept entities to Ashur bucket")
-        val uploadPath = "${codespace}/${correlationId}/$netexSource"
-        uploadKeptEntitiesReport(
-            filterReport = filterReport,
-            uploadPath = uploadPath,
-        )
-        logger.info("Successfully uploaded ids of kept entities to Ashur bucket")
-
+        val uploadPath = "${codespace}/${correlationId}"
         val filteredZipFileName = "${uploadPath}/filtered_${netexInputFile.name}"
         logger.info("Uploading filtered Netex zip file to Ashur bucket")
         filteredNetexZipFile.inputStream().use { inputStream ->
@@ -297,6 +277,9 @@ class FilterService(
             netexInputFile.delete()
         }
 
-        return filteredZipFileName
+        return FilterResult(
+            filteredZipFilePath = filteredZipFileName,
+            filterReport = filterReport,
+        )
     }
 }

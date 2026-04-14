@@ -3,8 +3,11 @@ resource "google_pubsub_subscription" "FilterNetexFileQueue" {
   topic                      = "projects/${var.pubsub_topic_project}/topics/FilterNetexFileQueue"
   project                    = var.ashur_project
   labels                     = var.labels
-  message_retention_duration = "3600s"
+  message_retention_duration = "604800s"
   ack_deadline_seconds       = 600
+  expiration_policy {
+    ttl = ""
+  }
   retry_policy {
     minimum_backoff = "10s"
     maximum_backoff = "600s"
@@ -16,8 +19,11 @@ resource "google_pubsub_subscription" "FilterNetexFileStatusQueue" {
   topic                      = "projects/${var.pubsub_topic_project}/topics/FilterNetexFileStatusQueue"
   project                    = var.ashur_project
   labels                     = var.labels
-  message_retention_duration = "3600s"
+  message_retention_duration = "604800s"
   ack_deadline_seconds       = 600
+  expiration_policy {
+    ttl = ""
+  }
   retry_policy {
     minimum_backoff = "10s"
     maximum_backoff = "600s"

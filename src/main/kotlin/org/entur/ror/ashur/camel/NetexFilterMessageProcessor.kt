@@ -17,7 +17,8 @@ class NetexFilterMessageProcessor(
 ): Processor {
     override fun process(exchange: Exchange) {
         val pubsubMessage = exchange.toPubsubMessage()
-        val pathToFilteredZipFile = messageHandler.handleMessage(pubsubMessage)
-        exchange.getIn().setHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER, pathToFilteredZipFile)
+        val filterResult = messageHandler.handleMessage(pubsubMessage)
+        exchange.getIn().setHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER, filterResult.filteredZipFilePath)
+        exchange.getIn().setHeader(Constants.FILTER_REPORT_HEADER, filterResult.filterReport)
     }
 }

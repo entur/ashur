@@ -55,8 +55,9 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
         exchange.getIn().setHeader("CamelGooglePubsubAttributes", mapOf(
             Constants.CORRELATION_ID_HEADER to succeedingCorrelationId,
             Constants.CODESPACE_HEADER to testCodespace,
-            Constants.FILTERING_REPORT_STATUS_HEADER to Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED
+            Constants.FILTERING_REPORT_STATUS_HEADER to Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED,
         ))
+        exchange.getIn().setHeader(Constants.FILTERING_PROFILE_HEADER, "StandardImportFilter")
         CreateFilteringReportProcessor(ashurBucketService).process(exchange)
 
         val reportFileExists = fileExistsInAshurInternalBucket(reportPath)
@@ -67,8 +68,10 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
             assertNotNull(report.created)
             assertEquals(succeedingCorrelationId, report.correlationId)
             assertEquals(testCodespace, report.codespace)
+            assertEquals("StandardImportFilter", report.filterProfile)
             assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, report.status)
             assertNull(report.reason)
+            assertNull(report.entityTypeCounts)
         }
 
         cleanupTestZipFiles()
@@ -86,8 +89,9 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
             Constants.CORRELATION_ID_HEADER to failingCorrelationId,
             Constants.CODESPACE_HEADER to testCodespace,
             Constants.FILTERING_REPORT_STATUS_HEADER to Constants.FILTER_NETEX_FILE_STATUS_FAILED,
-            Constants.FILTERING_FAILURE_REASON_HEADER to reasonForFailure
+            Constants.FILTERING_FAILURE_REASON_HEADER to reasonForFailure,
         ))
+        exchange.getIn().setHeader(Constants.FILTERING_PROFILE_HEADER, "StandardImportFilter")
         CreateFilteringReportProcessor(ashurBucketService).process(exchange)
 
         val reportFileExists = fileExistsInAshurInternalBucket(reportPath)
@@ -98,8 +102,10 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
             assertNotNull(report.created)
             assertEquals(failingCorrelationId, report.correlationId)
             assertEquals(testCodespace, report.codespace)
+            assertEquals("StandardImportFilter", report.filterProfile)
             assertEquals(Constants.FILTER_NETEX_FILE_STATUS_FAILED, report.status)
             assertEquals(reasonForFailure, report.reason)
+            assertNull(report.entityTypeCounts)
         }
 
         cleanupTestZipFiles()
