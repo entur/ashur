@@ -66,23 +66,6 @@ class FilterService(
     }
 
     /**
-     * Uploads the kept entities to a .txt file through fileService
-     *
-     * @param filterReport The filter report containing information about the entities and references.
-     * @param uploadPath The path in the Ashur bucket where the files will be uploaded
-     */
-    fun uploadKeptEntitiesReport(
-        filterReport: FilterReport,
-        uploadPath: String,
-    ) {
-        val filesToKeep = findFilesToKeep(filterReport)
-        val entityIds = filterReport.getAllEntityIdsByFiles(filesToKeep)
-        entityIds.joinToString("\n").byteInputStream().use { stream ->
-            ashurBucketService.uploadBlob("${uploadPath}/entities.txt", stream)
-        }
-    }
-
-    /**
      * Filters a Netex file from a zip archive and returns the filtered zip file.
      *
      * @param netexInputFile Name of the Netex file to filter.
@@ -268,14 +251,7 @@ class FilterService(
         )
         logger.info("Filtering process for file ${netexInputFile.name} was successful")
 
-        logger.info("Uploading file with ids of kept entities to Ashur bucket")
         val uploadPath = "${codespace}/${correlationId}"
-        uploadKeptEntitiesReport(
-            filterReport = filterReport,
-            uploadPath = uploadPath,
-        )
-        logger.info("Successfully uploaded ids of kept entities to Ashur bucket")
-
         val filteredZipFileName = "${uploadPath}/filtered_${netexInputFile.name}"
         logger.info("Uploading filtered Netex zip file to Ashur bucket")
         filteredNetexZipFile.inputStream().use { inputStream ->
