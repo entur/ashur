@@ -1,16 +1,16 @@
 FROM bellsoft/liberica-openjdk-alpine:21.0.9-11 AS builder
 WORKDIR /builder
-# Patch OpenSSL/libssl3 in the builder stage too (for image scanning)
+# Upgrade all system packages to patch known CVEs
 RUN apk update \
- && apk upgrade --no-cache openssl libssl3 libcrypto3 \
+ && apk upgrade --no-cache \
  && rm -rf /var/cache/apk/*
 COPY target/*-SNAPSHOT.jar application.jar
 RUN java -Djarmode=tools  -jar application.jar extract --layers --destination extracted
 
 FROM bellsoft/liberica-openjdk-alpine:21.0.9-11
-# Patch OpenSSL / libssl3 in the runtime image
+# Upgrade all system packages to patch known CVEs
 RUN apk update \
- && apk upgrade --no-cache openssl libssl3 libcrypto3 \
+ && apk upgrade --no-cache \
  && apk add --no-cache tini \
  && rm -rf /var/cache/apk/*
 WORKDIR /deployments
