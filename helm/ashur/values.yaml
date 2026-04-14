@@ -9,11 +9,11 @@ common:
     internalPort: 8080
   hpa:
     spec:
-      minReplicas: 1
-      maxReplicas: 1
+      minReplicas: 2
+      maxReplicas: 2
   container:
     image: <+artifacts.primary.image>
-    forceReplicas: 1
+    forceReplicas: 2
     cpu: 5
     memory: 8000
     memoryLimit: 9000

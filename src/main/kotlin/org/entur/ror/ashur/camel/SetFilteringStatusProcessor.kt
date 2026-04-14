@@ -2,6 +2,7 @@ package org.entur.ror.ashur.camel
 
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
+import org.entur.ror.ashur.Constants
 
 /**
  * SetFilteringStatusProcessor is a Camel processor that sets the filtering status
@@ -15,7 +16,12 @@ class SetFilteringStatusProcessor(val status: String): Processor {
             .getIn()
             .getHeader("CamelGooglePubsubAttributes", Map::class.java)
             .toMutableMap()
-        existingAttributes["Status"] = status
+        existingAttributes[Constants.FILTERING_REPORT_STATUS_HEADER] = status
+        val filteringProfile = existingAttributes[Constants.FILTERING_PROFILE_HEADER]?.toString()
+            ?: exchange.getIn().getHeader(Constants.FILTERING_PROFILE_HEADER, String::class.java)
+        if (filteringProfile != null) {
+            existingAttributes[Constants.FILTERING_PROFILE_HEADER] = filteringProfile
+        }
         exchange.getIn().setHeader("CamelGooglePubsubAttributes", existingAttributes)
     }
 }
