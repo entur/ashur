@@ -1,21 +1,19 @@
 package org.entur.ror.ashur.sax.handlers
 
-import org.entur.netex.tools.lib.extensions.toAttributes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
 import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.xml.sax.Attributes
+import org.xml.sax.helpers.AttributesImpl
 
 /**
- * Handler that normalizes the PublicationDelivery root element by replacing
- * all existing attributes and namespace declarations with a standardized set.
+ * Handler that normalizes the PublicationDelivery root element by preserving
+ * input attributes while overriding namespace declarations and the version attribute.
  *
- * Any attributes or namespaces present in the input are removed entirely and
- * replaced with exactly:
- * <PublicationDelivery
- *   xmlns="http://www.netex.org.uk/netex"
- *   xmlns:gis="http://www.opengis.net/gml/3.2"
- *   xmlns:siri="http://www.siri.org.uk/siri"
- *   version="1.15:NO-NeTEx-networktimetable:1.5">
+ * Specifically:
+ * - Namespace declarations are replaced with a standardized set (netex, gis, siri)
+ * - The version attribute is overridden with a standardized value
+ * - The xsi:schemaLocation attribute is removed
+ * - All other input attributes are preserved as-is
  */
 class PublicationDeliveryHandler : XMLElementHandler {
 
@@ -26,6 +24,7 @@ class PublicationDeliveryHandler : XMLElementHandler {
         private const val SIRI_PREFIX = "siri"
         private const val SIRI_NAMESPACE = "http://www.siri.org.uk/siri"
         private const val NETEX_VERSION = "1.15:NO-NeTEx-networktimetable:1.5"
+        private const val XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
     }
 
     override fun startElement(
@@ -40,10 +39,31 @@ class PublicationDeliveryHandler : XMLElementHandler {
         writer.startPrefixMapping(GIS_PREFIX, GIS_NAMESPACE)
         writer.startPrefixMapping(SIRI_PREFIX, SIRI_NAMESPACE)
 
-        // Replace all existing attributes with only the version attribute
-        val newAttributes = mapOf("version" to NETEX_VERSION)
+        writer.startElement(uri, localName, qName, normalizeAttributes(attributes))
+    }
 
-        writer.startElement(uri, localName, qName, newAttributes.toAttributes())
+    private fun normalizeAttributes(attributes: Attributes?): AttributesImpl {
+        val normalized = AttributesImpl(attributes)
+
+        val schemaLocationIndex = normalized.getIndex(XSI_NAMESPACE, "schemaLocation")
+        if (schemaLocationIndex >= 0) {
+            normalized.removeAttribute(schemaLocationIndex)
+        }
+
+        // Also remove by qName in case namespace URI is not populated by the parser
+        val schemaLocationByQName = normalized.getIndex("xsi:schemaLocation")
+        if (schemaLocationByQName >= 0) {
+            normalized.removeAttribute(schemaLocationByQName)
+        }
+
+        val versionIndex = normalized.getIndex("version")
+        if (versionIndex >= 0) {
+            normalized.setValue(versionIndex, NETEX_VERSION)
+        } else {
+            normalized.addAttribute("", "version", "version", "CDATA", NETEX_VERSION)
+        }
+
+        return normalized
     }
 
     override fun characters(

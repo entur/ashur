@@ -11,6 +11,7 @@ import org.mockito.kotlin.verify
 import org.xml.sax.helpers.AttributesImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class PublicationDeliveryHandlerTest {
     private val writer = mock<DelegatingXMLElementWriter>()
@@ -25,7 +26,6 @@ class PublicationDeliveryHandlerTest {
     fun testStartElementDeclaresNamespacePrefixesBeforeElement() {
         val attrs = AttributesImpl()
         attrs.addAttribute("", "version", "version", "CDATA", "old-version")
-        attrs.addAttribute("", "xmlns:xsi", "xmlns:xsi", "CDATA", "http://www.w3.org/2001/XMLSchema-instance")
 
         handler.startElement("http://www.netex.org.uk/netex", "PublicationDelivery", "PublicationDelivery", attrs, writer)
 
@@ -38,14 +38,13 @@ class PublicationDeliveryHandlerTest {
             eq("PublicationDelivery"),
             eq("PublicationDelivery"),
             check {
-                assertEquals(1, it.length, "Should only have version attribute")
                 assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
             }
         )
     }
 
     @Test
-    fun testStartElementReplacesAllAttributesWithStandardVersion() {
+    fun testStartElementPreservesInputAttributesButOverridesVersion() {
         val attrs = AttributesImpl()
         attrs.addAttribute("", "version", "version", "CDATA", "some-other-version")
         attrs.addAttribute("", "custom", "custom", "CDATA", "custom-value")
@@ -57,8 +56,78 @@ class PublicationDeliveryHandlerTest {
             eq("PublicationDelivery"),
             eq("PublicationDelivery"),
             check {
-                assertEquals(1, it.length, "Should only have version attribute")
+                assertEquals(2, it.length, "Should have version and custom attributes")
                 assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("custom-value", it.getValue("custom"))
+            }
+        )
+    }
+
+    @Test
+    fun testStartElementRemovesSchemaLocation() {
+        val attrs = AttributesImpl()
+        attrs.addAttribute("", "version", "version", "CDATA", "old-version")
+        attrs.addAttribute(
+            "http://www.w3.org/2001/XMLSchema-instance",
+            "schemaLocation",
+            "xsi:schemaLocation",
+            "CDATA",
+            "http://www.netex.org.uk/netex some.xsd"
+        )
+        attrs.addAttribute("", "custom", "custom", "CDATA", "custom-value")
+
+        handler.startElement("", "PublicationDelivery", "PublicationDelivery", attrs, writer)
+
+        verify(writer).startElement(
+            eq(""),
+            eq("PublicationDelivery"),
+            eq("PublicationDelivery"),
+            check {
+                assertEquals(2, it.length, "Should have version and custom, but not schemaLocation")
+                assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("custom-value", it.getValue("custom"))
+                assertNull(it.getValue("xsi:schemaLocation"))
+            }
+        )
+    }
+
+    @Test
+    fun testStartElementRemovesSchemaLocationByQName() {
+        val attrs = AttributesImpl()
+        attrs.addAttribute("", "version", "version", "CDATA", "old-version")
+        attrs.addAttribute("", "", "xsi:schemaLocation", "CDATA", "http://www.netex.org.uk/netex some.xsd")
+        attrs.addAttribute("", "custom", "custom", "CDATA", "custom-value")
+
+        handler.startElement("", "PublicationDelivery", "PublicationDelivery", attrs, writer)
+
+        verify(writer).startElement(
+            eq(""),
+            eq("PublicationDelivery"),
+            eq("PublicationDelivery"),
+            check {
+                assertEquals(2, it.length, "Should have version and custom, but not schemaLocation")
+                assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("custom-value", it.getValue("custom"))
+                assertNull(it.getValue("xsi:schemaLocation"))
+            }
+        )
+    }
+
+    @Test
+    fun testStartElementAddsVersionWhenMissing() {
+        val attrs = AttributesImpl()
+        attrs.addAttribute("", "custom", "custom", "CDATA", "custom-value")
+
+        handler.startElement("", "PublicationDelivery", "PublicationDelivery", attrs, writer)
+
+        verify(writer).startElement(
+            eq(""),
+            eq("PublicationDelivery"),
+            eq("PublicationDelivery"),
+            check {
+                assertEquals(2, it.length, "Should have version and custom attributes")
+                assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("custom-value", it.getValue("custom"))
             }
         )
     }
