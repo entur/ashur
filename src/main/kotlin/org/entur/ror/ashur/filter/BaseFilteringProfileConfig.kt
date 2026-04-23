@@ -11,9 +11,6 @@ import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
 import org.entur.ror.ashur.sax.handlers.JourneyPatternWithNameHandler
 import org.entur.ror.ashur.sax.handlers.PublicationDeliveryHandler
 import org.entur.ror.ashur.sax.handlers.QuayRefHandler
-import org.entur.ror.ashur.sax.handlers.ServiceJourneyHandler
-import org.entur.ror.ashur.sax.handlers.ServiceJourneyLineRefHandler
-import org.entur.ror.ashur.sax.handlers.ServiceJourneyOperatorRefContext
 import org.entur.ror.ashur.sax.handlers.ValidBetweenFromDateHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenHandler
 import org.entur.ror.ashur.sax.handlers.ValidBetweenToDateHandler
@@ -23,8 +20,6 @@ import org.entur.ror.ashur.sax.plugins.filenames.FileNamePlugin
 import org.entur.ror.ashur.sax.plugins.filenames.FileNameRepository
 import org.entur.ror.ashur.sax.plugins.journeypatternname.JourneyPatternNamePlugin
 import org.entur.ror.ashur.sax.plugins.journeypatternname.JourneyPatternNameRepository
-import org.entur.ror.ashur.sax.plugins.operatorref.OperatorRefPlugin
-import org.entur.ror.ashur.sax.plugins.operatorref.OperatorRefRepository
 import org.entur.ror.ashur.sax.selectors.entities.ActiveDatesSelector
 import org.entur.ror.ashur.sax.selectors.entities.PassengerStopAssignmentSelector
 import org.entur.ror.ashur.sax.selectors.entities.ServiceJourneyInterchangeSelector
@@ -56,8 +51,7 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
         period: TimePeriod,
         codespace: String,
         fileCreatedAt: LocalDateTime?,
-        journeyPatternNameRepository: JourneyPatternNameRepository,
-        operatorRefRepository: OperatorRefRepository
+        journeyPatternNameRepository: JourneyPatternNameRepository
     ): Map<String, XMLElementHandler> {
         val publicationDeliveryHandler = PublicationDeliveryHandler()
         val compositeFrameHandler = CompositeFrameHandler(fileCreatedAt)
@@ -68,9 +62,6 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
         val validBetweenFromDateHandler = ValidBetweenFromDateHandler(fromDate = period.start!!)
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
         val journeyPatternWithNameHandler = JourneyPatternWithNameHandler(journeyPatternNameRepository)
-        val operatorRefContext = ServiceJourneyOperatorRefContext()
-        val serviceJourneyHandler = ServiceJourneyHandler(operatorRefContext)
-        val serviceJourneyLineRefHandler = ServiceJourneyLineRefHandler(operatorRefContext, operatorRefRepository)
         return mapOf(
             "/PublicationDelivery" to publicationDeliveryHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
@@ -85,10 +76,6 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
             "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/ValidBetween/ToDate" to validBetweenToDateHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/JourneyPattern" to journeyPatternWithNameHandler,
             "/PublicationDelivery/dataObjects/ServiceFrame/journeyPatterns/JourneyPattern" to journeyPatternWithNameHandler,
-            "/PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney" to serviceJourneyHandler,
-            "/PublicationDelivery/dataObjects/TimetableFrame/vehicleJourneys/ServiceJourney" to serviceJourneyHandler,
-            "/PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney/LineRef" to serviceJourneyLineRefHandler,
-            "/PublicationDelivery/dataObjects/TimetableFrame/vehicleJourneys/ServiceJourney/LineRef" to serviceJourneyLineRefHandler,
         )
     }
 
@@ -130,9 +117,8 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
         val activeDatesRepository = ActiveDatesRepository()
         val fileNameRepository = FileNameRepository()
         val journeyPatternNameRepository = JourneyPatternNameRepository()
-        val operatorRefRepository = OperatorRefRepository()
         return FilterConfigBuilder()
-            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt, journeyPatternNameRepository, operatorRefRepository))
+            .withCustomElementHandlers(customElementHandlers(timePeriod, codespace, fileCreatedAt, journeyPatternNameRepository))
             .withSkipElements(skipElements().filterNot { it in includeElements() })
             .withRemovePrivateData(removePrivateData)
             .withPreserveComments(false)
@@ -167,8 +153,7 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
                         fileNameRepository = fileNameRepository,
                         codespace = codespace
                     ),
-                    JourneyPatternNamePlugin(journeyPatternNameRepository),
-                    OperatorRefPlugin(operatorRefRepository)
+                    JourneyPatternNamePlugin(journeyPatternNameRepository)
                 )
             )
             .withFileNameMap(fileNameRepository.filesToRename)
