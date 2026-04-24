@@ -634,6 +634,244 @@ class ActiveDatesCalculatorTest {
         }
     }
 
+    // ==================== DAYTYPE WITHOUT PROPERTIES TESTS ====================
+
+    @Nested
+    inner class DayTypeWithoutPropertiesTests {
+
+        @Test
+        fun `DayType with OperatingPeriod but no DaysOfWeek should include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1")
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(
+                    fromDate = today,
+                    toDate = today.plusDays(14)
+                )
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "DayType with OperatingPeriod but no DaysOfWeek should treat all days as valid")
+        }
+
+        @Test
+        fun `DayType with OperatingDay but no DaysOfWeek should include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingDays = mutableListOf("opd1")
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+            repository.operatingDays["opd1"] = today
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "DayType with OperatingDay but no DaysOfWeek should include ServiceJourney")
+        }
+
+        @Test
+        fun `DayType with Date but no DaysOfWeek should include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                dates = mutableListOf(today.plusDays(5))
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "DayType with Date but no DaysOfWeek should include ServiceJourney")
+        }
+
+        @Test
+        fun `DayType with multiple OperatingPeriods but no DaysOfWeek should include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1", "op2")
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(
+                    fromDate = today,
+                    toDate = today.plusDays(14)
+                )
+            )
+            repository.operatingPeriods["op2"] = OperatingPeriodData(
+                period = Period(
+                    fromDate = today.plusDays(30),
+                    toDate = today.plusDays(60)
+                )
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "DayType with multiple OperatingPeriods but no DaysOfWeek should include ServiceJourney")
+            assertTrue(activeEntities["OperatingPeriod"]?.contains("op1") == true,
+                "First OperatingPeriod should be included")
+            assertTrue(activeEntities["OperatingPeriod"]?.contains("op2") == true,
+                "Second OperatingPeriod should be included")
+        }
+
+        @Test
+        fun `DayType with multiple OperatingDays but no DaysOfWeek should include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingDays = mutableListOf("opd1", "opd2")
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+            repository.operatingDays["opd1"] = today
+            repository.operatingDays["opd2"] = today.plusDays(7)
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "DayType with multiple OperatingDays but no DaysOfWeek should include ServiceJourney")
+            assertTrue(activeEntities["OperatingDay"]?.contains("opd1") == true,
+                "First OperatingDay should be included")
+            assertTrue(activeEntities["OperatingDay"]?.contains("opd2") == true,
+                "Second OperatingDay should be included")
+        }
+
+        @Test
+        fun `DayType with multiple Dates but no DaysOfWeek should include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                dates = mutableListOf(today.plusDays(5), today.plusDays(10))
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "DayType with multiple Dates but no DaysOfWeek should include ServiceJourney")
+        }
+
+        @Test
+        fun `DayType with both OperatingPeriod and Date but no DaysOfWeek should include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                dates = mutableListOf(today.plusDays(5))
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(
+                    fromDate = today,
+                    toDate = today.plusDays(14)
+                )
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "DayType with both OperatingPeriod and Date but no DaysOfWeek should include ServiceJourney")
+            assertTrue(activeEntities["OperatingPeriod"]?.contains("op1") == true,
+                "OperatingPeriod should also be included")
+        }
+
+        @Test
+        fun `DayType with expired OperatingPeriod but valid Date should still include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                dates = mutableListOf(today.plusDays(5))
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(
+                    fromDate = today.minusDays(30),
+                    toDate = today.minusDays(20) // Fully expired
+                )
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "ServiceJourney should be included if Date is valid even when OperatingPeriod is expired")
+        }
+
+        @Test
+        fun `DayType with valid OperatingPeriod but expired Date should still include ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                dates = mutableListOf(today.minusDays(30)) // Expired date
+                // No daysOfWeek set — DayType has no PropertyOfDay
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(
+                    fromDate = today,
+                    toDate = today.plusDays(14)
+                )
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "ServiceJourney should be included if OperatingPeriod is valid even when Date is expired")
+        }
+    }
+
     // ==================== MULTIPLE DATES/PERIODS TESTS ====================
 
     @Nested
