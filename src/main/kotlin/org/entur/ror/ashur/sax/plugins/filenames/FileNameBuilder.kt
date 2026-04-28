@@ -43,6 +43,10 @@ class FileNameBuilder {
             .replace("æ", "e")
             .replace("ø", "o")
             .replace("å", "a")
+            .replace("Ä", "A")
+            .replace("Ö", "O")
+            .replace("ä", "a")
+            .replace("ö", "o")
             .replace(Regex("[^\\x00-\\x7F]"), "-") // Replaces remaining non-ASCII characters with hyphen
             .replace(Regex("\\s"), "-")
     }

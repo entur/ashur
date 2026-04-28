@@ -61,4 +61,20 @@ class FileNameBuilderTest {
 
         assertEquals(expectedFileName, fileName)
     }
+
+    @Test
+    fun sanitizesNordicAndUmlautDiacritics() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("Brösarp Ängelholm Sætre Øvre Ålesund")
+            .withLinePublicCode("1")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_1_Brosarp-Angelholm-Setre-Ovre-Alesund.xml",
+            fileName,
+        )
+    }
 }
