@@ -81,3 +81,9 @@ variable "bucket_retention_period" {
   description = "Retention period for GCS objects (both current and non-current versions), in days"
   default     = "90"
 }
+
+variable "enable_slack_notifications" {
+  description = "Whether to look up the Slack notification channel and route alerts to it. The channel must be created manually in the GCP console first."
+  type        = bool
+  default     = false
+}
