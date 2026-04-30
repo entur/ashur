@@ -5,3 +5,4 @@ bucket_instance_suffix="prd"
 service_account = "serviceAccount:application@ent-ashur-prd.iam.gserviceaccount.com"
 marduk_service_account = "serviceAccount:application@ent-marduk-prd.iam.gserviceaccount.com"
 ashur_exchange_storage_bucket="ror-ashur-exchange-gcp-prd"
+enable_slack_notifications = true
