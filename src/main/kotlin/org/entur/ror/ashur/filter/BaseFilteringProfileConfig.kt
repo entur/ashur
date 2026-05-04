@@ -43,7 +43,7 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
     companion object {
         fun standardTimePeriod(): TimePeriod = TimePeriod(
             start = LocalDate.now().minusDays(2),
-            end = LocalDate.now().plusYears(1)
+            end = LocalDate.now().plusYears(3)
         )
     }
 
