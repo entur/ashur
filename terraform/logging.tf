@@ -52,6 +52,6 @@ resource "google_monitoring_alert_policy" "filtering_failures" {
   notification_channels = data.google_monitoring_notification_channel.slack_alerts[*].name
 
   alert_strategy {
-    auto_close = "1800s"
+    auto_close = "28800s"
   }
 }
