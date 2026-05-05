@@ -2,6 +2,10 @@ resource "google_logging_metric" "filtering_failures" {
   name    = "ashur/filtering_failures"
   project = var.ashur_project
 
+  # Scope the metric to the custom log bucket where Ashur's k8s logs are
+  # routed. Without this, the metric reads from _Default and never matches.
+  bucket_name = "projects/${var.ashur_project}/locations/${var.log_bucket_location}/buckets/${var.log_bucket_name}"
+
   description = "Counts NeTEx filtering runs that ended with status FAILED in Ashur."
 
   filter = <<-EOT
@@ -35,7 +39,7 @@ resource "google_monitoring_alert_policy" "filtering_failures" {
   conditions {
     display_name = "Failed filtering runs in the last 10 minutes"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.filtering_failures.name}\" resource.type=\"k8s_container\""
+      filter          = "metric.type=\"logging.googleapis.com/user/${google_logging_metric.filtering_failures.name}\" resource.type=\"logging_bucket\""
       comparison      = "COMPARISON_GT"
       threshold_value = 0
       duration        = "0s"

@@ -87,3 +87,13 @@ variable "enable_slack_notifications" {
   type        = bool
   default     = false
 }
+
+variable "log_bucket_name" {
+  description = "Short name (bucket_id) of the Cloud Logging bucket where Ashur's container logs are stored. The log-based metric is scoped to this bucket."
+  type        = string
+}
+
+variable "log_bucket_location" {
+  description = "Location of the Cloud Logging bucket referenced by log_bucket_name (e.g. europe-west1)."
+  type        = string
+}

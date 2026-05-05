@@ -6,3 +6,5 @@ service_account = "serviceAccount:application@ent-ashur-dev.iam.gserviceaccount.
 marduk_service_account = "serviceAccount:application@ent-marduk-dev.iam.gserviceaccount.com"
 ashur_exchange_storage_bucket="ror-ashur-exchange-gcp-dev"
 enable_slack_notifications = true
+log_bucket_name = "log-ent-ashur-dev"
+log_bucket_location = "europe-west1"
