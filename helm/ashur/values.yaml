@@ -1,4 +1,6 @@
 common:
+  labels:
+    customLogRetention: enabled
   app: ashur
   shortname: ashur
   team: ror
