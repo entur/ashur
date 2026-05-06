@@ -30,6 +30,14 @@ data "google_monitoring_notification_channel" "slack_alerts" {
   type         = "slack"
 }
 
+data "google_monitoring_notification_channel" "mail_alerts" {
+  count = var.enable_mail_notifications ? 1 : 0
+
+  project      = var.ashur_project
+  display_name = "Mail"
+  type         = "email"
+}
+
 resource "google_monitoring_alert_policy" "filtering_failures" {
   project      = var.ashur_project
   display_name = "Ashur filtering failures"
@@ -53,7 +61,10 @@ resource "google_monitoring_alert_policy" "filtering_failures" {
     }
   }
 
-  notification_channels = data.google_monitoring_notification_channel.slack_alerts[*].name
+  notification_channels = concat(
+    data.google_monitoring_notification_channel.slack_alerts[*].name,
+    data.google_monitoring_notification_channel.mail_alerts[*].name,
+  )
 
   alert_strategy {
     auto_close           = "28800s"

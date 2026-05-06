@@ -88,6 +88,12 @@ variable "enable_slack_notifications" {
   default     = false
 }
 
+variable "enable_mail_notifications" {
+  description = "Whether to look up the email notification channel (display name 'Mail') and route alerts to it. The channel must be created manually in the GCP console first."
+  type        = bool
+  default     = false
+}
+
 variable "log_bucket_name" {
   description = "Short name (bucket_id) of the Cloud Logging bucket where Ashur's container logs are stored. The log-based metric is scoped to this bucket."
   type        = string
