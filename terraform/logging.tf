@@ -22,6 +22,15 @@ resource "google_logging_metric" "filtering_failures" {
   }
 }
 
+# Buffer for the eventual-consistency lag between the Logging API (where the
+# metric is created) and the Monitoring API (which the alert policy queries
+# to validate the metric type). Without this, the first apply in a new env
+# fails with a 404 on the metric type.
+resource "time_sleep" "wait_for_metric" {
+  depends_on      = [google_logging_metric.filtering_failures]
+  create_duration = "60s"
+}
+
 data "google_monitoring_notification_channel" "slack_alerts" {
   count = var.enable_slack_notifications ? 1 : 0
 
@@ -43,6 +52,8 @@ resource "google_monitoring_alert_policy" "filtering_failures" {
   display_name = "Ashur filtering failures"
   combiner     = "OR"
   user_labels  = var.labels
+
+  depends_on = [time_sleep.wait_for_metric]
 
   conditions {
     display_name = "Failed filtering runs in the last 10 minutes"
