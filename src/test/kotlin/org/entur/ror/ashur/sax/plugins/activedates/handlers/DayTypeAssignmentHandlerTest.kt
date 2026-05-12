@@ -64,6 +64,11 @@ class DayTypeAssignmentHandlerTest {
                 .dates
                 .contains(date)
         )
+        Assertions.assertEquals(
+            setOf(dayTypeAssignmentId),
+            repository.dayTypeAssignmentsByDayTypeAndDate[dayTypeAssignmentId to date],
+            "reverse index must map (dayType, date) back to the DayTypeAssignment id"
+        )
         assertNull(context.currentDayTypeAssignmentDate)
     }
 }

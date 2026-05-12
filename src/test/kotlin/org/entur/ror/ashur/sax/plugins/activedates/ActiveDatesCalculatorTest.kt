@@ -1044,4 +1044,131 @@ class ActiveDatesCalculatorTest {
                 "Negative offset should correctly calculate adjusted date")
         }
     }
+
+    // ==================== DAY TYPE ASSIGNMENT LITERAL DATE + ARRIVAL OFFSET TESTS ====================
+
+    @Nested
+    inner class DayTypeAssignmentLiteralDateWithArrivalOffsetTests {
+
+        private fun seedDtaLiteralDate(
+            repository: ActiveDatesRepository,
+            dayTypeId: String,
+            date: java.time.LocalDate,
+            dayTypeAssignmentId: String,
+        ) {
+            repository.getDayTypeData(dayTypeId).dates.add(date)
+            repository.dayTypeAssignmentToDate[dayTypeAssignmentId] = date
+            repository.addDayTypeAssignmentForDate(dayTypeId, date, dayTypeAssignmentId)
+        }
+
+        @Test
+        fun `DTA with literal Date 3 days ago and ServiceJourney with arrival offset 2 should INCLUDE DTA`() {
+            // Regression guard for the reported bug.
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1"),
+                finalArrivalDayOffset = 2L
+            )
+            seedDtaLiteralDate(repository, "dt1", today.minusDays(3), "dta1")
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "ServiceJourney with offset +2 over a date 3 days ago must be included")
+            assertTrue(activeEntities["DayTypeAssignment"]?.contains("dta1") == true,
+                "DayTypeAssignment supplying that date must be included (offset applied)")
+        }
+
+        @Test
+        fun `DTA with literal Date 3 days ago and ServiceJourney with zero offset should EXCLUDE DTA`() {
+            // Negative case — confirms the fix doesn't over-include.
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1"),
+                finalArrivalDayOffset = 0L
+            )
+            seedDtaLiteralDate(repository, "dt1", today.minusDays(3), "dta1")
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "ServiceJourney with no offset over a date before window must be excluded")
+            assertFalse(activeEntities["DayTypeAssignment"]?.contains("dta1") == true,
+                "DayTypeAssignment supplying an out-of-window date must be excluded when no journey offsets it in")
+        }
+
+        @Test
+        fun `DTA with literal Date 3 days ago and DeadRun with arrival offset 2 should INCLUDE DTA`() {
+            val repository = ActiveDatesRepository()
+            repository.deadRuns["dr1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1"),
+                finalArrivalDayOffset = 2L
+            )
+            seedDtaLiteralDate(repository, "dt1", today.minusDays(3), "dta1")
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["DeadRun"]?.contains("dr1") == true,
+                "DeadRun with offset +2 over a date 3 days ago must be included")
+            assertTrue(activeEntities["DayTypeAssignment"]?.contains("dta1") == true,
+                "DayTypeAssignment supplying that date must be included via the DeadRun's offset")
+        }
+
+        @Test
+        fun `DTA shared by two ServiceJourneys, only the offset journey activates it, DTA should be INCLUDED`() {
+            // Two journeys reference the same DayType; max offset wins.
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj_zero"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1"),
+                finalArrivalDayOffset = 0L
+            )
+            repository.serviceJourneys["sj_offset"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1"),
+                finalArrivalDayOffset = 2L
+            )
+            seedDtaLiteralDate(repository, "dt1", today.minusDays(3), "dta1")
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj_offset") == true,
+                "The +2 offset ServiceJourney must be active")
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj_zero") == true,
+                "The zero-offset ServiceJourney must not be active for an out-of-window date")
+            assertTrue(activeEntities["DayTypeAssignment"]?.contains("dta1") == true,
+                "DayTypeAssignment must be included because at least one referencing journey's offset puts the date in window")
+        }
+
+        @Test
+        fun `DTA with literal Date beyond the end of the window should be EXCLUDED regardless of offset`() {
+            // End-of-window check uses the raw date — offset cannot rescue a far-future date.
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1"),
+                finalArrivalDayOffset = 5L
+            )
+            seedDtaLiteralDate(repository, "dt1", today.plusYears(5), "dta1")
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "ServiceJourney with date beyond +3y window must be excluded even with a +5 offset")
+            assertFalse(activeEntities["DayTypeAssignment"]?.contains("dta1") == true,
+                "DayTypeAssignment with date beyond +3y window must be excluded")
+        }
+    }
 }

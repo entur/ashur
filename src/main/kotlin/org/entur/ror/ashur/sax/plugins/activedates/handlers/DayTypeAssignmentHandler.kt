@@ -23,10 +23,11 @@ class DayTypeAssignmentHandler(
                 .operatingPeriods.add(it)
         }
 
-        context.currentDayTypeAssignmentDate?.let {
-            activeDatesRepository.getDayTypeData(context.currentDayTypeAssignmentDayTypeRef!!)
-                .dates.add(it)
-            activeDatesRepository.dayTypeAssignmentToDate.put(currentEntity.id, it)
+        context.currentDayTypeAssignmentDate?.let { date ->
+            val dayTypeId = context.currentDayTypeAssignmentDayTypeRef!!
+            activeDatesRepository.getDayTypeData(dayTypeId).dates.add(date)
+            activeDatesRepository.dayTypeAssignmentToDate.put(currentEntity.id, date)
+            activeDatesRepository.addDayTypeAssignmentForDate(dayTypeId, date, currentEntity.id)
         }
 
         context.currentDayTypeAssignmentDayTypeRef = null
