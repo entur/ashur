@@ -596,15 +596,12 @@ class ActiveDatesCalculatorTest {
         }
 
         @Test
-        fun `OperatingPeriod with weekend-only filter for weekday-only period should still include if no matches`() {
-            // This tests the edge case where no days match - the current implementation
-            // returns the original period if activeDays is empty
+        fun `OperatingPeriod with weekend-only filter for weekday-only period should be excluded`() {
             val repository = ActiveDatesRepository()
             repository.serviceJourneys["sj1"] = VehicleJourneyData(
                 dayTypes = mutableListOf("dt1")
             )
 
-            // Find next Monday and create a weekday-only period (Mon-Fri)
             var nextMonday = today
             while (nextMonday.dayOfWeek != DayOfWeek.MONDAY) {
                 nextMonday = nextMonday.plusDays(1)
@@ -612,13 +609,12 @@ class ActiveDatesCalculatorTest {
 
             repository.dayTypes["dt1"] = DayTypeData(
                 operatingPeriods = mutableListOf("op1"),
-                daysOfWeek = mutableSetOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)  // Weekend only
+                daysOfWeek = mutableSetOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
             )
-            // Period is Mon-Fri only (5 days starting Monday)
             repository.operatingPeriods["op1"] = OperatingPeriodData(
                 period = Period(
                     fromDate = nextMonday,
-                    toDate = nextMonday.plusDays(4)  // Monday to Friday
+                    toDate = nextMonday.plusDays(4)
                 )
             )
 
@@ -627,10 +623,63 @@ class ActiveDatesCalculatorTest {
 
             val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
 
-            // Note: Current implementation returns original period when no days match,
-            // so this will be included. This test documents the current behavior.
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "ServiceJourney should be excluded when DaysOfWeek has no intersection with the OperatingPeriod")
+        }
+
+        @Test
+        fun `single-day OperatingPeriod on Monday with Saturday-only DayType should be excluded`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+
+            var monday = today
+            while (monday.dayOfWeek != DayOfWeek.MONDAY) {
+                monday = monday.plusDays(1)
+            }
+
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                daysOfWeek = mutableSetOf(DayOfWeek.SATURDAY)
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(fromDate = monday, toDate = monday)
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "ServiceJourney with single-day Monday period and Saturday-only DayType should be excluded")
+            assertFalse(activeEntities["OperatingPeriod"]?.contains("op1") == true,
+                "OperatingPeriod should not be retained when its only date is filtered out by DaysOfWeek")
+        }
+
+        @Test
+        fun `OperatingPeriod with no DaysOfWeek restriction should be included`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                daysOfWeek = mutableSetOf()
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(fromDate = today, toDate = today.plusDays(6))
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val entityModel = TestDataFactory.defaultEntityModel()
+
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, entityModel)
+
             assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
-                "Current behavior: when no days match, original period is used")
+                "ServiceJourney with no DaysOfWeek restriction should remain included")
         }
     }
 

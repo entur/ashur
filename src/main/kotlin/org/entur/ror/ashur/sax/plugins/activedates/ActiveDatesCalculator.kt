@@ -269,16 +269,17 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
     }
     
     private fun filterPeriodByDaysOfWeek(period: Period, daysOfWeek: Set<DayOfWeek>): Period {
+        if (daysOfWeek.isEmpty()) return period
         val fromDate = period.fromDate ?: return period
         val toDate = period.toDate ?: return period
-        
+
         val activeDays = generateSequence(fromDate) { it.plusDays(1) }
             .takeWhile { !it.isAfter(toDate) }
             .filter { it.dayOfWeek in daysOfWeek }
             .toList()
-        
+
         return if (activeDays.isEmpty()) {
-            period
+            Period(null, null)
         } else {
             Period(activeDays.first(), activeDays.last())
         }
