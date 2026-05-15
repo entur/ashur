@@ -683,6 +683,172 @@ class ActiveDatesCalculatorTest {
         }
     }
 
+    // ==================== IS AVAILABLE TESTS ====================
+
+    @Nested
+    inner class IsAvailableTests {
+
+        @Test
+        fun `literal-date cancellation drops the ServiceJourney when it is the only date`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                dates = mutableListOf(today),
+                excludedDates = mutableSetOf(today),
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, TestDataFactory.defaultEntityModel())
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "SJ must be excluded when its only candidate date is cancelled by isAvailable=false")
+        }
+
+        @Test
+        fun `single-day OperatingPeriod cancelled by a Date DTA drops the ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                excludedDates = mutableSetOf(today),
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(fromDate = today, toDate = today)
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, TestDataFactory.defaultEntityModel())
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "SJ must be excluded when the only date in its OperatingPeriod is cancelled")
+            assertFalse(activeEntities["OperatingPeriod"]?.contains("op1") == true,
+                "OperatingPeriod must not be retained when fully cancelled for the only DayType referencing it")
+        }
+
+        @Test
+        fun `OperatingDayRef cancellation drops the ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingDays = mutableListOf("od1"),
+                excludedOperatingDays = mutableSetOf("od1"),
+            )
+            repository.operatingDays["od1"] = today
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, TestDataFactory.defaultEntityModel())
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "SJ must be excluded when its only OperatingDay reference is cancelled")
+        }
+
+        @Test
+        fun `OperatingPeriodRef cancellation drops the ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                excludedOperatingPeriods = mutableSetOf("op1"),
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(fromDate = today, toDate = today.plusDays(7))
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, TestDataFactory.defaultEntityModel())
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "SJ must be excluded when its only OperatingPeriod reference is cancelled")
+        }
+
+        @Test
+        fun `partial cancellation inside an OperatingPeriod keeps the ServiceJourney`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+
+            var firstMonday = today
+            while (firstMonday.dayOfWeek != DayOfWeek.MONDAY) {
+                firstMonday = firstMonday.plusDays(1)
+            }
+            val secondMonday = firstMonday.plusDays(7)
+
+            repository.dayTypes["dt1"] = DayTypeData(
+                operatingPeriods = mutableListOf("op1"),
+                daysOfWeek = mutableSetOf(DayOfWeek.MONDAY),
+                excludedDates = mutableSetOf(firstMonday),
+            )
+            repository.operatingPeriods["op1"] = OperatingPeriodData(
+                period = Period(fromDate = firstMonday, toDate = secondMonday.plusDays(6))
+            )
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, TestDataFactory.defaultEntityModel())
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "SJ must remain included when at least one Monday in the period survives the cancellation")
+        }
+
+        @Test
+        fun `cancellation DTA is retained in the output when its DayType has other active dates`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+
+            val activeDate = today
+            val cancelledDate = today.plusDays(1)
+            val cancellationDtaId = "TST:DayTypeAssignment:cancel"
+
+            repository.dayTypes["dt1"] = DayTypeData(
+                dates = mutableListOf(activeDate),
+                excludedDates = mutableSetOf(cancelledDate),
+            )
+            repository.addDayTypeAssignmentForExcludedDate("dt1", cancelledDate, cancellationDtaId)
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, TestDataFactory.defaultEntityModel())
+
+            assertTrue(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "SJ must be included via the additive active date")
+            assertTrue(activeEntities["DayTypeAssignment"]?.contains(cancellationDtaId) == true,
+                "Cancellation DTA must be retained so the output preserves the cancellation")
+        }
+
+        @Test
+        fun `cancellation DTA is NOT retained when its DayType has no active dates`() {
+            val repository = ActiveDatesRepository()
+            repository.serviceJourneys["sj1"] = VehicleJourneyData(
+                dayTypes = mutableListOf("dt1")
+            )
+
+            val cancelledDate = today
+            val cancellationDtaId = "TST:DayTypeAssignment:cancel"
+
+            repository.dayTypes["dt1"] = DayTypeData(
+                excludedDates = mutableSetOf(cancelledDate),
+            )
+            repository.addDayTypeAssignmentForExcludedDate("dt1", cancelledDate, cancellationDtaId)
+
+            val calculator = ActiveDatesCalculator(repository = repository)
+            val activeEntities = calculator.activeDateEntitiesInPeriod(standardTimePeriod, TestDataFactory.defaultEntityModel())
+
+            assertFalse(activeEntities["ServiceJourney"]?.contains("sj1") == true,
+                "SJ must be excluded — DayType has only a cancellation, no active dates")
+            assertFalse(activeEntities["DayTypeAssignment"]?.contains(cancellationDtaId) == true,
+                "Cancellation DTA must not be retained when its DayType contributes no active date")
+        }
+    }
+
     // ==================== DAYTYPE WITHOUT PROPERTIES TESTS ====================
 
     @Nested

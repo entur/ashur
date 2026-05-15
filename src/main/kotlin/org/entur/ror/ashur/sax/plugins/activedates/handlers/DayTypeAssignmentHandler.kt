@@ -10,29 +10,50 @@ class DayTypeAssignmentHandler(
 ) : ActiveDatesDataCollector() {
 
     override fun endElement(context: ActiveDatesParsingContext, currentEntity: Entity) {
-        if (context.currentDayTypeAssignmentDayTypeRef == null) {
+        val dayTypeId = context.currentDayTypeAssignmentDayTypeRef
+        if (dayTypeId == null) {
+            resetContext(context)
             return
         }
-        context.currentDayTypeAssignmentOperatingDay?.let {
-            activeDatesRepository.getDayTypeData(context.currentDayTypeAssignmentDayTypeRef!!)
-                .operatingDays.add(it)
+
+        val isAvailable = context.currentDayTypeAssignmentIsAvailable
+        val dayTypeData = activeDatesRepository.getDayTypeData(dayTypeId)
+
+        context.currentDayTypeAssignmentOperatingDay?.let { operatingDayId ->
+            if (isAvailable) {
+                dayTypeData.operatingDays.add(operatingDayId)
+            } else {
+                dayTypeData.excludedOperatingDays.add(operatingDayId)
+            }
         }
 
-        context.currentDayTypeAssignmentOperatingPeriod?.let {
-            activeDatesRepository.getDayTypeData(context.currentDayTypeAssignmentDayTypeRef!!)
-                .operatingPeriods.add(it)
+        context.currentDayTypeAssignmentOperatingPeriod?.let { operatingPeriodId ->
+            if (isAvailable) {
+                dayTypeData.operatingPeriods.add(operatingPeriodId)
+            } else {
+                dayTypeData.excludedOperatingPeriods.add(operatingPeriodId)
+            }
         }
 
         context.currentDayTypeAssignmentDate?.let { date ->
-            val dayTypeId = context.currentDayTypeAssignmentDayTypeRef!!
-            activeDatesRepository.getDayTypeData(dayTypeId).dates.add(date)
-            activeDatesRepository.dayTypeAssignmentToDate.put(currentEntity.id, date)
-            activeDatesRepository.addDayTypeAssignmentForDate(dayTypeId, date, currentEntity.id)
+            activeDatesRepository.dayTypeAssignmentToDate[currentEntity.id] = date
+            if (isAvailable) {
+                dayTypeData.dates.add(date)
+                activeDatesRepository.addDayTypeAssignmentForDate(dayTypeId, date, currentEntity.id)
+            } else {
+                dayTypeData.excludedDates.add(date)
+                activeDatesRepository.addDayTypeAssignmentForExcludedDate(dayTypeId, date, currentEntity.id)
+            }
         }
 
+        resetContext(context)
+    }
+
+    private fun resetContext(context: ActiveDatesParsingContext) {
         context.currentDayTypeAssignmentDayTypeRef = null
         context.currentDayTypeAssignmentOperatingDay = null
         context.currentDayTypeAssignmentOperatingPeriod = null
         context.currentDayTypeAssignmentDate = null
+        context.currentDayTypeAssignmentIsAvailable = true
     }
 }

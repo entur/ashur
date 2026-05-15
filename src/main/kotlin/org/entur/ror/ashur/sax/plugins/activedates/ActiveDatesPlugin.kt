@@ -14,6 +14,7 @@ import org.entur.ror.ashur.sax.plugins.activedates.handlers.DaysOfWeekHandler
 import org.entur.ror.ashur.sax.plugins.activedates.handlers.DeadRunHandler
 import org.entur.ror.ashur.sax.plugins.activedates.handlers.FromDateHandler
 import org.entur.ror.ashur.sax.plugins.activedates.handlers.FromDateRefHandler
+import org.entur.ror.ashur.sax.plugins.activedates.handlers.IsAvailableHandler
 import org.entur.ror.ashur.sax.plugins.activedates.handlers.OperatingDayRefHandler
 import org.entur.ror.ashur.sax.plugins.activedates.handlers.OperatingPeriodRefHandler
 import org.entur.ror.ashur.sax.plugins.activedates.handlers.ServiceJourneyHandler
@@ -46,6 +47,7 @@ class ActiveDatesPlugin (
             NetexTypes.FROM_DATE_REF to FromDateRefHandler(activeDatesRepository),
             NetexTypes.TO_DATE_REF to ToDateRefHandler(activeDatesRepository),
             NetexTypes.DATE to DateHandler(activeDatesRepository),
+            "isAvailable" to IsAvailableHandler(activeDatesRepository),
             NetexTypes.DAYS_OF_WEEK to DaysOfWeekHandler(activeDatesRepository),
             NetexTypes.ARRIVAL_TIME to ArrivalTimeHandler(activeDatesRepository),
             NetexTypes.ARRIVAL_DAY_OFFSET to ArrivalDayOffsetHandler(activeDatesRepository),

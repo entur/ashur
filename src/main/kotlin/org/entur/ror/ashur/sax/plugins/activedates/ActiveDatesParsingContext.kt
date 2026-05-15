@@ -14,5 +14,6 @@ data class ActiveDatesParsingContext (
     var currentDayTypeAssignmentDate: LocalDate? = null,
     var currentDayTypeAssignmentOperatingDay: String? = null,
     var currentDayTypeAssignmentOperatingPeriod: String? = null,
+    var currentDayTypeAssignmentIsAvailable: Boolean = true,
     var currentDayTypeId: String? = null,
 )

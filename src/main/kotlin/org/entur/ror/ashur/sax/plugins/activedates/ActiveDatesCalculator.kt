@@ -171,27 +171,39 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
         isDeadRun: Boolean = false,
     ) {
         val dayTypeData = repository.dayTypes[dayTypeId] ?: return
-        
+
+        var dayTypeContributed = false
+
         // Process operating periods
         dayTypeData.operatingPeriods.forEach { operatingPeriodId ->
-            processOperatingPeriod(
+            if (operatingPeriodId in dayTypeData.excludedOperatingPeriods) return@forEach
+            val contributed = processOperatingPeriod(
                 serviceJourneyId,
                 operatingPeriodId,
                 dayTypeData.daysOfWeek,
                 dayOffset,
                 timePeriod,
                 activeEntities,
+                excludedDates = dayTypeData.excludedDates,
                 isDeadRun = isDeadRun
             )
+            if (contributed) dayTypeContributed = true
         }
-        
+
         // Process operating days
         dayTypeData.operatingDays.forEach { operatingDayId ->
-            processOperatingDay(serviceJourneyId, operatingDayId, dayOffset, timePeriod, activeEntities, isDeadRun)
+            if (operatingDayId in dayTypeData.excludedOperatingDays) return@forEach
+            val resolvedDate = repository.operatingDays[operatingDayId]
+            if (resolvedDate != null && resolvedDate in dayTypeData.excludedDates) return@forEach
+            val contributed = processOperatingDay(
+                serviceJourneyId, operatingDayId, dayOffset, timePeriod, activeEntities, isDeadRun
+            )
+            if (contributed) dayTypeContributed = true
         }
 
         // Process dates
         dayTypeData.dates.forEach { date ->
+            if (date in dayTypeData.excludedDates) return@forEach
             if (isDateInPeriod(date, dayOffset, timePeriod)) {
                 if (isDeadRun) {
                     activeEntities.addDeadRun(serviceJourneyId)
@@ -200,6 +212,16 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
                 }
                 repository.dayTypeAssignmentsByDayTypeAndDate[dayTypeId to date]
                     ?.forEach(activeEntities::addDayTypeAssignment)
+                dayTypeContributed = true
+            }
+        }
+
+        if (dayTypeContributed) {
+            dayTypeData.excludedDates.forEach { excludedDate ->
+                if (isDateInPeriod(excludedDate, dayOffset, timePeriod)) {
+                    repository.dayTypeAssignmentsByDayTypeAndExcludedDate[dayTypeId to excludedDate]
+                        ?.forEach(activeEntities::addDayTypeAssignment)
+                }
             }
         }
     }
@@ -211,27 +233,35 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
         dayOffset: Long,
         timePeriod: TimePeriod,
         activeEntities: ActiveEntitiesCollector,
+        excludedDates: Set<LocalDate> = emptySet(),
         isDeadRun: Boolean = false,
-    ) {
-        val period = resolveOperatingPeriod(operatingPeriodId) ?: return
+    ): Boolean {
+        val period = resolveOperatingPeriod(operatingPeriodId) ?: return false
         val activePeriod = filterPeriodByDaysOfWeek(period, daysOfWeek)
-        
-        if (isPeriodOverlapping(activePeriod, dayOffset, timePeriod)) {
-            if (isDeadRun) {
-                activeEntities.addDeadRun(vehicleJourneyId)
-            } else {
-                activeEntities.addServiceJourney(vehicleJourneyId)
-            }
-            activeEntities.addOperatingPeriod(operatingPeriodId)
-            
-            // Add referenced operating days
-            repository.operatingPeriods[operatingPeriodId]?.let { opPeriodData ->
-                opPeriodData.fromDateId?.let { activeEntities.addOperatingDay(it) }
-                opPeriodData.toDateId?.let { activeEntities.addOperatingDay(it) }
-            }
+
+        if (!isPeriodOverlapping(activePeriod, dayOffset, timePeriod)) return false
+
+        if (excludedDates.isNotEmpty() &&
+            !hasUncancelledActiveDateInWindow(activePeriod, daysOfWeek, dayOffset, timePeriod, excludedDates)
+        ) {
+            return false
         }
+
+        if (isDeadRun) {
+            activeEntities.addDeadRun(vehicleJourneyId)
+        } else {
+            activeEntities.addServiceJourney(vehicleJourneyId)
+        }
+        activeEntities.addOperatingPeriod(operatingPeriodId)
+
+        // Add referenced operating days
+        repository.operatingPeriods[operatingPeriodId]?.let { opPeriodData ->
+            opPeriodData.fromDateId?.let { activeEntities.addOperatingDay(it) }
+            opPeriodData.toDateId?.let { activeEntities.addOperatingDay(it) }
+        }
+        return true
     }
-    
+
     private fun processOperatingDay(
         vehicleJourneyId: String,
         operatingDayId: String,
@@ -240,9 +270,9 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
         activeEntities: ActiveEntitiesCollector,
         isDeadRun: Boolean = false,
         additionalAction: (() -> Unit)? = null,
-    ) {
-        val calendarDate = repository.operatingDays[operatingDayId] ?: return
-        
+    ): Boolean {
+        val calendarDate = repository.operatingDays[operatingDayId] ?: return false
+
         if (isDateInPeriod(calendarDate, dayOffset, timePeriod)) {
             if (isDeadRun) {
                 activeEntities.addDeadRun(vehicleJourneyId)
@@ -251,7 +281,26 @@ class ActiveDatesCalculator(private val repository: ActiveDatesRepository) {
             }
             activeEntities.addOperatingDay(operatingDayId)
             additionalAction?.invoke()
+            return true
         }
+        return false
+    }
+
+    private fun hasUncancelledActiveDateInWindow(
+        period: Period,
+        daysOfWeek: Set<DayOfWeek>,
+        dayOffset: Long,
+        timePeriod: TimePeriod,
+        excludedDates: Set<LocalDate>,
+    ): Boolean {
+        val fromDate = period.fromDate ?: return false
+        val toDate = period.toDate ?: return false
+
+        return generateSequence(fromDate) { it.plusDays(1) }
+            .takeWhile { !it.isAfter(toDate) }
+            .filter { daysOfWeek.isEmpty() || it.dayOfWeek in daysOfWeek }
+            .filter { isDateInPeriod(it, dayOffset, timePeriod) }
+            .any { it !in excludedDates }
     }
     
     private fun resolveOperatingPeriod(operatingPeriodId: String): Period? {

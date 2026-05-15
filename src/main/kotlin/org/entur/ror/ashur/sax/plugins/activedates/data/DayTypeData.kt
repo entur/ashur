@@ -8,4 +8,7 @@ data class DayTypeData(
     val dates: MutableList<LocalDate> = mutableListOf(),
     val operatingDays: MutableList<String> = mutableListOf(),
     val daysOfWeek: MutableSet<DayOfWeek> = mutableSetOf(),
+    val excludedDates: MutableSet<LocalDate> = mutableSetOf(),
+    val excludedOperatingDays: MutableSet<String> = mutableSetOf(),
+    val excludedOperatingPeriods: MutableSet<String> = mutableSetOf(),
 )
