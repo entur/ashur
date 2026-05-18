@@ -71,4 +71,49 @@ class DayTypeAssignmentHandlerTest {
         )
         assertNull(context.currentDayTypeAssignmentDate)
     }
+
+    @Test
+    fun `isAvailable=false routes Date to excludedDates and resets the flag`() {
+        val date = LocalDate.of(2026, 5, 25)
+        context.currentDayTypeAssignmentDate = date
+        context.currentDayTypeAssignmentIsAvailable = false
+        handler.endElement(context, dayTypeAssignmentEntity)
+
+        val dayTypeData = repository.getDayTypeData(dayTypeAssignmentId)
+        Assertions.assertFalse(dayTypeData.dates.contains(date), "additive dates must not contain the cancelled date")
+        Assertions.assertTrue(dayTypeData.excludedDates.contains(date), "excluded dates must contain the cancelled date")
+        Assertions.assertEquals(
+            setOf(dayTypeAssignmentId),
+            repository.dayTypeAssignmentsByDayTypeAndExcludedDate[dayTypeAssignmentId to date],
+            "reverse index for excluded dates must map (dayType, date) back to the DayTypeAssignment id"
+        )
+        Assertions.assertTrue(
+            context.currentDayTypeAssignmentIsAvailable,
+            "isAvailable flag must reset to true (NeTEx default) after each DTA"
+        )
+    }
+
+    @Test
+    fun `isAvailable=false routes OperatingDayRef to excludedOperatingDays`() {
+        val operatingDayId = "TST:OperatingDay:1"
+        context.currentDayTypeAssignmentOperatingDay = operatingDayId
+        context.currentDayTypeAssignmentIsAvailable = false
+        handler.endElement(context, dayTypeAssignmentEntity)
+
+        val dayTypeData = repository.getDayTypeData(dayTypeAssignmentId)
+        Assertions.assertFalse(dayTypeData.operatingDays.contains(operatingDayId))
+        Assertions.assertTrue(dayTypeData.excludedOperatingDays.contains(operatingDayId))
+    }
+
+    @Test
+    fun `isAvailable=false routes OperatingPeriodRef to excludedOperatingPeriods`() {
+        val operatingPeriodId = "TST:OperatingPeriod:1"
+        context.currentDayTypeAssignmentOperatingPeriod = operatingPeriodId
+        context.currentDayTypeAssignmentIsAvailable = false
+        handler.endElement(context, dayTypeAssignmentEntity)
+
+        val dayTypeData = repository.getDayTypeData(dayTypeAssignmentId)
+        Assertions.assertFalse(dayTypeData.operatingPeriods.contains(operatingPeriodId))
+        Assertions.assertTrue(dayTypeData.excludedOperatingPeriods.contains(operatingPeriodId))
+    }
 }
