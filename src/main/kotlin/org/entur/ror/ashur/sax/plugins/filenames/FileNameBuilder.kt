@@ -34,9 +34,6 @@ class FileNameBuilder {
 
     private fun sanitize(fileNameString: String): String {
         return fileNameString
-            .replace("'", "-")
-            .replace(".", "-")
-            .replace("/", "-")
             .replace("Æ", "E")
             .replace("Ø", "O")
             .replace("Å", "A")
@@ -48,7 +45,7 @@ class FileNameBuilder {
             .replace("ä", "a")
             .replace("ö", "o")
             .replace(Regex("[^\\x00-\\x7F]"), "-") // Replaces remaining non-ASCII characters with hyphen
-            .replace(Regex("\\s"), "-")
+            .replace(Regex("""['./\\:<>"|?*;\s]"""), "-")
     }
 
     fun build(): String {

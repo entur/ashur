@@ -77,4 +77,36 @@ class FileNameBuilderTest {
             fileName,
         )
     }
+
+    @Test
+    fun sanitizesFilesystemUnsafeCharacters() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("A:B\\C<D>E\"F|G?H*I;J")
+            .withLinePublicCode("1")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_1_A-B-C-D-E-F-G-H-I-J.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun sanitizesPreviouslyHandledCharacters() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("It's a/b.c d")
+            .withLinePublicCode("1")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_1_It-s-a-b-c-d.xml",
+            fileName,
+        )
+    }
 }
