@@ -109,4 +109,52 @@ class FileNameBuilderTest {
             fileName,
         )
     }
+
+    @Test
+    fun transliteratesExtendedEuropeanTable() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("ÂáÓÉÊÈéèëÇÜüßªº")
+            .withLinePublicCode("1")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_1_AaOEEEeeeCUuss.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun removesUnmappedNonAsciiInsteadOfReplacing() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("Linjeα–test")
+            .withLinePublicCode("1")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_1_Linjetest.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun sharpSExpandsToDoubleS() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("Straße")
+            .withLinePublicCode("1")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_1_Strasse.xml",
+            fileName,
+        )
+    }
 }

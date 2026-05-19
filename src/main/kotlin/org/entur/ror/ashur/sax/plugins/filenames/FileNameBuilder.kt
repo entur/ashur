@@ -33,22 +33,35 @@ class FileNameBuilder {
     }
 
     private fun sanitize(fileNameString: String): String {
-        return fileNameString
-            .replace("Æ", "E")
-            .replace("Ø", "O")
-            .replace("Å", "A")
-            .replace("æ", "e")
-            .replace("ø", "o")
-            .replace("å", "a")
-            .replace("Ä", "A")
-            .replace("Ö", "O")
-            .replace("ä", "a")
-            .replace("ö", "o")
-            .replace(Regex("[^\\x00-\\x7F]"), "-") // Replaces remaining non-ASCII characters with hyphen
-            .replace(Regex("""['./\\:<>"|?*;\s]"""), "-")
+        val transliterated = buildString(fileNameString.length) {
+            for (ch in fileNameString) {
+                val mapped = TRANSLITERATION[ch]
+                if (mapped != null) append(mapped) else append(ch)
+            }
+        }
+        return transliterated
+            .replace(NON_ASCII, "")
+            .replace(UNSAFE, "-")
     }
 
     fun build(): String {
         return "${codespace.uppercase()}_${codespace.uppercase()}-${lineType}-${linePrivateCode}_${linePublicCode}_${lineName}.xml"
+    }
+
+    companion object {
+        private val TRANSLITERATION: Map<Char, String> = mapOf(
+            'Å' to "A", 'Ä' to "A", 'Â' to "A",
+            'å' to "a", 'ä' to "a", 'á' to "a",
+            'Ö' to "O", 'Ó' to "O", 'Ø' to "O",
+            'ö' to "o", 'ø' to "o",
+            'É' to "E", 'Ê' to "E", 'È' to "E", 'Æ' to "E",
+            'é' to "e", 'è' to "e", 'ë' to "e", 'æ' to "e",
+            'Ü' to "U", 'ü' to "u",
+            'Ç' to "C",
+            'ß' to "ss",
+            'ª' to "", 'º' to "",
+        )
+        private val NON_ASCII = Regex("[^\\x00-\\x7F]")
+        private val UNSAFE = Regex("""['./\\:<>"|?*;\s]""")
     }
 }
