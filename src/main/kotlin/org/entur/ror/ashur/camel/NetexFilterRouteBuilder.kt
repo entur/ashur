@@ -24,7 +24,10 @@ class NetexFilterRouteBuilder(
     override fun configure() {
         super.configure()
 
-        from("google-pubsub:$ashurProjectId:${filterSubscription}?synchronousPull=true")
+        // maxDeliveryAttempts=0 disables Camel's client-side pre-route nack gate (added in
+        // camel-google-pubsub 4.18). Pub/Sub's own server-side redelivery and dead-lettering
+        // are unaffected. Set explicitly to suppress the auto-fetch attempt that runs otherwise.
+        from("google-pubsub:$ashurProjectId:${filterSubscription}?synchronousPull=true&maxDeliveryAttempts=0")
             .log(LoggingLevel.INFO, "Received request to filter Netex from Pub/Sub topic $filterSubscription")
             .process({ exchange ->
                 val pubsubMessage = exchange.toPubsubMessage()
