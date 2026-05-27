@@ -21,6 +21,13 @@ open class BaseRouteBuilder(
 
     override fun configure() {
         val filterSubscription = Constants.FILTER_NETEX_FILE_SUBSCRIPTION
+
+        interceptFrom("google-pubsub:*")
+            .process(LogInboundPubsubMessageProcessor())
+
+        interceptSendToEndpoint("google-pubsub:*")
+            .process(LogOutboundPubsubMessageProcessor())
+
         onException(AshurException::class.java)
             .handled(true)
             .process { exchange ->

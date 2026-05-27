@@ -32,6 +32,7 @@
                         }
                     </pattern>
                 </pattern>
+                <logstashMarkers/>
             </providers>
         </encoder>
     </appender>
