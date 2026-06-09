@@ -24,6 +24,8 @@
         <logback.version>1.5.18</logback.version>
         <google-cloud-storage.version>2.54.0</google-cloud-storage.version>
         <google-pubsub.version>1.150.2</google-pubsub.version>
+        <protobuf-java.version>4.33.2</protobuf-java.version>
+        <gax.version>2.80.0</gax.version>
         <netex-tools.version>0.0.39</netex-tools.version>
         <camel.version>4.18.2</camel.version>
         <slf4j.version>2.0.17</slf4j.version>
@@ -102,6 +104,31 @@
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>${protobuf-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.api</groupId>
+                <artifactId>gax</artifactId>
+                <version>${gax.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.api</groupId>
+                <artifactId>gax-grpc</artifactId>
+                <version>${gax.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.api</groupId>
+                <artifactId>gax-httpjson</artifactId>
+                <version>${gax.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
