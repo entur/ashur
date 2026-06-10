@@ -1,7 +1,6 @@
 package org.entur.ror.ashur.report
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.camel.impl.DefaultCamelContext
 import org.apache.camel.support.DefaultExchange
 import org.apache.camel.test.spring.junit5.CamelSpringBootTest
@@ -41,7 +40,7 @@ class CreateFilteringReportProcessorTest: PubSubEmulatorTestBase() {
 
     fun getReport(filePath: String): FilteringReport {
         val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.ashurBucketName}/$filePath")
-        val objectMapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+        val objectMapper = jacksonObjectMapper()
         return objectMapper.readValue(target, FilteringReport::class.java)
     }
 

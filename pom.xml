@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
-        <entur.helpers.version>5.47.0</entur.helpers.version>
+        <entur.helpers.version>7.1.0</entur.helpers.version>
         <org.apache.commons.version>3.14.0</org.apache.commons.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>2.3.21</kotlin.version>
@@ -27,11 +27,10 @@
         <protobuf-java.version>4.33.2</protobuf-java.version>
         <gax.version>2.80.0</gax.version>
         <netex-tools.version>0.0.46</netex-tools.version>
-        <camel.version>4.18.2</camel.version>
+        <camel.version>4.20.0</camel.version>
         <slf4j.version>2.0.17</slf4j.version>
         <mockito-kotlin.version>6.3.0</mockito-kotlin.version>
-        <spring-boot.version>3.5.7</spring-boot.version>
-        <micrometer.version>1.15.5</micrometer.version>
+        <spring-boot.version>4.0.6</spring-boot.version>
     </properties>
 
     <repositories>
@@ -48,6 +47,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -141,14 +141,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>tools.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
+        </dependency>
+        <!-- Jackson 2 Kotlin module, test only: MarkerTestSupport bridges to
+             logstash-logback-encoder, whose writeTo(JsonGenerator) API is still Jackson 2. -->
+        <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
-            <version>2.21.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.21.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
@@ -295,7 +296,6 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
-            <version>${micrometer.version}</version>
         </dependency>
         <dependency>
             <groupId>org.entur.ror.helpers</groupId>
