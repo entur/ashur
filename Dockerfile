@@ -1,6 +1,6 @@
 FROM bellsoft/liberica-openjdk-alpine:21.0.11 AS builder
 WORKDIR /builder
-# Upgrade all system packages to patch known CVEs
+# Upgrades all system packages to patch known CVEs
 RUN apk update \
  && apk upgrade --no-cache \
  && rm -rf /var/cache/apk/*
@@ -8,7 +8,7 @@ COPY target/*-SNAPSHOT.jar application.jar
 RUN java -Djarmode=tools  -jar application.jar extract --layers --destination extracted
 
 FROM bellsoft/liberica-openjdk-alpine:21.0.11
-# Upgrade all system packages to patch known CVEs
+# Upgrades all system packages to patch known CVEs
 RUN apk update \
  && apk upgrade --no-cache \
  && apk add --no-cache tini \
