@@ -4,8 +4,7 @@ import org.apache.camel.CamelContext
 import org.apache.camel.ConsumerTemplate
 import org.apache.camel.ProducerTemplate
 import org.apache.camel.test.spring.junit5.CamelSpringBootTest
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.entur.ror.ashur.AshurApplication
 import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
@@ -67,7 +66,7 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         )
     }
 
-    private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+    private val mapper = jacksonObjectMapper()
 
     fun pathOfFilteredFile(fileName: String, correlationId: String) = "${testCodespace}/${correlationId}/filtered_${fileName}"
     fun pathOfFilteringReport(correlationId: String) = "reports/${testCodespace}/filtering-report-${correlationId}.json"

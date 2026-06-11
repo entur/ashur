@@ -1,7 +1,6 @@
 package org.entur.ror.ashur.report
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
 import org.entur.netex.tools.lib.report.FilterReport
@@ -22,7 +21,7 @@ class CreateFilteringReportProcessor(
 ) : Processor {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private val mapper = jacksonObjectMapper().registerModule(JavaTimeModule())
+    private val mapper = jacksonObjectMapper()
 
     fun toJson(report: FilteringReport): String {
         return mapper.writeValueAsString(report)
