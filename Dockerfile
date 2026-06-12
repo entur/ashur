@@ -8,11 +8,12 @@ COPY target/*-SNAPSHOT.jar application.jar
 RUN java -Djarmode=tools  -jar application.jar extract --layers --destination extracted
 
 FROM bellsoft/liberica-openjdk-alpine:21.0.11
-# Upgrades all system packages to patch known CVEs
+# Upgrades all system packages to patch known CVEs.
 RUN apk update \
  && apk upgrade --no-cache \
  && apk add --no-cache tini \
- && rm -rf /var/cache/apk/*
+ && rm -rf /var/cache/apk/* \
+ && echo "fresh apk upgrade 2026-06-12"
 WORKDIR /deployments
 RUN addgroup appuser && adduser --disabled-password appuser --ingroup appuser
 USER appuser
