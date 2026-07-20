@@ -7,12 +7,15 @@ import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.addPubsubAttribute
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.exceptions.AshurException
+import org.entur.ror.ashur.metrics.FilterMetrics
+import org.entur.ror.ashur.metrics.RecordFilterRunProcessor
 import org.entur.ror.ashur.report.CreateFilteringReportProcessor
 
 open class BaseRouteBuilder(
     val appConfig: AppConfig,
     val netexFilterMessageProcessor: NetexFilterMessageProcessor,
     val createFilteringReportProcessor: CreateFilteringReportProcessor,
+    val filterMetrics: FilterMetrics,
 ): RouteBuilder() {
     val ashurProjectId = appConfig.gcp.ashurProjectId
     val mardukProjectId = appConfig.gcp.mardukProjectId
@@ -58,6 +61,7 @@ open class BaseRouteBuilder(
 
         from("direct:filterProcessingStatusFailed")
             .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_FAILED))
+            .process(RecordFilterRunProcessor(filterMetrics, successful = false))
             .process(createFilteringReportProcessor)
             .log(LoggingLevel.INFO, "Publishing processing status FAILED for codespace: \${header.codespace}")
             .to("google-pubsub:$mardukProjectId:$statusTopic")
