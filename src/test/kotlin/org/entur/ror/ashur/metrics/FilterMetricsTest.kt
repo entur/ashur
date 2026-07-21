@@ -5,6 +5,7 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class FilterMetricsTest {
     private fun counterFor(
@@ -74,6 +75,39 @@ class FilterMetricsTest {
 
         assertEquals(1.0, counterFor(registry, "success", "unknown"))
         assertEquals(1.0, counterFor(registry, "failed", "unknown"))
+    }
+
+    @Test
+    fun `initializeRunCounters registers success and failed counters at zero`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.initializeRunCounters("RUT")
+
+        assertNotNull(
+            registry.find(FilterMetrics.RUNS_METRIC_NAME)
+                .tags("status", "success", "codespace", "RUT").counter(),
+            "success counter must be registered so a scrape sees the 0 baseline",
+        )
+        assertNotNull(
+            registry.find(FilterMetrics.RUNS_METRIC_NAME)
+                .tags("status", "failed", "codespace", "RUT").counter(),
+            "failed counter must be registered so a scrape sees the 0 baseline",
+        )
+        assertEquals(0.0, counterFor(registry, "success", "RUT"))
+        assertEquals(0.0, counterFor(registry, "failed", "RUT"))
+    }
+
+    @Test
+    fun `initializeRunCounters does not reset an existing count`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.incrementSuccessfulRun("RUT")
+        metrics.initializeRunCounters("RUT")
+
+        assertEquals(1.0, counterFor(registry, "success", "RUT"))
+        assertEquals(0.0, counterFor(registry, "failed", "RUT"))
     }
 
     @Test
