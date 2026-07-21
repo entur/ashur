@@ -25,6 +25,19 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
 
     fun incrementFailedRun(codespace: String?) = increment(STATUS_FAILED, codespace)
 
+    /**
+     * Registers the success and failed run counters for [codespace] at zero, without incrementing them.
+     *
+     * The counters are otherwise created lazily on their first increment (already at value 1), so a
+     * Prometheus scrape never observes the `0 -> 1` step and `rate()`/`increase()` silently drop the
+     * first run of each (codespace, pod) series. Calling this at run start exposes the `0` baseline so
+     * the first run becomes countable. Registration is idempotent, so it never resets an existing count.
+     */
+    fun initializeRunCounters(codespace: String?) {
+        runCounter(STATUS_SUCCESS, codespace)
+        runCounter(STATUS_FAILED, codespace)
+    }
+
     fun recordSuccessfulRunDuration(codespace: String?, duration: Duration) {
         Timer.builder(DURATION_METRIC_NAME)
             .tag("codespace", codespace.orUnknown())
@@ -32,13 +45,13 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
             .record(duration)
     }
 
-    private fun increment(status: String, codespace: String?) {
+    private fun increment(status: String, codespace: String?) = runCounter(status, codespace).increment()
+
+    private fun runCounter(status: String, codespace: String?): Counter =
         Counter.builder(RUNS_METRIC_NAME)
             .tag("status", status)
             .tag("codespace", codespace.orUnknown())
             .register(meterRegistry)
-            .increment()
-    }
 
     private fun String?.orUnknown(): String = this?.takeIf { it.isNotBlank() } ?: UNKNOWN_CODESPACE
 

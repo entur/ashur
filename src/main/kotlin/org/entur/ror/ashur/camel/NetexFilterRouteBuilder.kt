@@ -7,6 +7,7 @@ import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.getCodespace
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.metrics.FilterMetrics
+import org.entur.ror.ashur.metrics.InitializeFilterRunMetricsProcessor
 import org.entur.ror.ashur.metrics.RecordFilterRunProcessor
 import org.entur.ror.ashur.report.CreateFilteringReportProcessor
 import org.entur.ror.ashur.toPubsubMessage
@@ -39,6 +40,7 @@ class NetexFilterRouteBuilder(
                 exchange.message.setHeader(Constants.FILTERING_PROFILE_HEADER,
                     pubsubMessage.attributesMap[Constants.FILTERING_PROFILE_HEADER])
             })
+            .process(InitializeFilterRunMetricsProcessor(filterMetrics))
             .to("direct:filterProcessingStatusStarted")
             .to("direct:filterProcessingQueue")
             .to("direct:filterProcessingStatusSucceeded")
