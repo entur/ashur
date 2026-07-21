@@ -5,6 +5,7 @@ import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.PubSubEmulatorTestBase
 import org.entur.ror.ashur.file.AshurBucketService
 import org.entur.ror.ashur.file.MardukBucketService
+import org.entur.ror.ashur.metrics.FilterMetrics
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,9 +25,12 @@ class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmu
     @Autowired
     lateinit var appConfig: AppConfig
 
+    @Autowired
+    lateinit var filterMetrics: FilterMetrics
+
     @BeforeEach
     fun setUp() {
-        filterService = FilterService(ashurBucketService, mardukBucketService, appConfig)
+        filterService = FilterService(ashurBucketService, mardukBucketService, appConfig, filterMetrics)
     }
 
     @Test

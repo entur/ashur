@@ -6,6 +6,8 @@ import org.entur.ror.ashur.addPubsubAttribute
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.getCodespace
 import org.entur.ror.ashur.getCorrelationId
+import org.entur.ror.ashur.metrics.FilterMetrics
+import org.entur.ror.ashur.metrics.RecordFilterRunProcessor
 import org.entur.ror.ashur.report.CreateFilteringReportProcessor
 import org.entur.ror.ashur.toPubsubMessage
 import org.springframework.stereotype.Component
@@ -20,7 +22,8 @@ class NetexFilterRouteBuilder(
     appConfig: AppConfig,
     netexFilterMessageProcessor: NetexFilterMessageProcessor,
     createFilteringReportProcessor: CreateFilteringReportProcessor,
-) : BaseRouteBuilder(appConfig, netexFilterMessageProcessor, createFilteringReportProcessor) {
+    filterMetrics: FilterMetrics,
+) : BaseRouteBuilder(appConfig, netexFilterMessageProcessor, createFilteringReportProcessor, filterMetrics) {
     override fun configure() {
         super.configure()
 
@@ -57,6 +60,7 @@ class NetexFilterRouteBuilder(
 
         from("direct:filterProcessingStatusSucceeded")
             .process(SetFilteringStatusProcessor(status = Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED))
+            .process(RecordFilterRunProcessor(filterMetrics, successful = true))
             .process(createFilteringReportProcessor)
             .process { exchange ->
                 exchange.addPubsubAttribute(
