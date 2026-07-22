@@ -17,14 +17,15 @@ import java.util.concurrent.atomic.AtomicLong
  * - [DURATION_METRIC_NAME] is a timer tagged with `codespace`, recorded only for successful runs.
  *   In Prometheus this surfaces as `ashur_filter_duration_seconds_count` / `_sum`, so the average
  *   run time is `rate(..._sum[5m]) / rate(..._count[5m])`.
- * - [SERVICE_JOURNEYS_KEPT_METRIC_NAME] is a gauge tagged with `codespace`, set on each successful
- *   run to the number of `ServiceJourney` entities that survived filtering. In Prometheus this
- *   surfaces as `ashur_service_journeys_kept`. It is a level (re-measured each run), not an
- *   accumulating count, so a pod restart leaves a gap rather than resetting to zero.
- * - [SERVICE_JOURNEYS_KEPT_UPDATED_MS_METRIC_NAME] is a companion gauge tagged with `codespace`, set
- *   alongside it to the run's wall-clock time in milliseconds (`ashur_service_journeys_kept_updated_ms`).
- *   It is the recency signal that lets a dashboard pick the most-recently-updated pod per codespace
- *   across replicas, so a per-codespace history stays correct even when the kept count decreases.
+ * - [SERVICE_JOURNEYS_KEPT_METRIC_NAME] (`ashur_service_journeys_kept`) is a gauge tagged with
+ *   `codespace`, set on each successful run to how many `ServiceJourney` entities survived filtering.
+ *   The gauge only holds the latest run's number (each run replaces it in memory); the history over
+ *   time is kept by Prometheus, which records a sample every scrape — it is not stored in the app.
+ *   After a restart the app has no value until the next run, so the graph shows a gap rather than a
+ *   drop to zero (the samples Prometheus already recorded are untouched).
+ * - [SERVICE_JOURNEYS_KEPT_UPDATED_MS_METRIC_NAME] (`ashur_service_journeys_kept_updated_ms`) is a
+ *   companion gauge holding the time (in ms) of that run. It exists only so a dashboard can tell,
+ *   when Ashur runs on more than one pod, which pod's count is the newer one — see [setServiceJourneysKept].
  *
  * Because `codespace` is a label, a Grafana dashboard can both group by codespace
  * (`sum by (codespace) (...)`) and aggregate across codespaces (`sum without (codespace) (...)`).
@@ -32,8 +33,8 @@ import java.util.concurrent.atomic.AtomicLong
 @Component
 class FilterMetrics(private val meterRegistry: MeterRegistry) {
 
-    // Micrometer holds a weak reference to a gauge's backing state, so we keep a strong reference
-    // to one AtomicLong per codespace (per gauge) and update it in place on each run.
+    // A gauge only keeps a weak reference to the value behind it, so we hold that value ourselves
+    // (one number per codespace, per gauge) and overwrite it on each run.
     private val serviceJourneysKeptValues = ConcurrentHashMap<String, AtomicLong>()
     private val serviceJourneysKeptUpdatedMs = ConcurrentHashMap<String, AtomicLong>()
 
@@ -49,16 +50,17 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
     }
 
     /**
-     * Records, for [codespace], the number of `ServiceJourney` entities that survived filtering on
-     * the current run ([count]) as the [SERVICE_JOURNEYS_KEPT_METRIC_NAME] gauge, and the wall-clock
-     * time of the run ([epochMillis], defaulting to now) as the
-     * [SERVICE_JOURNEYS_KEPT_UPDATED_MS_METRIC_NAME] gauge.
+     * Records, for [codespace], how many `ServiceJourney` entities survived filtering on this run
+     * ([count]), together with when the run happened ([epochMillis], defaulting to now).
      *
-     * The timestamp is the recency signal a dashboard needs to reconstruct a correct per-codespace
-     * history across replicas: each pod holds its own last-run value per codespace, so a query picks
-     * the value from whichever pod ran the codespace most recently (largest timestamp) rather than
-     * the largest value. Both gauges are registered once per codespace on first sight; later runs
-     * update the backing value in place.
+     * The time is recorded so a dashboard can draw a correct history over time. Ashur runs on more
+     * than one pod, and each pod only remembers the counts for the runs it handled itself, so no
+     * single pod has the whole picture for a codespace. Knowing when each pod's count was last set
+     * lets a dashboard always use the newer one, and so show the count rising and falling exactly as
+     * it really did. Without the time it could only guess (say, show the biggest), which would hide
+     * the runs where the count dropped.
+     *
+     * Both gauges are created the first time a codespace appears, then just updated in place on later runs.
      */
     fun setServiceJourneysKept(codespace: String?, count: Int, epochMillis: Long = System.currentTimeMillis()) {
         val resolvedCodespace = codespace.orUnknown()
@@ -68,8 +70,8 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
     }
 
     /**
-     * Returns the strongly-held [AtomicLong] backing the [metricName] gauge for [codespace],
-     * registering the gauge on first sight. Registration is idempotent per codespace.
+     * Returns the value behind the [metricName] gauge for [codespace], creating and registering the
+     * gauge the first time we see this codespace and reusing it afterwards.
      */
     private fun gaugeHolder(
         holders: ConcurrentHashMap<String, AtomicLong>,
