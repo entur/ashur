@@ -29,6 +29,18 @@ class FilterMetricsTest {
             .timer()
             ?.totalTime(TimeUnit.MILLISECONDS) ?: 0.0
 
+    private fun serviceJourneysKept(registry: SimpleMeterRegistry, codespace: String): Double? =
+        registry.find(FilterMetrics.SERVICE_JOURNEYS_KEPT_METRIC_NAME)
+            .tags("codespace", codespace)
+            .gauge()
+            ?.value()
+
+    private fun serviceJourneysKeptUpdatedMs(registry: SimpleMeterRegistry, codespace: String): Double? =
+        registry.find(FilterMetrics.SERVICE_JOURNEYS_KEPT_UPDATED_MS_METRIC_NAME)
+            .tags("codespace", codespace)
+            .gauge()
+            ?.value()
+
     @Test
     fun `incrementSuccessfulRun records one run tagged status=success and codespace`() {
         val registry = SimpleMeterRegistry()
@@ -110,5 +122,69 @@ class FilterMetricsTest {
         metrics.recordSuccessfulRunDuration(null, Duration.ofMillis(100))
 
         assertEquals(1L, durationCount(registry, "unknown"))
+    }
+
+    @Test
+    fun `setServiceJourneysKept registers a gauge with the kept count tagged by codespace`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", 42)
+
+        assertEquals(42.0, serviceJourneysKept(registry, "RUT"))
+    }
+
+    @Test
+    fun `setServiceJourneysKept replaces the value on a later run and does not accumulate`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", 42)
+        metrics.setServiceJourneysKept("RUT", 40)
+
+        assertEquals(40.0, serviceJourneysKept(registry, "RUT"))
+    }
+
+    @Test
+    fun `service journeys kept are tracked separately per codespace`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", 42)
+        metrics.setServiceJourneysKept("ATB", 7)
+
+        assertEquals(42.0, serviceJourneysKept(registry, "RUT"))
+        assertEquals(7.0, serviceJourneysKept(registry, "ATB"))
+    }
+
+    @Test
+    fun `null or blank codespace kept count is recorded as unknown`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept(null, 5)
+
+        assertEquals(5.0, serviceJourneysKept(registry, "unknown"))
+    }
+
+    @Test
+    fun `setServiceJourneysKept records the run's update time in millis tagged by codespace`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", 42, epochMillis = 1_761_000_000_123L)
+
+        assertEquals(1_761_000_000_123.0, serviceJourneysKeptUpdatedMs(registry, "RUT"))
+    }
+
+    @Test
+    fun `setServiceJourneysKept advances the update time on each run`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", 42, epochMillis = 1000L)
+        metrics.setServiceJourneysKept("RUT", 40, epochMillis = 2000L)
+
+        assertEquals(2000.0, serviceJourneysKeptUpdatedMs(registry, "RUT"))
     }
 }

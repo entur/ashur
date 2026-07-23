@@ -283,6 +283,7 @@ class FilterService(
 
         // Reached only when the run succeeded; failures throw before this point.
         filterMetrics.recordSuccessfulRunDuration(codespace, Duration.ofNanos(System.nanoTime() - runStartNanos))
+        filterMetrics.setServiceJourneysKept(codespace, filterReport.getNumberOfElementsOfType("ServiceJourney"))
 
         return FilterResult(
             filteredZipFilePath = filteredZipFileName,
