@@ -117,6 +117,12 @@
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <!-- Writes target/classes/git.properties, which Spring Boot reads into GitProperties. -->
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <!-- Allowlist only the fields VersionLogger reads, so no committer emails, build
+                         host, remote URL or commit messages get baked into the shipped jar. -->
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>^git.branch$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+                    </includeOnlyProperties>
                 </configuration>
             </plugin>
         </plugins>
