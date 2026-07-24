@@ -36,6 +36,7 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
     // A gauge only keeps a weak reference to the value behind it, so we hold that value ourselves
     // (one number per codespace, per gauge) and overwrite it on each run.
     private val serviceJourneysKeptValues = ConcurrentHashMap<String, AtomicLong>()
+    private val serviceJourneysOriginalValues = ConcurrentHashMap<String, AtomicLong>()
     private val serviceJourneysKeptUpdatedMs = ConcurrentHashMap<String, AtomicLong>()
 
     fun incrementSuccessfulRun(codespace: String?) = increment(STATUS_SUCCESS, codespace)
@@ -62,9 +63,10 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
      *
      * Both gauges are created the first time a codespace appears, then just updated in place on later runs.
      */
-    fun setServiceJourneysKept(codespace: String?, count: Int, epochMillis: Long = System.currentTimeMillis()) {
+    fun setServiceJourneysKept(codespace: String?, keptCount: Int, originalCount: Int, epochMillis: Long = System.currentTimeMillis()) {
         val resolvedCodespace = codespace.orUnknown()
-        gaugeHolder(serviceJourneysKeptValues, SERVICE_JOURNEYS_KEPT_METRIC_NAME, resolvedCodespace).set(count.toLong())
+        gaugeHolder(serviceJourneysKeptValues, SERVICE_JOURNEYS_KEPT_METRIC_NAME, resolvedCodespace).set(keptCount.toLong())
+        gaugeHolder(serviceJourneysOriginalValues, SERVICE_JOURNEYS_ORIGINAL_METRIC_NAME, resolvedCodespace).set(originalCount.toLong())
         gaugeHolder(serviceJourneysKeptUpdatedMs, SERVICE_JOURNEYS_KEPT_UPDATED_MS_METRIC_NAME, resolvedCodespace)
             .set(epochMillis)
     }
@@ -100,6 +102,7 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
         const val RUNS_METRIC_NAME = "ashur.filter.runs"
         const val DURATION_METRIC_NAME = "ashur.filter.duration"
         const val SERVICE_JOURNEYS_KEPT_METRIC_NAME = "ashur.service.journeys.kept"
+        const val SERVICE_JOURNEYS_ORIGINAL_METRIC_NAME = "ashur.service.journeys.original"
         const val SERVICE_JOURNEYS_KEPT_UPDATED_MS_METRIC_NAME = "ashur.service.journeys.kept.updated.ms"
         const val STATUS_SUCCESS = "success"
         const val STATUS_FAILED = "failed"

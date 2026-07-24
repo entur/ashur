@@ -41,6 +41,12 @@ class FilterMetricsTest {
             .gauge()
             ?.value()
 
+    private fun serviceJourneysOriginal(registry: SimpleMeterRegistry, codespace: String): Double? =
+        registry.find(FilterMetrics.SERVICE_JOURNEYS_ORIGINAL_METRIC_NAME)
+            .tags("codespace", codespace)
+            .gauge()
+            ?.value()
+
     @Test
     fun `incrementSuccessfulRun records one run tagged status=success and codespace`() {
         val registry = SimpleMeterRegistry()
@@ -129,7 +135,7 @@ class FilterMetricsTest {
         val registry = SimpleMeterRegistry()
         val metrics = FilterMetrics(registry)
 
-        metrics.setServiceJourneysKept("RUT", 42)
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100)
 
         assertEquals(42.0, serviceJourneysKept(registry, "RUT"))
     }
@@ -139,8 +145,8 @@ class FilterMetricsTest {
         val registry = SimpleMeterRegistry()
         val metrics = FilterMetrics(registry)
 
-        metrics.setServiceJourneysKept("RUT", 42)
-        metrics.setServiceJourneysKept("RUT", 40)
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100)
+        metrics.setServiceJourneysKept("RUT", keptCount = 40, originalCount = 95)
 
         assertEquals(40.0, serviceJourneysKept(registry, "RUT"))
     }
@@ -150,8 +156,8 @@ class FilterMetricsTest {
         val registry = SimpleMeterRegistry()
         val metrics = FilterMetrics(registry)
 
-        metrics.setServiceJourneysKept("RUT", 42)
-        metrics.setServiceJourneysKept("ATB", 7)
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100)
+        metrics.setServiceJourneysKept("ATB", keptCount = 7, originalCount = 10)
 
         assertEquals(42.0, serviceJourneysKept(registry, "RUT"))
         assertEquals(7.0, serviceJourneysKept(registry, "ATB"))
@@ -162,7 +168,7 @@ class FilterMetricsTest {
         val registry = SimpleMeterRegistry()
         val metrics = FilterMetrics(registry)
 
-        metrics.setServiceJourneysKept(null, 5)
+        metrics.setServiceJourneysKept(null, keptCount = 5, originalCount = 10)
 
         assertEquals(5.0, serviceJourneysKept(registry, "unknown"))
     }
@@ -172,7 +178,7 @@ class FilterMetricsTest {
         val registry = SimpleMeterRegistry()
         val metrics = FilterMetrics(registry)
 
-        metrics.setServiceJourneysKept("RUT", 42, epochMillis = 1_761_000_000_123L)
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100, epochMillis = 1_761_000_000_123L)
 
         assertEquals(1_761_000_000_123.0, serviceJourneysKeptUpdatedMs(registry, "RUT"))
     }
@@ -182,9 +188,52 @@ class FilterMetricsTest {
         val registry = SimpleMeterRegistry()
         val metrics = FilterMetrics(registry)
 
-        metrics.setServiceJourneysKept("RUT", 42, epochMillis = 1000L)
-        metrics.setServiceJourneysKept("RUT", 40, epochMillis = 2000L)
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100, epochMillis = 1000L)
+        metrics.setServiceJourneysKept("RUT", keptCount = 40, originalCount = 95, epochMillis = 2000L)
 
         assertEquals(2000.0, serviceJourneysKeptUpdatedMs(registry, "RUT"))
+    }
+
+    @Test
+    fun `setServiceJourneysKept registers a gauge for the original count tagged by codespace`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100)
+
+        assertEquals(100.0, serviceJourneysOriginal(registry, "RUT"))
+    }
+
+    @Test
+    fun `setServiceJourneysKept replaces the original count on a later run`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100)
+        metrics.setServiceJourneysKept("RUT", keptCount = 40, originalCount = 95)
+
+        assertEquals(95.0, serviceJourneysOriginal(registry, "RUT"))
+    }
+
+    @Test
+    fun `original counts are tracked separately per codespace`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept("RUT", keptCount = 42, originalCount = 100)
+        metrics.setServiceJourneysKept("ATB", keptCount = 7, originalCount = 10)
+
+        assertEquals(100.0, serviceJourneysOriginal(registry, "RUT"))
+        assertEquals(10.0, serviceJourneysOriginal(registry, "ATB"))
+    }
+
+    @Test
+    fun `null or blank codespace original count is recorded as unknown`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.setServiceJourneysKept(null, keptCount = 5, originalCount = 10)
+
+        assertEquals(10.0, serviceJourneysOriginal(registry, "unknown"))
     }
 }
