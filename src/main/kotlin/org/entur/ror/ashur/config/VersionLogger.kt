@@ -7,6 +7,7 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.info.BuildProperties
 import org.springframework.boot.info.GitProperties
+import org.springframework.context.annotation.Profile
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
@@ -16,12 +17,14 @@ import org.springframework.stereotype.Component
  * The [BuildProperties] and [GitProperties] beans are auto-configured by Spring Boot from
  * `META-INF/build-info.properties` and `git.properties`, generated at build time by the
  * spring-boot-maven-plugin `build-info` goal and the git-commit-id-maven-plugin respectively.
- * They are injected via [ObjectProvider] so a run without those files (e.g. an IDE run that
- * skipped the Maven build) logs "unknown" instead of failing to start.
+ *
+ * Restricted to the `gcp` profile (the deployed dev/tst/prd environments), where the metadata
+ * reflects the CI-built jar that is actually running.
  *
  * [BuildProperties.getTime] is the instant the artifact was built (i.e. when the Docker image's
  * jar was produced in CI); it is rendered in Norwegian local time for readability.
  */
+@Profile("gcp")
 @Component
 class VersionLogger(
     private val buildProperties: ObjectProvider<BuildProperties>,
