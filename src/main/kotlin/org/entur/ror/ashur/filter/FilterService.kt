@@ -1,8 +1,8 @@
 package org.entur.ror.ashur.filter
 
+import org.entur.netex.tools.lib.app.FilterNetexApp
 import org.entur.netex.tools.lib.config.FilterConfig
 import org.entur.netex.tools.lib.report.FilterReport
-import org.entur.netex.tools.pipeline.app.FilterNetexApp
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.exceptions.InvalidZipFileException
 import org.entur.ror.ashur.exceptions.NoJourneysInNetexFileException
@@ -283,7 +283,11 @@ class FilterService(
 
         // Reached only when the run succeeded; failures throw before this point.
         filterMetrics.recordSuccessfulRunDuration(codespace, Duration.ofNanos(System.nanoTime() - runStartNanos))
-        filterMetrics.setServiceJourneysKept(codespace, filterReport.getNumberOfElementsOfType("ServiceJourney"))
+        filterMetrics.setServiceJourneysKept(
+            codespace,
+            keptCount = filterReport.getNumberOfElementsOfType("ServiceJourney"),
+            originalCount = filterReport.originalEntityTypeCount["ServiceJourney"] ?: 0,
+        )
 
         return FilterResult(
             filteredZipFilePath = filteredZipFileName,
