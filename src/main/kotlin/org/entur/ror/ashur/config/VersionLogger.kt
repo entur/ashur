@@ -41,7 +41,7 @@ class VersionLogger(
         val git = gitProperties.ifAvailable
         val imageBuiltAt = build?.time?.let(buildTimeFormatter::format) ?: "unknown"
         logger.info(
-            "Ashur started — commit={}, branch={}, image built {} (Norway time)",
+            "Ashur started: commit={}, branch={}, image built {} (Norway time)",
             git?.shortCommitId ?: "unknown",
             git?.branch ?: "unknown",
             imageBuiltAt,
