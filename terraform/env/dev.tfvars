@@ -1,0 +1,11 @@
+ashur_project                 = "ent-ashur-dev"
+pubsub_topic_project          = "ent-marduk-dev"
+gcs_bucket_project            = "ent-ashur-dev"
+bucket_instance_suffix        = "dev"
+service_account               = "serviceAccount:application@ent-ashur-dev.iam.gserviceaccount.com"
+marduk_service_account        = "serviceAccount:application@ent-marduk-dev.iam.gserviceaccount.com"
+ashur_exchange_storage_bucket = "ror-ashur-exchange-gcp-dev"
+enable_slack_notifications    = false
+enable_mail_notifications     = true
+log_bucket_name               = "log-ent-ashur-dev"
+log_bucket_location           = "europe-west1"

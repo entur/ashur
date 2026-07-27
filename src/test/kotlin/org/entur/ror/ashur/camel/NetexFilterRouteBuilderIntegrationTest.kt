@@ -1,5 +1,6 @@
 package org.entur.ror.ashur.camel
 
+import io.micrometer.core.instrument.MeterRegistry
 import org.apache.camel.CamelContext
 import org.apache.camel.ConsumerTemplate
 import org.apache.camel.ProducerTemplate
@@ -9,6 +10,7 @@ import org.entur.ror.ashur.AshurApplication
 import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.PubSubEmulatorTestBase
+import org.entur.ror.ashur.metrics.FilterMetrics
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getFilterProfile
 import org.entur.ror.ashur.getPathOfFilteredFile
@@ -43,6 +45,9 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     @Autowired
     lateinit var context: CamelContext
 
+    @Autowired
+    lateinit var meterRegistry: MeterRegistry
+
     private val testCodespace = "test-codespace"
     private val testSource = "test-source"
     private val testFilteringProfile = "AsIsImportFilter"
@@ -67,6 +72,18 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     }
 
     private val mapper = jacksonObjectMapper()
+
+    fun runCount(status: String): Double =
+        meterRegistry.find(FilterMetrics.RUNS_METRIC_NAME)
+            .tags("status", status, "codespace", testCodespace)
+            .counter()
+            ?.count() ?: 0.0
+
+    fun durationRunCount(): Long =
+        meterRegistry.find(FilterMetrics.DURATION_METRIC_NAME)
+            .tags("codespace", testCodespace)
+            .timer()
+            ?.count() ?: 0L
 
     fun pathOfFilteredFile(fileName: String, correlationId: String) = "${testCodespace}/${correlationId}/filtered_${fileName}"
     fun pathOfFilteringReport(correlationId: String) = "reports/${testCodespace}/filtering-report-${correlationId}.json"
@@ -105,6 +122,8 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         copyTestZipFileToMardukTestBucket()
         val mardukProjectId = appConfig.gcp.mardukProjectId
         val correlationId = "success-correlation-id"
+        val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
+        val durationRunsBefore = durationRunCount()
 
         sendFilterMessageToPubsub(
             netexFilePath = "testfile.zip",
@@ -143,6 +162,9 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         val expectedFilteringReportPath = pathOfFilteringReport(correlationId)
         assertTrue(fileExistsInAshurInternalBucket(expectedFilteringReportPath))
 
+        assertEquals(successRunsBefore + 1.0, runCount(FilterMetrics.STATUS_SUCCESS))
+        assertEquals(durationRunsBefore + 1, durationRunCount())
+
         cleanupTestZipFiles()
     }
 
@@ -150,6 +172,8 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     fun `test filter route processes message but fails because file does not exist`() {
         val mardukProjectId = appConfig.gcp.mardukProjectId
         val failingCorrelationId = "failing-correlation-id"
+        val failedRunsBefore = runCount(FilterMetrics.STATUS_FAILED)
+        val durationRunsBefore = durationRunCount()
 
         sendFilterMessageToPubsub(netexFilePath = "unknown-file.zip", correlationId = failingCorrelationId)
 
@@ -181,6 +205,9 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         assertEquals(testCodespace, failedReport.codespace)
         assertEquals(testFilteringProfile, failedReport.filterProfile)
         assertEquals(Constants.FILTER_NETEX_FILE_STATUS_FAILED, failedReport.status)
+
+        assertEquals(failedRunsBefore + 1.0, runCount(FilterMetrics.STATUS_FAILED))
+        assertEquals(durationRunsBefore, durationRunCount())
 
         cleanupTestZipFiles()
     }

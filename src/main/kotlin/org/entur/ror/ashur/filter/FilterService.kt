@@ -1,18 +1,20 @@
 package org.entur.ror.ashur.filter
 
+import org.entur.netex.tools.lib.app.FilterNetexApp
 import org.entur.netex.tools.lib.config.FilterConfig
 import org.entur.netex.tools.lib.report.FilterReport
-import org.entur.netex.tools.pipeline.app.FilterNetexApp
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.exceptions.InvalidZipFileException
 import org.entur.ror.ashur.exceptions.NoJourneysInNetexFileException
 import org.entur.ror.ashur.file.AshurBucketService
 import org.entur.ror.ashur.file.MardukBucketService
+import org.entur.ror.ashur.metrics.FilterMetrics
 import org.entur.ror.ashur.utils.FileUtils
 import org.entur.ror.ashur.utils.ZipUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.io.File
+import java.time.Duration
 
 data class FilterResult(
     val filteredZipFilePath: String,
@@ -27,6 +29,7 @@ class FilterService(
     private val ashurBucketService: AshurBucketService,
     private val mardukBucketService: MardukBucketService,
     private val appConfig: AppConfig,
+    private val filterMetrics: FilterMetrics,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -234,6 +237,7 @@ class FilterService(
         codespace: String,
         correlationId: String,
     ): FilterResult {
+        val runStartNanos = System.nanoTime()
         val netexInputFile = getZipFile(fileName)
         val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId)
         val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId)
@@ -276,6 +280,14 @@ class FilterService(
             )
             netexInputFile.delete()
         }
+
+        // Reached only when the run succeeded; failures throw before this point.
+        filterMetrics.recordSuccessfulRunDuration(codespace, Duration.ofNanos(System.nanoTime() - runStartNanos))
+        filterMetrics.setServiceJourneysKept(
+            codespace,
+            keptCount = filterReport.getNumberOfElementsOfType("ServiceJourney"),
+            originalCount = filterReport.originalEntityTypeCount["ServiceJourney"] ?: 0,
+        )
 
         return FilterResult(
             filteredZipFilePath = filteredZipFileName,
