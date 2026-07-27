@@ -15,9 +15,9 @@
         <entur.helpers.version>7.1.0</entur.helpers.version>
         <org.apache.commons.version>3.14.0</org.apache.commons.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>2.3.21</kotlin.version>
+        <kotlin.version>2.4.0</kotlin.version>
         <kotlinx.serialization.version>1.11.0</kotlinx.serialization.version>
-        <junit.version>6.0.2</junit.version>
+        <junit.version>6.1.0</junit.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -26,7 +26,7 @@
         <google-pubsub.version>1.150.2</google-pubsub.version>
         <protobuf-java.version>4.33.2</protobuf-java.version>
         <gax.version>2.81.0</gax.version>
-        <netex-tools.version>0.0.46</netex-tools.version>
+        <netex-tools.version>0.0.50</netex-tools.version>
         <camel.version>4.20.0</camel.version>
         <slf4j.version>2.0.17</slf4j.version>
         <mockito-kotlin.version>6.3.0</mockito-kotlin.version>
@@ -52,6 +52,12 @@
                     <execution>
                         <goals>
                             <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <goal>build-info</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -88,9 +94,35 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
+                <version>3.6.3</version>
                 <configuration>
                     <mainClass>MainKt</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <version>10.0.0</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Keep the build green if .git is absent (e.g. jar rebuilt outside a checkout);
+                         commit fields simply fall back to "unknown" at runtime. -->
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <!-- Writes target/classes/git.properties, which Spring Boot reads into GitProperties. -->
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <!-- Allowlist only the fields VersionLogger reads, so no committer emails, build
+                         host, remote URL or commit messages get baked into the shipped jar. -->
+                    <includeOnlyProperties>
+                        <includeOnlyProperty>^git.branch$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+                    </includeOnlyProperties>
                 </configuration>
             </plugin>
         </plugins>
