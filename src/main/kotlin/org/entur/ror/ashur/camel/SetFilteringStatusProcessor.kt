@@ -3,6 +3,7 @@ package org.entur.ror.ashur.camel
 import org.apache.camel.Exchange
 import org.apache.camel.Processor
 import org.entur.ror.ashur.Constants
+import org.entur.ror.ashur.addPubsubAttribute
 
 /**
  * SetFilteringStatusProcessor is a Camel processor that sets the filtering status
@@ -12,16 +13,9 @@ import org.entur.ror.ashur.Constants
  */
 class SetFilteringStatusProcessor(val status: String): Processor {
     override fun process(exchange: Exchange) {
-        val existingAttributes = exchange
-            .getIn()
-            .getHeader("CamelGooglePubsubAttributes", Map::class.java)
-            .toMutableMap()
-        existingAttributes[Constants.FILTERING_REPORT_STATUS_HEADER] = status
-        val filteringProfile = existingAttributes[Constants.FILTERING_PROFILE_HEADER]?.toString()
-            ?: exchange.getIn().getHeader(Constants.FILTERING_PROFILE_HEADER, String::class.java)
-        if (filteringProfile != null) {
-            existingAttributes[Constants.FILTERING_PROFILE_HEADER] = filteringProfile
-        }
-        exchange.getIn().setHeader("CamelGooglePubsubAttributes", existingAttributes)
+        exchange.addPubsubAttribute(Constants.FILTERING_REPORT_STATUS_HEADER, status)
+        exchange.getIn()
+            .getHeader(Constants.FILTERING_PROFILE_HEADER, String::class.java)
+            ?.let { exchange.addPubsubAttribute(Constants.FILTERING_PROFILE_HEADER, it) }
     }
 }
