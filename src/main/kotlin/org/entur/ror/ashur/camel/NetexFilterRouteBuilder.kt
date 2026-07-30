@@ -63,10 +63,9 @@ class NetexFilterRouteBuilder(
             .process(RecordFilterRunProcessor(filterMetrics, successful = true))
             .process(createFilteringReportProcessor)
             .process { exchange ->
-                exchange.addPubsubAttribute(
-                    Constants.FILTERED_NETEX_FILE_PATH_HEADER,
-                    exchange.getIn().getHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER, String::class.java)
-                )
+                exchange.getIn()
+                    .getHeader(Constants.FILTERED_NETEX_FILE_PATH_HEADER, String::class.java)
+                    ?.let { exchange.addPubsubAttribute(Constants.FILTERED_NETEX_FILE_PATH_HEADER, it) }
             }
             .log(LoggingLevel.INFO, "Publishing processing status SUCCEEDED for codespace: \${header.codespace}")
             .to("google-pubsub:$mardukProjectId:$statusTopic")

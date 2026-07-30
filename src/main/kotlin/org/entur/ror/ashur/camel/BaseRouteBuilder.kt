@@ -34,11 +34,13 @@ open class BaseRouteBuilder(
         onException(AshurException::class.java)
             .handled(true)
             .process { exchange ->
-                val exception = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, AshurException::class.java)
-                if (exception.errorCode != null) {
+                val errorCode = exchange
+                    .getProperty(Exchange.EXCEPTION_CAUGHT, AshurException::class.java)
+                    ?.errorCode
+                if (errorCode != null) {
                     exchange.addPubsubAttribute(
                         Constants.FILTERING_ERROR_CODE_HEADER,
-                        exception.errorCode
+                        errorCode
                     )
                 }
             }
