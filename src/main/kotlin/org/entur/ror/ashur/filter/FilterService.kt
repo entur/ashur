@@ -63,7 +63,9 @@ class FilterService(
         logger.info("Cleaning up files in local file system...")
         directoryForInputFiles.deleteRecursively()
         directoryForOutputFiles.listFiles()?.forEach { file ->
-            file.delete()
+            if (!file.delete()) {
+                logger.warn("Failed to delete output file: ${file.absolutePath}")
+            }
         }
         logger.info("Successfully cleaned up files in local file system.")
     }
@@ -214,7 +216,9 @@ class FilterService(
         val filesToRemove = findLineFilesToRemove(filterReport)
         filesToRemove.forEach { file ->
             logger.info("Removing file without journeys: ${file.name}")
-            file.delete()
+            if (!file.delete()) {
+                logger.warn("Failed to delete line file: ${file.absolutePath}")
+            }
         }
     }
 
@@ -278,7 +282,6 @@ class FilterService(
                 directoryForInputFiles = localDirectoryForInputFiles,
                 directoryForOutputFiles = localDirectoryForOutputFiles,
             )
-            netexInputFile.delete()
         }
 
         // Reached only when the run succeeded; failures throw before this point.
