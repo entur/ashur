@@ -2,7 +2,7 @@ package org.entur.ror.ashur.pubsub
 
 import org.entur.ror.ashur.filter.FilterResult
 
-interface MessageHandler {
+fun interface MessageHandler {
     /**
      * Handles the incoming message from a Pub/Sub topic.
      *
