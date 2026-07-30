@@ -6,9 +6,9 @@ import com.google.cloud.pubsub.v1.SubscriptionAdminClient
 import com.google.cloud.pubsub.v1.SubscriptionAdminSettings
 import com.google.cloud.pubsub.v1.TopicAdminClient
 import com.google.cloud.pubsub.v1.TopicAdminSettings
-import com.google.pubsub.v1.ProjectSubscriptionName
-import com.google.pubsub.v1.ProjectTopicName
 import com.google.pubsub.v1.PushConfig
+import com.google.pubsub.v1.SubscriptionName
+import com.google.pubsub.v1.TopicName
 import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.CamelConfig
@@ -54,9 +54,9 @@ class PubSubInitializer(
         val projectId = appConfig.gcp.ashurProjectId
 
         val topicClient = createTopicAdminClient()
-        val topics = listOf<ProjectTopicName>(
-            ProjectTopicName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
-            ProjectTopicName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_TOPIC)
+        val topics = listOf<TopicName>(
+            TopicName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
+            TopicName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_TOPIC)
         )
 
         for (topic in topics) {
@@ -76,13 +76,13 @@ class PubSubInitializer(
         }
 
         val subscriptionClient = createSubscriptionAdminClient()
-        val subscriptions = listOf<ProjectSubscriptionName>(
-            ProjectSubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
-            ProjectSubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_TOPIC)
+        val subscriptions = listOf<SubscriptionName>(
+            SubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_SUBSCRIPTION),
+            SubscriptionName.of(projectId, Constants.FILTER_NETEX_FILE_STATUS_TOPIC)
         )
 
         for (subscription in subscriptions) {
-            val topicName = ProjectTopicName.of(projectId, subscription.subscription)
+            val topicName = TopicName.of(projectId, subscription.subscription)
             try {
                 logger.info("Checking if subscription $subscription exists in project $projectId")
                 subscriptionClient.getSubscription(subscription)
