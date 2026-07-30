@@ -68,12 +68,8 @@ fun PubsubMessage.getFilterProfile(): FilterProfile {
 
 fun Exchange.getPubsubAttributes(): Map<String, String> {
     val attributes = this.getIn().headers["CamelGooglePubsubAttributes"]
-    if (attributes !is Map<*, *>) {
-        throw IllegalArgumentException("Expected CamelGooglePubsubAttributes to be a Map, but got: $attributes")
-    }
-    if (attributes.isEmpty()) {
-        throw IllegalArgumentException("CamelGooglePubsubAttributes cannot be empty")
-    }
+    require(attributes is Map<*, *>) { "Expected CamelGooglePubsubAttributes to be a Map, but got: $attributes" }
+    require(attributes.isNotEmpty()) { "CamelGooglePubsubAttributes cannot be empty" }
     return attributes.map { it.key.toString() to it.value.toString() }.toMap()
 }
 
