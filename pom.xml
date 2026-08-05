@@ -60,7 +60,7 @@
                         <configuration>
                             <rules>
                                 <requireJavaVersion>
-                                    <version>${maven.compiler.target}</version>
+                                    <version>[${maven.compiler.target},)</version>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
