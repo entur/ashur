@@ -7,11 +7,11 @@ import org.xml.sax.helpers.AttributesImpl
 
 /**
  * Handler that normalizes the PublicationDelivery root element by preserving
- * input attributes while overriding namespace declarations and the version attribute.
+ * input attributes while overriding namespace declarations.
  *
  * Specifically:
  * - Namespace declarations are replaced with a standardized set (netex, gis, siri)
- * - The version attribute is overridden with a standardized value
+ * - The version attribute is preserved as-is when present, or set to a standardized value when absent
  * - The xsi:schemaLocation attribute is removed
  * - All other input attributes are preserved as-is
  */
@@ -56,10 +56,8 @@ class PublicationDeliveryHandler : XMLElementHandler {
             normalized.removeAttribute(schemaLocationByQName)
         }
 
-        val versionIndex = normalized.getIndex("version")
-        if (versionIndex >= 0) {
-            normalized.setValue(versionIndex, NETEX_VERSION)
-        } else {
+        // Preserve an existing version as-is; only supply a standardized value when it is absent
+        if (normalized.getIndex("version") < 0) {
             normalized.addAttribute("", "version", "version", "CDATA", NETEX_VERSION)
         }
 

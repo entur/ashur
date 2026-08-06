@@ -38,13 +38,13 @@ class PublicationDeliveryHandlerTest {
             eq("PublicationDelivery"),
             eq("PublicationDelivery"),
             check {
-                assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("old-version", it.getValue("version"))
             }
         )
     }
 
     @Test
-    fun testStartElementPreservesInputAttributesButOverridesVersion() {
+    fun testStartElementPreservesInputAttributesIncludingVersion() {
         val attrs = AttributesImpl()
         attrs.addAttribute("", "version", "version", "CDATA", "some-other-version")
         attrs.addAttribute("", "custom", "custom", "CDATA", "custom-value")
@@ -57,7 +57,7 @@ class PublicationDeliveryHandlerTest {
             eq("PublicationDelivery"),
             check {
                 assertEquals(2, it.length, "Should have version and custom attributes")
-                assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("some-other-version", it.getValue("version"))
                 assertEquals("custom-value", it.getValue("custom"))
             }
         )
@@ -84,7 +84,7 @@ class PublicationDeliveryHandlerTest {
             eq("PublicationDelivery"),
             check {
                 assertEquals(2, it.length, "Should have version and custom, but not schemaLocation")
-                assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("old-version", it.getValue("version"))
                 assertEquals("custom-value", it.getValue("custom"))
                 assertNull(it.getValue("xsi:schemaLocation"))
             }
@@ -106,7 +106,7 @@ class PublicationDeliveryHandlerTest {
             eq("PublicationDelivery"),
             check {
                 assertEquals(2, it.length, "Should have version and custom, but not schemaLocation")
-                assertEquals("1.15:NO-NeTEx-networktimetable:1.5", it.getValue("version"))
+                assertEquals("old-version", it.getValue("version"))
                 assertEquals("custom-value", it.getValue("custom"))
                 assertNull(it.getValue("xsi:schemaLocation"))
             }
