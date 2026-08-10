@@ -88,6 +88,19 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
             }
         }
 
+    /**
+     * Records the outcome of the redelivery guard for a delivery, tagged by [outcome] and [codespace].
+     * In Prometheus this surfaces as `ashur_filter_guard_total{outcome,codespace}` — the signal for
+     * whether the concurrent/crash redelivery cases actually occur in production.
+     */
+    fun recordGuardOutcome(outcome: String, codespace: String?) {
+        Counter.builder(GUARD_METRIC_NAME)
+            .tag("outcome", outcome)
+            .tag("codespace", codespace.orUnknown())
+            .register(meterRegistry)
+            .increment()
+    }
+
     private fun increment(status: String, codespace: String?) {
         Counter.builder(RUNS_METRIC_NAME)
             .tag("status", status)
@@ -107,5 +120,11 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
         const val STATUS_SUCCESS = "success"
         const val STATUS_FAILED = "failed"
         const val UNKNOWN_CODESPACE = "unknown"
+        const val GUARD_METRIC_NAME = "ashur.filter.guard"
+        const val GUARD_OUTCOME_CLAIMED = "claimed"
+        const val GUARD_OUTCOME_SKIPPED_DONE = "skipped_already_done"
+        const val GUARD_OUTCOME_BOUNCED_FRESH = "bounced_claim_fresh"
+        const val GUARD_OUTCOME_TOOK_OVER_STALE = "took_over_stale"
+        const val GUARD_OUTCOME_FAIL_OPEN = "fail_open"
     }
 }

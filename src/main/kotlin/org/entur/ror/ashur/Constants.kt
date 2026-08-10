@@ -22,4 +22,7 @@ object Constants {
     val FILTERING_ERROR_CODE_HEADER = "FilteringErrorCode"
 
     val NO_JOURNEYS_IN_NETEX_DATASET_ERROR_CODE = "NO_JOURNEYS_IN_NETEX_DATASET"
+
+    val GUARD_DECISION_HEADER = "AshurRedeliveryGuardDecision"
+    val GUARD_DECISION_SKIP = "SKIP"
 }

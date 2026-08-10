@@ -4,6 +4,7 @@ import org.entur.netex.tools.lib.app.FilterNetexApp
 import org.entur.netex.tools.lib.config.FilterConfig
 import org.entur.netex.tools.lib.report.FilterReport
 import org.entur.ror.ashur.config.AppConfig
+import org.entur.ror.ashur.filteredOutputObjectPath
 import org.entur.ror.ashur.exceptions.InvalidZipFileException
 import org.entur.ror.ashur.exceptions.NoJourneysInNetexFileException
 import org.entur.ror.ashur.file.AshurBucketService
@@ -259,8 +260,7 @@ class FilterService(
         )
         logger.info("Filtering process for file ${netexInputFile.name} was successful")
 
-        val uploadPath = "${codespace}/${correlationId}"
-        val filteredZipFileName = "${uploadPath}/filtered_${netexInputFile.name}"
+        val filteredZipFileName = filteredOutputObjectPath(codespace, correlationId, netexInputFile.name)
         logger.info("Uploading filtered Netex zip file to Ashur bucket")
         filteredNetexZipFile.inputStream().use { inputStream ->
             ashurBucketService.uploadBlob(

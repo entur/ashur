@@ -49,6 +49,12 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     @Autowired
     lateinit var meterRegistry: MeterRegistry
 
+    @Autowired
+    lateinit var claimStore: org.entur.ror.ashur.file.InMemoryClaimStore
+
+    @Autowired
+    lateinit var ashurBucketService: org.entur.ror.ashur.file.AshurBucketService
+
     private val testCodespace = "test-codespace"
     private val testSource = "test-source"
     private val testFilteringProfile = "AsIsImportFilter"
@@ -96,6 +102,22 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
             "no status message on ${Constants.FILTER_NETEX_FILE_STATUS_TOPIC} within ${timeoutMillis}ms",
         )
     }
+
+    private fun tryReceiveStatusMessage(timeoutMillis: Long): Exchange? {
+        val uri = "google-pubsub:${appConfig.gcp.mardukProjectId}:${Constants.FILTER_NETEX_FILE_STATUS_TOPIC}?synchronousPull=true"
+        return consumerTemplate.receive(uri, timeoutMillis)
+    }
+
+    /** Drain any status messages left over from earlier tests so an assertion window starts clean. */
+    private fun drainStatusMessages() {
+        while (tryReceiveStatusMessage(500) != null) { /* discard */ }
+    }
+
+    private fun guardCount(outcome: String): Double =
+        meterRegistry.find(FilterMetrics.GUARD_METRIC_NAME)
+            .tags("outcome", outcome, "codespace", testCodespace)
+            .counter()
+            ?.count() ?: 0.0
 
     fun fileExistsInAshurInternalBucket(filePath: String): Boolean {
         val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.ashurBucketName}/$filePath")
@@ -205,5 +227,49 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         assertEquals(durationRunsBefore, durationRunCount())
 
         cleanupTestZipFiles()
+    }
+
+    @Test
+    fun `guard skips redelivery when filtered output already exists`() {
+        drainStatusMessages()
+        val correlationId = "already-done-correlation-id"
+        // Pre-seed the done-signal: the filtered output already exists in the internal bucket.
+        val outputPath = pathOfFilteredFile("testfile.zip", correlationId)
+        ashurBucketService.uploadBlob(outputPath, "already-filtered".byteInputStream())
+        val skippedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE)
+        val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        // No STARTED / SUCCEEDED / FAILED status is published — the route acks and stops.
+        val status = tryReceiveStatusMessage(4000)
+        assertEquals(null, status, "expected no status message on a skipped redelivery, got ${status?.toPubsubMessage()?.getStatus()}")
+        assertEquals(skippedBefore + 1.0, guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
+        assertEquals(successRunsBefore, runCount(FilterMetrics.STATUS_SUCCESS))
+    }
+
+    @Test
+    fun `guard bounces (no FAILED, no SUCCEEDED) when a fresh claim is held by another pod`() {
+        drainStatusMessages()
+        val correlationId = "fresh-claim-correlation-id"
+        // Simulate the other pod holding a fresh claim.
+        claimStore.put(
+            "claims/$testCodespace/$correlationId",
+            mapper.writeValueAsBytes(
+                org.entur.ror.ashur.pubsub.Claim(owner = "other-pod", startedAtEpochMs = System.currentTimeMillis(), attempt = 1),
+            ),
+        )
+        val bouncedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH)
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        // The bounce is nacked, not turned into a FAILED status.
+        val status = tryReceiveStatusMessage(4000)
+        assertEquals(null, status, "expected no status message on a bounce, got ${status?.toPubsubMessage()?.getStatus()}")
+        assertTrue(guardCount(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH) > bouncedBefore)
+
+        // Drain the bounced message cleanly: seed its output so the next redelivery skips+acks rather
+        // than perpetually re-bouncing, which would otherwise starve sibling tests' single consumer.
+        ashurBucketService.uploadBlob(pathOfFilteredFile("testfile.zip", correlationId), "done".byteInputStream())
     }
 }

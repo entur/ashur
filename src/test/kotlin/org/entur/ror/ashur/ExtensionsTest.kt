@@ -150,6 +150,21 @@ class ExtensionsTest {
         assertEquals("value", attributes["key"])
     }
 
+    // filteredOutputObjectPath
+
+    @Test
+    fun `filteredOutputObjectPath builds codespace correlation filtered-name and strips leading dirs`() {
+        assertEquals(
+            "RUT/corr-1/filtered_rb_rut-aggregated-netex.zip",
+            filteredOutputObjectPath("RUT", "corr-1", "rb_rut-aggregated-netex.zip"),
+        )
+        // A file handle with directories collapses to its leaf, matching File(fileName).name.
+        assertEquals(
+            "RUT/corr-1/filtered_rb_rut-aggregated-netex.zip",
+            filteredOutputObjectPath("RUT", "corr-1", "inbound/received/rb_rut-aggregated-netex.zip"),
+        )
+    }
+
     // helpers
 
     private fun pubsubMessage(vararg attributes: Pair<String, String>): PubsubMessage =

@@ -23,6 +23,7 @@ class NetexFilterRouteBuilder(
     netexFilterMessageProcessor: NetexFilterMessageProcessor,
     createFilteringReportProcessor: CreateFilteringReportProcessor,
     filterMetrics: FilterMetrics,
+    private val redeliveryGuardProcessor: RedeliveryGuardProcessor,
 ) : BaseRouteBuilder(appConfig, netexFilterMessageProcessor, createFilteringReportProcessor, filterMetrics) {
     override fun configure() {
         super.configure()
@@ -39,6 +40,14 @@ class NetexFilterRouteBuilder(
                 exchange.message.setHeader(Constants.FILTERING_PROFILE_HEADER,
                     pubsubMessage.attributesMap[Constants.FILTERING_PROFILE_HEADER])
             })
+            // Idempotency guard: runs before STARTED so a skipped/bounced redelivery emits no status.
+            // SKIP -> stop (ack, no re-processing); BOUNCE -> ClaimHeldException (nack); PROCESS -> continue.
+            .process(redeliveryGuardProcessor)
+            .choice()
+                .`when`(header(Constants.GUARD_DECISION_HEADER).isEqualTo(Constants.GUARD_DECISION_SKIP))
+                    .log(LoggingLevel.INFO, "Redelivery guard: skipping already-completed request for codespace: \${header.codespace}")
+                    .stop()
+            .end()
             .to("direct:filterProcessingStatusStarted")
             .to("direct:filterProcessingQueue")
             .to("direct:filterProcessingStatusSucceeded")

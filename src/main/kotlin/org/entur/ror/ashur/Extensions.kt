@@ -9,6 +9,14 @@ import org.entur.ror.ashur.filter.FilterProfile
 import java.io.File
 import java.time.LocalDateTime
 
+/**
+ * The object path, within the Ashur internal + exchange buckets, of the filtered output for a
+ * request. This is the redelivery guard's durable "done-signal", and it MUST match exactly the path
+ * [org.entur.ror.ashur.filter.FilterService] uploads to. Derivable purely from message attributes.
+ */
+fun filteredOutputObjectPath(codespace: String, correlationId: String, netexFileName: String): String =
+    "$codespace/$correlationId/filtered_${File(netexFileName).name}"
+
 fun File.createFileWithDirectories(): File {
     if (!this.exists()) {
         if (!this.parentFile.exists()) {
