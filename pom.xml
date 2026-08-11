@@ -15,7 +15,7 @@
         <entur.helpers.version>7.1.0</entur.helpers.version>
         <org.apache.commons.version>3.14.0</org.apache.commons.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <kotlin.version>2.4.0</kotlin.version>
+        <kotlin.version>2.4.10</kotlin.version>
         <kotlinx.serialization.version>1.11.0</kotlinx.serialization.version>
         <junit.version>6.1.0</junit.version>
         <maven.compiler.source>21</maven.compiler.source>
@@ -25,10 +25,10 @@
         <google-cloud-storage.version>2.54.0</google-cloud-storage.version>
         <google-pubsub.version>1.150.2</google-pubsub.version>
         <protobuf-java.version>4.33.2</protobuf-java.version>
-        <gax.version>2.81.0</gax.version>
+        <gax.version>2.82.0</gax.version>
         <netex-tools.version>0.0.50</netex-tools.version>
         <camel.version>4.21.0</camel.version>
-        <slf4j.version>2.0.17</slf4j.version>
+        <slf4j.version>2.0.18</slf4j.version>
         <mockito-kotlin.version>6.3.0</mockito-kotlin.version>
         <spring-boot.version>4.0.6</spring-boot.version>
     </properties>
@@ -89,7 +89,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.5.5</version>
+                <version>3.5.6</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

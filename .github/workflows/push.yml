@@ -66,7 +66,7 @@ jobs:
 
 
   tf-plan-dev:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ terraform-lint, docker-push ]
     name: Terraform Plan DEV
     uses: entur/gha-terraform/.github/workflows/plan.yml@v2
@@ -74,7 +74,7 @@ jobs:
       environment: dev
 
   tf-approval-dev:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-dev.outputs.has_changes == 'true' }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-dev.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-dev ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -85,7 +85,7 @@ jobs:
         run: echo "Approve DEV tf plan"
 
   tf-apply-dev:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-dev.outputs.has_changes == 'true' }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-dev.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-dev, tf-approval-dev ]
     name: Terraform Apply DEV
     uses: entur/gha-terraform/.github/workflows/apply.yml@v2
@@ -118,7 +118,7 @@ jobs:
 
 
   tf-plan-tst:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ terraform-lint, approval-tst ]
     name: Terraform Plan TST
     uses: entur/gha-terraform/.github/workflows/plan.yml@v2
@@ -126,7 +126,7 @@ jobs:
       environment: tst
 
   tf-approval-tst:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-tst.outputs.has_changes == 'true' }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-tst.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-tst ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -137,7 +137,7 @@ jobs:
         run: echo "Approve TST tf plan"
 
   tf-apply-tst:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-tst.outputs.has_changes == 'true' }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-tst.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-tst, tf-approval-tst ]
     name: Terraform Apply TST
     uses: entur/gha-terraform/.github/workflows/apply.yml@v2
@@ -171,7 +171,7 @@ jobs:
 
 
   tf-plan-prd:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ terraform-lint, approval-prd ]
     name: Terraform Plan PRD
     uses: entur/gha-terraform/.github/workflows/plan.yml@v2
@@ -179,7 +179,7 @@ jobs:
       environment: prd
 
   tf-approval-prd:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-prd.outputs.has_changes == 'true' }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-prd.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-prd ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -190,7 +190,7 @@ jobs:
         run: echo "Approve PRD tf plan"
 
   tf-apply-prd:
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-prd.outputs.has_changes == 'true' }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-prd.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-prd, tf-approval-prd ]
     name: Terraform Apply PRD
     uses: entur/gha-terraform/.github/workflows/apply.yml@v2
