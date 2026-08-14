@@ -47,7 +47,8 @@ class GcsClaimStore(
             storage.create(blobInfo, content, option)
             true
         } catch (e: StorageException) {
-            if (e.code == PRECONDITION_FAILED) false else throw e
+            if (e.code != PRECONDITION_FAILED) throw e
+            false
         }
     }
 }
