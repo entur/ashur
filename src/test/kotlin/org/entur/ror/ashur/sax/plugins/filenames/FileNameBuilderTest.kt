@@ -63,6 +63,27 @@ class FileNameBuilderTest {
     }
 
     @Test
+    fun testBuildWithEmptyPrivateCode() {
+        val codespace = "TestCodespace"
+        val lineType = "TestLineType"
+        val lineName = "TestLineName"
+        val publicCode = "TestPublicCode"
+        val privateCode = ""
+
+        val expectedFileName = "TESTCODESPACE_TESTCODESPACE-TestLineType-TestPublicCode_TestPublicCode_TestLineName.xml"
+
+        val fileName = fileNameBuilder
+            .withCodespace(codespace)
+            .withLineType(lineType)
+            .withLineName(lineName)
+            .withLinePublicCode(publicCode)
+            .withLinePrivateCode(privateCode)
+            .build()
+
+        assertEquals(expectedFileName, fileName)
+    }
+
+    @Test
     fun sanitizesNordicAndUmlautDiacritics() {
         val fileName = fileNameBuilder
             .withCodespace("TST")

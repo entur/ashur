@@ -32,6 +32,8 @@ class FileNameBuilder {
         return this
     }
 
+    fun firstCode(): String = sanitize(linePrivateCode.ifEmpty { linePublicCode })
+
     private fun sanitize(fileNameString: String): String {
         val transliterated = buildString(fileNameString.length) {
             for (ch in fileNameString) {
@@ -45,7 +47,7 @@ class FileNameBuilder {
     }
 
     fun build(): String {
-        return "${codespace.uppercase()}_${codespace.uppercase()}-${lineType}-${linePrivateCode}_${linePublicCode}_${lineName}.xml"
+        return "${codespace.uppercase()}_${codespace.uppercase()}-${lineType}-${firstCode()}_${linePublicCode}_${lineName}.xml"
     }
 
     companion object {
