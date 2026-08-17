@@ -24,6 +24,7 @@ class NetexFilterRouteBuilder(
     createFilteringReportProcessor: CreateFilteringReportProcessor,
     filterMetrics: FilterMetrics,
     private val redeliveryGuardProcessor: RedeliveryGuardProcessor,
+    private val redeliveryGuardCompletionProcessor: RedeliveryGuardCompletionProcessor,
 ) : BaseRouteBuilder(appConfig, netexFilterMessageProcessor, createFilteringReportProcessor, filterMetrics) {
     override fun configure() {
         super.configure()
@@ -78,5 +79,8 @@ class NetexFilterRouteBuilder(
             }
             .log(LoggingLevel.INFO, "Publishing processing status SUCCEEDED for codespace: \${header.codespace}")
             .to("google-pubsub:$mardukProjectId:$statusTopic")
+            // Only after SUCCEEDED has actually been published is the run's every externally-visible
+            // effect done; only then can the claim be marked completed (see RedeliveryGuard).
+            .process(redeliveryGuardCompletionProcessor)
     }
 }

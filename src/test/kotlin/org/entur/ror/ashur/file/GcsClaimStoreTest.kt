@@ -14,9 +14,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class GcsClaimStoreTest {
 
@@ -28,19 +26,20 @@ class GcsClaimStoreTest {
     private fun storeWith(storage: Storage) = GcsClaimStore(storage, appConfig)
 
     @Test
-    fun `createIfAbsent returns true when the create succeeds`() {
+    fun `createIfAbsent returns the new generation when the create succeeds`() {
+        val blob = mock<Blob> { on { getGeneration() } doReturn 7L }
         val storage = mock<Storage> {
-            on { create(any<BlobInfo>(), any<ByteArray>(), any<Storage.BlobTargetOption>()) } doReturn mock<Blob>()
+            on { create(any<BlobInfo>(), any<ByteArray>(), any<Storage.BlobTargetOption>()) } doReturn blob
         }
-        assertTrue(storeWith(storage).createIfAbsent("claims/RUT/c1", "x".toByteArray()))
+        assertEquals(7L, storeWith(storage).createIfAbsent("claims/RUT/c1", "x".toByteArray()))
     }
 
     @Test
-    fun `createIfAbsent returns false on a 412 precondition failure`() {
+    fun `createIfAbsent returns null on a 412 precondition failure`() {
         val storage = mock<Storage> {
             on { create(any<BlobInfo>(), any<ByteArray>(), any<Storage.BlobTargetOption>()) } doThrow StorageException(412, "precondition")
         }
-        assertFalse(storeWith(storage).createIfAbsent("claims/RUT/c1", "x".toByteArray()))
+        assertNull(storeWith(storage).createIfAbsent("claims/RUT/c1", "x".toByteArray()))
     }
 
     @Test
@@ -74,15 +73,16 @@ class GcsClaimStoreTest {
     }
 
     @Test
-    fun `overwriteIfGeneration returns true on success and false on 412`() {
+    fun `overwriteIfGeneration returns the new generation on success and null on 412`() {
+        val blob = mock<Blob> { on { getGeneration() } doReturn 8L }
         val ok = mock<Storage> {
-            on { create(any<BlobInfo>(), any<ByteArray>(), any<Storage.BlobTargetOption>()) } doReturn mock<Blob>()
+            on { create(any<BlobInfo>(), any<ByteArray>(), any<Storage.BlobTargetOption>()) } doReturn blob
         }
-        assertTrue(storeWith(ok).overwriteIfGeneration("claims/RUT/c1", "x".toByteArray(), 7L))
+        assertEquals(8L, storeWith(ok).overwriteIfGeneration("claims/RUT/c1", "x".toByteArray(), 7L))
 
         val conflict = mock<Storage> {
             on { create(any<BlobInfo>(), any<ByteArray>(), any<Storage.BlobTargetOption>()) } doThrow StorageException(412, "precondition")
         }
-        assertFalse(storeWith(conflict).overwriteIfGeneration("claims/RUT/c1", "x".toByteArray(), 7L))
+        assertNull(storeWith(conflict).overwriteIfGeneration("claims/RUT/c1", "x".toByteArray(), 7L))
     }
 }

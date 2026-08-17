@@ -20,10 +20,11 @@ class InMemoryClaimStore : ClaimStore {
     private var generationSequence = 0L
 
     @Synchronized
-    override fun createIfAbsent(name: String, content: ByteArray): Boolean {
-        if (entries.containsKey(name)) return false
-        entries[name] = Entry(content.copyOf(), ++generationSequence)
-        return true
+    override fun createIfAbsent(name: String, content: ByteArray): Long? {
+        if (entries.containsKey(name)) return null
+        val generation = ++generationSequence
+        entries[name] = Entry(content.copyOf(), generation)
+        return generation
     }
 
     @Synchronized
@@ -33,11 +34,12 @@ class InMemoryClaimStore : ClaimStore {
     }
 
     @Synchronized
-    override fun overwriteIfGeneration(name: String, content: ByteArray, expectedGeneration: Long): Boolean {
-        val entry = entries[name] ?: return false
-        if (entry.generation != expectedGeneration) return false
-        entries[name] = Entry(content.copyOf(), ++generationSequence)
-        return true
+    override fun overwriteIfGeneration(name: String, content: ByteArray, expectedGeneration: Long): Long? {
+        val entry = entries[name] ?: return null
+        if (entry.generation != expectedGeneration) return null
+        val generation = ++generationSequence
+        entries[name] = Entry(content.copyOf(), generation)
+        return generation
     }
 
     /** Test seam: seed a claim directly (used by the route integration test to force a bounce). */

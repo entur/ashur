@@ -7,14 +7,14 @@ package org.entur.ror.ashur.file
  * because that abstraction cannot express `ifGenerationMatch`.
  */
 interface ClaimStore {
-    /** Atomically create [name] iff it does not already exist. @return true if we created it. */
-    fun createIfAbsent(name: String, content: ByteArray): Boolean
+    /** Atomically create [name] iff it does not already exist. @return the new generation, or null if it already existed. */
+    fun createIfAbsent(name: String, content: ByteArray): Long?
 
     /** @return the current content + generation of [name], or null if it does not exist. */
     fun read(name: String): VersionedClaim?
 
-    /** Atomically overwrite [name] iff its current generation equals [expectedGeneration]. @return true if we won. */
-    fun overwriteIfGeneration(name: String, content: ByteArray, expectedGeneration: Long): Boolean
+    /** Atomically overwrite [name] iff its current generation equals [expectedGeneration]. @return the new generation, or null if we lost the race. */
+    fun overwriteIfGeneration(name: String, content: ByteArray, expectedGeneration: Long): Long?
 }
 
 /** A claim object's bytes together with the generation they were read at. */

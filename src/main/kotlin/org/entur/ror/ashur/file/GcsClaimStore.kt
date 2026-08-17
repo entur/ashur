@@ -30,7 +30,7 @@ class GcsClaimStore(
         const val CONTENT_TYPE = "application/json"
     }
 
-    override fun createIfAbsent(name: String, content: ByteArray): Boolean =
+    override fun createIfAbsent(name: String, content: ByteArray): Long? =
         writeWithPrecondition(name, content, Storage.BlobTargetOption.doesNotExist())
 
     override fun read(name: String): VersionedClaim? {
@@ -38,17 +38,16 @@ class GcsClaimStore(
         return VersionedClaim(blob.getContent(), blob.generation)
     }
 
-    override fun overwriteIfGeneration(name: String, content: ByteArray, expectedGeneration: Long): Boolean =
+    override fun overwriteIfGeneration(name: String, content: ByteArray, expectedGeneration: Long): Long? =
         writeWithPrecondition(name, content, Storage.BlobTargetOption.generationMatch(expectedGeneration))
 
-    private fun writeWithPrecondition(name: String, content: ByteArray, option: Storage.BlobTargetOption): Boolean {
+    private fun writeWithPrecondition(name: String, content: ByteArray, option: Storage.BlobTargetOption): Long? {
         val blobInfo = BlobInfo.newBuilder(BlobId.of(bucket, name)).setContentType(CONTENT_TYPE).build()
         return try {
-            storage.create(blobInfo, content, option)
-            true
+            storage.create(blobInfo, content, option).generation
         } catch (e: StorageException) {
             if (e.code != PRECONDITION_FAILED) throw e
-            false
+            null
         }
     }
 }

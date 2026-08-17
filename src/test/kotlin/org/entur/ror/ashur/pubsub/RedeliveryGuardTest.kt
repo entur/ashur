@@ -3,25 +3,25 @@ package org.entur.ror.ashur.pubsub
 import com.google.cloud.storage.StorageException
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.entur.ror.ashur.config.AppConfig
-import org.entur.ror.ashur.file.AshurBucketService
 import org.entur.ror.ashur.file.ClaimStore
 import org.entur.ror.ashur.file.InMemoryClaimStore
 import org.entur.ror.ashur.metrics.FilterMetrics
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class RedeliveryGuardTest {
 
     private val ttlSeconds = 1200L
     private val ttlMs = ttlSeconds * 1000
-    private val outputPath = "RUT/corr-1/filtered_data.zip"
     private val claimPath = "claims/RUT/corr-1"
-    private val request = GuardRequest(codespace = "RUT", correlationId = "corr-1", outputPath = outputPath)
+    private val request = GuardRequest(codespace = "RUT", correlationId = "corr-1")
     private val mapper = jacksonObjectMapper()
 
     private fun appConfig(enabled: Boolean = true) = AppConfig(
@@ -31,14 +31,9 @@ class RedeliveryGuardTest {
         }
     )
 
-    private fun guard(
-        claimStore: ClaimStore,
-        outputExists: Boolean,
-        enabled: Boolean = true,
-    ): Pair<RedeliveryGuard, SimpleMeterRegistry> {
+    private fun guard(claimStore: ClaimStore, enabled: Boolean = true): Pair<RedeliveryGuard, SimpleMeterRegistry> {
         val registry = SimpleMeterRegistry()
-        val bucket = mock<AshurBucketService> { on { exists(outputPath) } doReturn outputExists }
-        val guard = RedeliveryGuard(claimStore, bucket, FilterMetrics(registry), appConfig(enabled))
+        val guard = RedeliveryGuard(claimStore, FilterMetrics(registry), appConfig(enabled))
         return guard to registry
     }
 
@@ -46,71 +41,144 @@ class RedeliveryGuardTest {
         registry.find(FilterMetrics.GUARD_METRIC_NAME).tags("outcome", outcome, "codespace", "RUT")
             .counter()?.count() ?: 0.0
 
-    @Test
-    fun `skips when the output already exists`() {
-        val store = InMemoryClaimStore()
-        val (guard, registry) = guard(store, outputExists = true)
-
-        assertEquals(GuardDecision.SKIP, guard.evaluate(request, nowEpochMs = 1_000))
-        assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
-    }
+    private fun put(store: InMemoryClaimStore, claim: Claim) = store.put(claimPath, mapper.writeValueAsBytes(claim))
 
     @Test
-    fun `claims and processes when no output and no existing claim`() {
+    fun `claims and processes when no existing claim`() {
         val store = InMemoryClaimStore()
-        val (guard, registry) = guard(store, outputExists = false)
+        val (guard, registry) = guard(store)
 
-        assertEquals(GuardDecision.PROCESS, guard.evaluate(request, nowEpochMs = 1_000))
+        val result = guard.evaluate(request, nowEpochMs = 1_000)
+
+        assertEquals(GuardDecision.PROCESS, result.decision)
+        assertNotNull(result.claimHandle)
+        assertEquals(claimPath, result.claimHandle!!.path)
         assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_CLAIMED))
     }
 
     @Test
-    fun `bounces when a fresh claim already exists`() {
+    fun `bounces when a fresh, not-yet-completed claim already exists`() {
         val store = InMemoryClaimStore()
-        store.put(claimPath, mapper.writeValueAsBytes(Claim(owner = "pod-a", startedAtEpochMs = 1_000, attempt = 1)))
-        val (guard, registry) = guard(store, outputExists = false)
+        put(store, Claim(owner = "pod-a", startedAtEpochMs = 1_000, attempt = 1))
+        val (guard, registry) = guard(store)
 
         // now is only 10s after the claim started; well under the 1200s TTL.
-        assertEquals(GuardDecision.BOUNCE, guard.evaluate(request, nowEpochMs = 11_000))
+        val result = guard.evaluate(request, nowEpochMs = 11_000)
+
+        assertEquals(GuardDecision.BOUNCE, result.decision)
+        assertNull(result.claimHandle)
         assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH))
     }
 
     @Test
-    fun `takes over and processes when the existing claim is stale`() {
+    fun `takes over and processes when the existing claim is stale and not completed`() {
         val store = InMemoryClaimStore()
-        store.put(claimPath, mapper.writeValueAsBytes(Claim(owner = "pod-a", startedAtEpochMs = 1_000, attempt = 1)))
-        val (guard, registry) = guard(store, outputExists = false)
+        put(store, Claim(owner = "pod-a", startedAtEpochMs = 1_000, attempt = 1))
+        val (guard, registry) = guard(store)
 
         val now = 1_000 + ttlMs + 1 // just past the TTL
-        assertEquals(GuardDecision.PROCESS, guard.evaluate(request, nowEpochMs = now))
+        val result = guard.evaluate(request, nowEpochMs = now)
+
+        assertEquals(GuardDecision.PROCESS, result.decision)
+        assertNotNull(result.claimHandle)
         assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_TOOK_OVER_STALE))
 
         // the claim was overwritten with a bumped attempt and refreshed start time
         val rewritten = mapper.readValue(store.read(claimPath)!!.content, Claim::class.java)
         assertEquals(2, rewritten.attempt)
         assertEquals(now, rewritten.startedAtEpochMs)
+        assertEquals(false, rewritten.completed)
     }
 
     @Test
-    fun `no-op processes when the guard is disabled and does not skip on existing output`() {
+    fun `skips when the existing claim is marked completed, even if fresh`() {
         val store = InMemoryClaimStore()
-        // outputExists=true would normally SKIP; disabled must still PROCESS.
-        val (guard, registry) = guard(store, outputExists = true, enabled = false)
+        put(store, Claim(owner = "pod-a", startedAtEpochMs = 1_000, attempt = 1, completed = true))
+        val (guard, registry) = guard(store)
 
-        assertEquals(GuardDecision.PROCESS, guard.evaluate(request, nowEpochMs = 1_000))
-        assertEquals(0.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
+        // Still well within the TTL window, yet completed=true must win over freshness.
+        val result = guard.evaluate(request, nowEpochMs = 11_000)
+
+        assertEquals(GuardDecision.SKIP, result.decision)
+        assertNull(result.claimHandle)
+        assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
+    }
+
+    @Test
+    fun `skips when the existing claim is marked completed and stale`() {
+        // This is the regression this rewrite fixes: a genuinely finished run's claim eventually goes
+        // stale by age, but must never be taken over and reprocessed.
+        val store = InMemoryClaimStore()
+        put(store, Claim(owner = "pod-a", startedAtEpochMs = 1_000, attempt = 1, completed = true))
+        val (guard, registry) = guard(store)
+
+        val now = 1_000 + ttlMs + 1 // well past the TTL
+        val result = guard.evaluate(request, nowEpochMs = now)
+
+        assertEquals(GuardDecision.SKIP, result.decision)
+        assertNull(result.claimHandle)
+        assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
+    }
+
+    @Test
+    fun `no-op processes when the guard is disabled and returns no claim handle`() {
+        val store = InMemoryClaimStore()
+        val (guard, registry) = guard(store, enabled = false)
+
+        val result = guard.evaluate(request, nowEpochMs = 1_000)
+
+        assertEquals(GuardDecision.PROCESS, result.decision)
+        assertNull(result.claimHandle)
+        assertEquals(0.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_CLAIMED))
     }
 
     @Test
     fun `fails open and processes when the claim store throws`() {
         val registry = SimpleMeterRegistry()
-        val bucket = mock<AshurBucketService> { on { exists(outputPath) } doReturn false }
         val throwingStore = mock<ClaimStore> {
             on { createIfAbsent(any(), any()) } doThrow StorageException(503, "unavailable")
         }
-        val guard = RedeliveryGuard(throwingStore, bucket, FilterMetrics(registry), appConfig())
+        val guard = RedeliveryGuard(throwingStore, FilterMetrics(registry), appConfig())
 
-        assertEquals(GuardDecision.PROCESS, guard.evaluate(request, nowEpochMs = 1_000))
+        val result = guard.evaluate(request, nowEpochMs = 1_000)
+
+        assertEquals(GuardDecision.PROCESS, result.decision)
+        assertNull(result.claimHandle)
         assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_FAIL_OPEN))
+    }
+
+    @Test
+    fun `markCompleted persists completed=true so a later evaluate skips`() {
+        val store = InMemoryClaimStore()
+        val (guard, _) = guard(store)
+
+        val claimed = guard.evaluate(request, nowEpochMs = 1_000)
+        guard.markCompleted(claimed.claimHandle!!)
+
+        val after = guard.evaluate(request, nowEpochMs = 2_000)
+        assertEquals(GuardDecision.SKIP, after.decision)
+
+        val stored = mapper.readValue(store.read(claimPath)!!.content, Claim::class.java)
+        assertTrue(stored.completed)
+    }
+
+    @Test
+    fun `markCompleted silently no-ops when the claim was taken over in the meantime`() {
+        val store = InMemoryClaimStore()
+        val (guard, _) = guard(store)
+
+        val claimed = guard.evaluate(request, nowEpochMs = 1_000)
+
+        // Someone else took the claim over as stale in between (generation moved on).
+        val now = 1_000 + ttlMs + 1
+        put(store, Claim(owner = "other-pod", startedAtEpochMs = now, attempt = 2))
+
+        // The original (slow) holder finally finishes and tries to mark its stale handle completed.
+        guard.markCompleted(claimed.claimHandle!!)
+
+        // The new holder's claim must not be clobbered back to completed=true by the old handle.
+        val stored = mapper.readValue(store.read(claimPath)!!.content, Claim::class.java)
+        assertEquals("other-pod", stored.owner)
+        assertEquals(false, stored.completed)
     }
 }

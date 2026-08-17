@@ -12,6 +12,7 @@ import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.PubSubEmulatorTestBase
 import org.entur.ror.ashur.metrics.FilterMetrics
+import org.entur.ror.ashur.pubsub.Claim
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getFilterProfile
 import org.entur.ror.ashur.getPathOfFilteredFile
@@ -229,13 +230,16 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         cleanupTestZipFiles()
     }
 
+    private fun putClaim(correlationId: String, claim: Claim) =
+        claimStore.put("claims/$testCodespace/$correlationId", mapper.writeValueAsBytes(claim))
+
     @Test
-    fun `guard skips redelivery when filtered output already exists`() {
+    fun `guard skips redelivery when the claim is marked completed`() {
         drainStatusMessages()
         val correlationId = "already-done-correlation-id"
-        // Pre-seed the done-signal: the filtered output already exists in the internal bucket.
-        val outputPath = pathOfFilteredFile("testfile.zip", correlationId)
-        ashurBucketService.uploadBlob(outputPath, "already-filtered".byteInputStream())
+        // Pre-seed the done-signal directly on the claim, exactly as markCompleted would after a run
+        // actually finished end-to-end (bucket upload + exchange copy + SUCCEEDED publish).
+        putClaim(correlationId, Claim(owner = "test-setup", startedAtEpochMs = System.currentTimeMillis(), attempt = 1, completed = true))
         val skippedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE)
         val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
 
@@ -249,16 +253,63 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     }
 
     @Test
+    fun `guard reprocesses (does not skip) when the output exists but the claim was never completed`() {
+        // Regression coverage: a pod that crashes right after uploading to the internal bucket but
+        // before the exchange-bucket copy / SUCCEEDED publish must NOT leave the request stuck forever.
+        // The claim it held is stale and never got marked completed, so a redelivery must take it over
+        // and fully reprocess rather than mistaking the leftover bucket object for "done".
+        drainStatusMessages()
+        copyTestZipFileToMardukTestBucket()
+        val correlationId = "crash-before-completion-correlation-id"
+        ashurBucketService.uploadBlob(
+            pathOfFilteredFile("testfile.zip", correlationId),
+            "partial-output-from-crashed-run".byteInputStream(),
+        )
+        putClaim(correlationId, Claim(owner = "crashed-pod", startedAtEpochMs = 1L, attempt = 1)) // ancient -> stale, not completed
+        val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        val startedMessage = receiveStatusMessage(5000)
+        val successMessage = receiveStatusMessage(10000)
+        assertEquals(correlationId, startedMessage.toPubsubMessage().getCorrelationId())
+        assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, startedMessage.toPubsubMessage().getStatus())
+        assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, successMessage.toPubsubMessage().getStatus())
+        assertEquals(successRunsBefore + 1.0, runCount(FilterMetrics.STATUS_SUCCESS))
+
+        cleanupTestZipFiles()
+    }
+
+    @Test
+    fun `successful run marks its claim completed so a later redelivery skips`() {
+        drainStatusMessages()
+        copyTestZipFileToMardukTestBucket()
+        val correlationId = "marks-completed-correlation-id"
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+        receiveStatusMessage(5000)
+        receiveStatusMessage(10000)
+
+        val skippedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE)
+        val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
+
+        // Redeliver the same request now that the run has actually finished end-to-end.
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        val status = tryReceiveStatusMessage(4000)
+        assertEquals(null, status, "expected no status message on a skipped redelivery, got ${status?.toPubsubMessage()?.getStatus()}")
+        assertEquals(skippedBefore + 1.0, guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
+        assertEquals(successRunsBefore, runCount(FilterMetrics.STATUS_SUCCESS))
+
+        cleanupTestZipFiles()
+    }
+
+    @Test
     fun `guard bounces (no FAILED, no SUCCEEDED) when a fresh claim is held by another pod`() {
         drainStatusMessages()
         val correlationId = "fresh-claim-correlation-id"
         // Simulate the other pod holding a fresh claim.
-        claimStore.put(
-            "claims/$testCodespace/$correlationId",
-            mapper.writeValueAsBytes(
-                org.entur.ror.ashur.pubsub.Claim(owner = "other-pod", startedAtEpochMs = System.currentTimeMillis(), attempt = 1),
-            ),
-        )
+        putClaim(correlationId, Claim(owner = "other-pod", startedAtEpochMs = System.currentTimeMillis(), attempt = 1))
         val bouncedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH)
 
         sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
@@ -268,8 +319,8 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         assertEquals(null, status, "expected no status message on a bounce, got ${status?.toPubsubMessage()?.getStatus()}")
         assertTrue(guardCount(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH) > bouncedBefore)
 
-        // Drain the bounced message cleanly: seed its output so the next redelivery skips+acks rather
-        // than perpetually re-bouncing, which would otherwise starve sibling tests' single consumer.
-        ashurBucketService.uploadBlob(pathOfFilteredFile("testfile.zip", correlationId), "done".byteInputStream())
+        // Drain the bounced message cleanly: mark the claim completed so the next redelivery skips+acks
+        // rather than perpetually re-bouncing, which would otherwise starve sibling tests' single consumer.
+        putClaim(correlationId, Claim(owner = "test-cleanup", startedAtEpochMs = System.currentTimeMillis(), attempt = 1, completed = true))
     }
 }

@@ -25,4 +25,6 @@ object Constants {
 
     val GUARD_DECISION_HEADER = "AshurRedeliveryGuardDecision"
     val GUARD_DECISION_SKIP = "SKIP"
+    /** Internal-only exchange header carrying the [org.entur.ror.ashur.pubsub.ClaimHandle] from the guard to [org.entur.ror.ashur.camel.RedeliveryGuardCompletionProcessor]; never sent as a Pub/Sub attribute. */
+    val CLAIM_HANDLE_HEADER = "AshurRedeliveryGuardClaimHandle"
 }
