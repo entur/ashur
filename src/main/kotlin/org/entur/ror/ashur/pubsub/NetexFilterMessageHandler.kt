@@ -1,6 +1,7 @@
 package org.entur.ror.ashur.pubsub
 
 import com.google.pubsub.v1.PubsubMessage
+import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.filter.FilterConfigResolver
 import org.entur.ror.ashur.filter.FilterContext
 import org.entur.ror.ashur.filter.FilterResult
@@ -53,7 +54,7 @@ class NetexFilterMessageHandler(
             fileName = fileName,
             filterConfig = filterConfig,
             codespace = codespace,
-            correlationId = correlationId ?: "unknown",
+            correlationId = correlationId ?: Constants.UNKNOWN_CORRELATION_ID,
             filterProfile = filterProfile,
         )
     }

@@ -2,6 +2,7 @@ package org.entur.ror.ashur.pubsub
 
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.file.ClaimStore
+import org.entur.ror.ashur.filter.FilterProfile
 import org.entur.ror.ashur.metrics.FilterMetrics
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -10,8 +11,18 @@ import tools.jackson.module.kotlin.jacksonObjectMapper
 /** What the caller should do with this delivery. */
 enum class GuardDecision { SKIP, PROCESS, BOUNCE }
 
-/** The minimal, message-derived facts the guard needs to locate the claim. */
-data class GuardRequest(val codespace: String, val correlationId: String)
+/**
+ * The minimal, message-derived facts the guard needs to locate the claim.
+ *
+ * Note: one import run reuses a single correlationId across several profiles (marduk requests StandardImportFilter
+ * and IncludeBlocksAndRestrictedJourneysFilter under the same one), and those are distinct units of work
+ * producing distinct artifacts.
+ */
+data class GuardRequest(
+    val codespace: String,
+    val correlationId: String,
+    val filterProfile: FilterProfile,
+)
 
 /**
  * Opaque handle to the claim a [GuardDecision.PROCESS] outcome now owns. The caller must pass this
@@ -70,29 +81,37 @@ class RedeliveryGuard(
 
         val codespace = request.codespace
         val correlationId = request.correlationId
-        val claimPath = "claims/$codespace/$correlationId"
+        val filterProfile = request.filterProfile.name
+        val claimPath = "claims/$codespace/$correlationId/$filterProfile"
 
         return try {
-            decideOnClaim(claimPath, codespace, correlationId, nowEpochMs)
+            decideOnClaim(claimPath, request, nowEpochMs)
         } catch (e: Exception) {
             // Fail-open: the guard is a safety-net, not a correctness gate. A claim I/O error must
             // degrade to today's behavior (process, tolerate a possible duplicate), never block.
             logger.warn(
-                "Redelivery guard: claim I/O failed for codespace={} correlationId={}; failing open and processing anyway.",
-                codespace, correlationId, e,
+                "Redelivery guard: claim I/O failed for codespace={} correlationId={} filterProfile={}; failing open and processing anyway.",
+                codespace, correlationId, filterProfile, e,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_FAIL_OPEN, codespace)
             GuardResult(GuardDecision.PROCESS)
         }
     }
 
-    private fun decideOnClaim(claimPath: String, codespace: String, correlationId: String, nowEpochMs: Long): GuardResult {
+    private fun decideOnClaim(claimPath: String, request: GuardRequest, nowEpochMs: Long): GuardResult {
+        val codespace = request.codespace
+        val correlationId = request.correlationId
+        val filterProfile = request.filterProfile.name
+
         // We atomically win the claim iff no one else holds one. This is the normal first-delivery
         // case: no other pod is (or was) working on this request, so we own it and process.
         val newClaim = Claim(owner, nowEpochMs, attempt = 1)
         val generation = claimStore.createIfAbsent(claimPath, serialize(newClaim))
         if (generation != null) {
-            logger.info("Redelivery guard: claimed codespace={} correlationId={}; processing.", codespace, correlationId)
+            logger.info(
+                "Redelivery guard: claimed codespace={} correlationId={} filterProfile={}; processing.",
+                codespace, correlationId, filterProfile,
+            )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_CLAIMED, codespace)
             return GuardResult(GuardDecision.PROCESS, ClaimHandle(claimPath, generation, newClaim))
         }
@@ -103,8 +122,8 @@ class RedeliveryGuard(
             // touches 7-day-old objects. Treat a vanished claim as a lost race and bounce; a clean
             // redelivery will re-attempt the claim.
             logger.warn(
-                "Redelivery guard: claim for codespace={} correlationId={} vanished after a create conflict; bouncing.",
-                codespace, correlationId,
+                "Redelivery guard: claim for codespace={} correlationId={} filterProfile={} vanished after a create conflict; bouncing.",
+                codespace, correlationId, filterProfile,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH, codespace)
             return GuardResult(GuardDecision.BOUNCE)
@@ -118,8 +137,8 @@ class RedeliveryGuard(
         // how stale the claim's age is — a completed claim is never taken over.
         if (claim.completed) {
             logger.info(
-                "Redelivery guard: claim for codespace={} correlationId={} is completed; skipping (ack, no re-processing).",
-                codespace, correlationId,
+                "Redelivery guard: claim for codespace={} correlationId={} filterProfile={} is completed; skipping (ack, no re-processing).",
+                codespace, correlationId, filterProfile,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE, codespace)
             return GuardResult(GuardDecision.SKIP)
@@ -138,8 +157,8 @@ class RedeliveryGuard(
         // crosses the TTL and a later redelivery takes it over (see below). We never ack here.
         if (ageMs < ttlMs) {
             logger.info(
-                "Redelivery guard: fresh claim (age={}ms < ttl={}ms, owner={}) for codespace={} correlationId={}; bouncing (nack) for redelivery.",
-                ageMs, ttlMs, claim.owner, codespace, correlationId,
+                "Redelivery guard: fresh claim (age={}ms < ttl={}ms, owner={}) for codespace={} correlationId={} filterProfile={}; bouncing (nack) for redelivery.",
+                ageMs, ttlMs, claim.owner, codespace, correlationId, filterProfile,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH, codespace)
             return GuardResult(GuardDecision.BOUNCE)
@@ -158,8 +177,8 @@ class RedeliveryGuard(
         val tookOverGeneration = claimStore.overwriteIfGeneration(claimPath, serialize(tookOverClaim), existing.generation)
         return if (tookOverGeneration != null) {
             logger.info(
-                "Redelivery guard: took over stale claim (age={}ms >= ttl={}ms, prevOwner={}) for codespace={} correlationId={}; processing.",
-                ageMs, ttlMs, claim.owner, codespace, correlationId,
+                "Redelivery guard: took over stale claim (age={}ms >= ttl={}ms, prevOwner={}) for codespace={} correlationId={} filterProfile={}; processing.",
+                ageMs, ttlMs, claim.owner, codespace, correlationId, filterProfile,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_TOOK_OVER_STALE, codespace)
             GuardResult(GuardDecision.PROCESS, ClaimHandle(claimPath, tookOverGeneration, tookOverClaim))
@@ -167,8 +186,8 @@ class RedeliveryGuard(
             // Both pods saw the same stale claim and raced to take it over; the compare-and-swap let
             // the other pod win, so it is now processing. Bounce (nack) — the winner owns the work.
             logger.info(
-                "Redelivery guard: lost the takeover race for codespace={} correlationId={}; bouncing (nack).",
-                codespace, correlationId,
+                "Redelivery guard: lost the takeover race for codespace={} correlationId={} filterProfile={}; bouncing (nack).",
+                codespace, correlationId, filterProfile,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH, codespace)
             GuardResult(GuardDecision.BOUNCE)

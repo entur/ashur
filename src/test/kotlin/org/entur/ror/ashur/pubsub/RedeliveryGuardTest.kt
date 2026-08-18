@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.file.ClaimStore
 import org.entur.ror.ashur.file.InMemoryClaimStore
+import org.entur.ror.ashur.filter.FilterProfile
 import org.entur.ror.ashur.metrics.FilterMetrics
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
@@ -20,8 +21,12 @@ class RedeliveryGuardTest {
 
     private val ttlSeconds = 1200L
     private val ttlMs = ttlSeconds * 1000
-    private val claimPath = "claims/RUT/corr-1"
-    private val request = GuardRequest(codespace = "RUT", correlationId = "corr-1")
+    private val claimPath = "claims/RUT/corr-1/StandardImportFilter"
+    private val request = GuardRequest(
+        codespace = "RUT",
+        correlationId = "corr-1",
+        filterProfile = FilterProfile.StandardImportFilter,
+    )
     private val mapper = jacksonObjectMapper()
 
     private fun appConfig(enabled: Boolean = true) = AppConfig(
@@ -160,6 +165,31 @@ class RedeliveryGuardTest {
 
         val stored = mapper.readValue(store.read(claimPath)!!.content, Claim::class.java)
         assertTrue(stored.completed)
+    }
+
+    @Test
+    fun `a second filter profile for the same codespace and correlationId is not skipped`() {
+        // Marduk sends both StandardImportFilter and IncludeBlocksAndRestrictedJourneysFilter under one
+        // correlationId for the same import run. They are distinct units of work producing distinct
+        // artifacts, so completing one must never make the guard skip the other.
+        val store = InMemoryClaimStore()
+        val (guard, _) = guard(store)
+
+        val standard = guard.evaluate(request, nowEpochMs = 1_000)
+        assertEquals(GuardDecision.PROCESS, standard.decision)
+        guard.markCompleted(standard.claimHandle!!)
+
+        val blocks = guard.evaluate(
+            request.copy(filterProfile = FilterProfile.IncludeBlocksAndRestrictedJourneysFilter),
+            nowEpochMs = 2_000,
+        )
+
+        assertEquals(GuardDecision.PROCESS, blocks.decision)
+        assertNotNull(blocks.claimHandle)
+        assertEquals(
+            "claims/RUT/corr-1/IncludeBlocksAndRestrictedJourneysFilter",
+            blocks.claimHandle!!.path,
+        )
     }
 
     @Test

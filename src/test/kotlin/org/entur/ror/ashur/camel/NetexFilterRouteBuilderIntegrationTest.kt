@@ -233,7 +233,7 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     }
 
     private fun putClaim(correlationId: String, claim: Claim) =
-        claimStore.put("claims/$testCodespace/$correlationId", mapper.writeValueAsBytes(claim))
+        claimStore.put("claims/$testCodespace/$correlationId/$testFilteringProfile", mapper.writeValueAsBytes(claim))
 
     @Test
     fun `guard skips redelivery when the claim is marked completed`() {
