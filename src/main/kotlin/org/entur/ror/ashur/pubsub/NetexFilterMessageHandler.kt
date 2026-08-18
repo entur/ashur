@@ -54,6 +54,7 @@ class NetexFilterMessageHandler(
             filterConfig = filterConfig,
             codespace = codespace,
             correlationId = correlationId ?: "unknown",
+            filterProfile = filterProfile,
         )
     }
 }

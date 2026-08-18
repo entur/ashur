@@ -86,7 +86,8 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
             .timer()
             ?.count() ?: 0L
 
-    fun pathOfFilteredFile(fileName: String, correlationId: String) = "${testCodespace}/${correlationId}/filtered_${fileName}"
+    fun pathOfFilteredFile(fileName: String, correlationId: String) =
+        "${testCodespace}/${correlationId}/${testFilteringProfile}/filtered_${fileName}"
     fun pathOfFilteringReport(correlationId: String) = "reports/${testCodespace}/filtering-report-${correlationId}.json"
 
     private fun receiveStatusMessage(timeoutMillis: Long): Exchange {
@@ -152,6 +153,7 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
 
         val pathOfFilteredFile = pathOfFilteredFile("testfile.zip", correlationId)
         assertEquals(pathOfFilteredFile, successMessage.toPubsubMessage().getPathOfFilteredFile())
+        assertTrue(fileExistsInAshurInternalBucket(pathOfFilteredFile))
 
         val successBody = successMessage.toPubsubMessage().data.toStringUtf8()
         val successReport = mapper.readValue(successBody, FilteringReport::class.java)
