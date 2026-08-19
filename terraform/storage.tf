@@ -23,6 +23,20 @@ resource "google_storage_bucket" "storage_bucket" {
       type = "Delete"
     }
   }
+  # Redelivery-guard claim leases (claims/{codespace}/{correlationId}/{filterProfile}) are never deleted by the app;
+  # they only have to outlive the 7-day Pub/Sub message retention. Delete them at 8 days (a day of
+  # margin) so they don't linger the full retention period. The blanket rule above already GCs them
+  # eventually, so this is a faster-cleanup optimisation, not a correctness requirement.
+  lifecycle_rule {
+    condition {
+      age            = 8
+      matches_prefix = ["claims/"]
+      with_state     = "ANY"
+    }
+    action {
+      type = "Delete"
+    }
+  }
 }
 
 resource "google_storage_bucket" "exchange_bucket" {

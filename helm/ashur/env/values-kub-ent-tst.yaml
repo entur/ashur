@@ -17,6 +17,9 @@ configmap:
       inputPath: /tmp/netex-data/input
       outputPath: /tmp/netex-data/output
       cleanupEnabled: true
+    redeliveryGuard:
+      enabled: true
+      ttlSeconds: 1200
 
   camel:
     component:

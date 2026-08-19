@@ -1,5 +1,6 @@
 package org.entur.ror.ashur.camel
 
+import com.google.cloud.storage.StorageException
 import io.micrometer.core.instrument.MeterRegistry
 import org.apache.camel.CamelContext
 import org.apache.camel.ConsumerTemplate
@@ -12,6 +13,7 @@ import org.entur.ror.ashur.Constants
 import org.entur.ror.ashur.config.AppConfig
 import org.entur.ror.ashur.config.PubSubEmulatorTestBase
 import org.entur.ror.ashur.metrics.FilterMetrics
+import org.entur.ror.ashur.pubsub.Claim
 import org.entur.ror.ashur.getCorrelationId
 import org.entur.ror.ashur.getFilterProfile
 import org.entur.ror.ashur.getPathOfFilteredFile
@@ -29,6 +31,7 @@ import java.nio.file.Paths
 import kotlin.io.path.inputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.fail
 
 @Testcontainers
 @CamelSpringBootTest
@@ -48,6 +51,12 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
 
     @Autowired
     lateinit var meterRegistry: MeterRegistry
+
+    @Autowired
+    lateinit var claimStore: org.entur.ror.ashur.file.InMemoryClaimStore
+
+    @Autowired
+    lateinit var ashurBucketService: org.entur.ror.ashur.file.AshurBucketService
 
     private val testCodespace = "test-codespace"
     private val testSource = "test-source"
@@ -96,6 +105,37 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
             consumerTemplate.receive(uri, timeoutMillis),
             "no status message on ${Constants.FILTER_NETEX_FILE_STATUS_TOPIC} within ${timeoutMillis}ms",
         )
+    }
+
+    private fun tryReceiveStatusMessage(timeoutMillis: Long): Exchange? {
+        val uri = "google-pubsub:${appConfig.gcp.mardukProjectId}:${Constants.FILTER_NETEX_FILE_STATUS_TOPIC}?synchronousPull=true"
+        return consumerTemplate.receive(uri, timeoutMillis)
+    }
+
+    /** Drain any status messages left over from earlier tests so an assertion window starts clean. */
+    private fun drainStatusMessages() {
+        while (tryReceiveStatusMessage(500) != null) { /* discard */ }
+    }
+
+    private fun guardCount(outcome: String): Double =
+        meterRegistry.find(FilterMetrics.GUARD_METRIC_NAME)
+            .tags("outcome", outcome, "codespace", testCodespace)
+            .counter()
+            ?.count() ?: 0.0
+
+    /**
+     * Polls a guard-outcome counter until it rises above [greaterThan], failing on timeout. Used to
+     * wait on things driven by a Pub/Sub redelivery, whose timing we don't control. Safe against the
+     * shared counter because the methods in this class run sequentially, so nothing else moves it
+     * during the window.
+     */
+    private fun awaitGuardCountAbove(outcome: String, greaterThan: Double, timeoutMillis: Long) {
+        val deadline = System.currentTimeMillis() + timeoutMillis
+        while (System.currentTimeMillis() < deadline) {
+            if (guardCount(outcome) > greaterThan) return
+            Thread.sleep(200)
+        }
+        fail("guard outcome '$outcome' never rose above $greaterThan within ${timeoutMillis}ms")
     }
 
     fun fileExistsInAshurInternalBucket(filePath: String): Boolean {
@@ -205,6 +245,142 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
 
         assertEquals(failedRunsBefore + 1.0, runCount(FilterMetrics.STATUS_FAILED))
         assertEquals(durationRunsBefore, durationRunCount())
+
+        cleanupTestZipFiles()
+    }
+
+    private fun putClaim(correlationId: String, claim: Claim) =
+        claimStore.put("claims/$testCodespace/$correlationId/$testFilteringProfile", mapper.writeValueAsBytes(claim))
+
+    @Test
+    fun `guard skips redelivery when the claim is marked completed`() {
+        drainStatusMessages()
+        val correlationId = "already-done-correlation-id"
+        // Pre-seed the done-signal directly on the claim, exactly as markCompleted would after a run
+        // actually finished end-to-end (bucket upload + exchange copy + SUCCEEDED publish).
+        putClaim(correlationId, Claim(owner = "test-setup", startedAtEpochMs = System.currentTimeMillis(), attempt = 1, completed = true))
+        val skippedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE)
+        val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        // No STARTED / SUCCEEDED / FAILED status is published — the route acks and stops.
+        val status = tryReceiveStatusMessage(4000)
+        assertEquals(null, status, "expected no status message on a skipped redelivery, got ${status?.toPubsubMessage()?.getStatus()}")
+        assertEquals(skippedBefore + 1.0, guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
+        assertEquals(successRunsBefore, runCount(FilterMetrics.STATUS_SUCCESS))
+    }
+
+    @Test
+    fun `guard reprocesses (does not skip) when the output exists but the claim was never completed`() {
+        // Regression coverage: a pod that crashes right after uploading to the internal bucket but
+        // before the exchange-bucket copy / SUCCEEDED publish must NOT leave the request stuck forever.
+        // The claim it held is stale and never got marked completed, so a redelivery must take it over
+        // and fully reprocess rather than mistaking the leftover bucket object for "done".
+        drainStatusMessages()
+        copyTestZipFileToMardukTestBucket()
+        val correlationId = "crash-before-completion-correlation-id"
+        ashurBucketService.uploadBlob(
+            pathOfFilteredFile("testfile.zip", correlationId),
+            "partial-output-from-crashed-run".byteInputStream(),
+        )
+        putClaim(correlationId, Claim(owner = "crashed-pod", startedAtEpochMs = 1L, attempt = 1)) // ancient -> stale, not completed
+        val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        val startedMessage = receiveStatusMessage(5000)
+        val successMessage = receiveStatusMessage(10000)
+        assertEquals(correlationId, startedMessage.toPubsubMessage().getCorrelationId())
+        assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, startedMessage.toPubsubMessage().getStatus())
+        assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, successMessage.toPubsubMessage().getStatus())
+        assertEquals(successRunsBefore + 1.0, runCount(FilterMetrics.STATUS_SUCCESS))
+
+        cleanupTestZipFiles()
+    }
+
+    @Test
+    fun `successful run marks its claim completed so a later redelivery skips`() {
+        drainStatusMessages()
+        copyTestZipFileToMardukTestBucket()
+        val correlationId = "marks-completed-correlation-id"
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+        receiveStatusMessage(5000)
+        receiveStatusMessage(10000)
+
+        val skippedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE)
+        val successRunsBefore = runCount(FilterMetrics.STATUS_SUCCESS)
+
+        // Redeliver the same request now that the run has actually finished end-to-end.
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        val status = tryReceiveStatusMessage(4000)
+        assertEquals(null, status, "expected no status message on a skipped redelivery, got ${status?.toPubsubMessage()?.getStatus()}")
+        assertEquals(skippedBefore + 1.0, guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE))
+        assertEquals(successRunsBefore, runCount(FilterMetrics.STATUS_SUCCESS))
+
+        cleanupTestZipFiles()
+    }
+
+    @Test
+    fun `guard bounces (no FAILED, no SUCCEEDED) when a fresh claim is held by another pod`() {
+        drainStatusMessages()
+        val correlationId = "fresh-claim-correlation-id"
+        // Simulate the other pod holding a fresh claim.
+        putClaim(correlationId, Claim(owner = "other-pod", startedAtEpochMs = System.currentTimeMillis(), attempt = 1))
+        val bouncedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH)
+
+        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+        // The bounce is not turned into a FAILED status.
+        val status = tryReceiveStatusMessage(4000)
+        assertEquals(null, status, "expected no status message on a bounce, got ${status?.toPubsubMessage()?.getStatus()}")
+        assertTrue(guardCount(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH) > bouncedBefore)
+
+        // A bounce has to be a real nack, and publishing no status is not evidence of that on its own —
+        // an exchange that was quietly acked and dropped looks identical from here, and would lose the
+        // request outright. Crash recovery depends on the message coming back, so prove it does: marking
+        // the claim completed sends the next delivery down the skip path, so a rising skipped count can
+        // only mean the message was redelivered. It also drains it, since a skip acks.
+        val skippedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE)
+        putClaim(correlationId, Claim(owner = "test-cleanup", startedAtEpochMs = System.currentTimeMillis(), attempt = 1, completed = true))
+
+        awaitGuardCountAbove(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE, skippedBefore, 30000)
+        assertEquals(null, tryReceiveStatusMessage(2000), "a skipped redelivery must publish no status either")
+    }
+
+    @Test
+    fun `a successful run whose claim completion fails is still reported as successful`() {
+        // markCompleted runs after SUCCEEDED has been published, so an exception escaping it would hit
+        // the route's generic exception handler and publish FAILED for a run that actually succeeded.
+        drainStatusMessages()
+        copyTestZipFileToMardukTestBucket()
+        val correlationId = "completion-failure-correlation-id"
+        // The only overwriteIfGeneration call on the success path is markCompleted's. A 403 is the
+        // realistic trigger: overwriting an existing GCS object needs storage.objects.delete on top of
+        // storage.objects.create.
+        claimStore.overwriteFailure = StorageException(403, "does not have storage.objects.delete access")
+        val failedRunsBefore = runCount(FilterMetrics.STATUS_FAILED)
+
+        try {
+            sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+
+            assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, receiveStatusMessage(5000).toPubsubMessage().getStatus())
+            assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, receiveStatusMessage(10000).toPubsubMessage().getStatus())
+
+            val extraStatus = tryReceiveStatusMessage(4000)
+            assertEquals(
+                null,
+                extraStatus?.toPubsubMessage()?.getStatus(),
+                "the run succeeded end-to-end; a failed claim completion must not publish another status",
+            )
+            assertEquals(failedRunsBefore, runCount(FilterMetrics.STATUS_FAILED), "the run must not be counted as failed")
+            assertTrue(guardCount(FilterMetrics.GUARD_OUTCOME_COMPLETION_FAILED) > 0.0)
+        } finally {
+            // Sibling tests take over stale claims and mark claims completed; both need writes working.
+            claimStore.overwriteFailure = null
+        }
 
         cleanupTestZipFiles()
     }

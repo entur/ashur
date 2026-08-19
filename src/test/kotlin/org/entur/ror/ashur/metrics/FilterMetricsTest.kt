@@ -236,4 +236,37 @@ class FilterMetricsTest {
 
         assertEquals(10.0, serviceJourneysOriginal(registry, "unknown"))
     }
+
+    private fun guardCount(
+        registry: SimpleMeterRegistry,
+        outcome: String,
+        codespace: String,
+    ): Double =
+        registry.find(FilterMetrics.GUARD_METRIC_NAME)
+            .tags("outcome", outcome, "codespace", codespace)
+            .counter()
+            ?.count() ?: 0.0
+
+    @Test
+    fun `recordGuardOutcome counts per outcome and codespace`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH, "RUT")
+        metrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH, "RUT")
+        metrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE, "RUT")
+
+        assertEquals(2.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH, "RUT"))
+        assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE, "RUT"))
+    }
+
+    @Test
+    fun `recordGuardOutcome records null codespace as unknown`() {
+        val registry = SimpleMeterRegistry()
+        val metrics = FilterMetrics(registry)
+
+        metrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_FAIL_OPEN, null)
+
+        assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_FAIL_OPEN, "unknown"))
+    }
 }

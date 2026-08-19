@@ -9,6 +9,7 @@ class AppConfig(
     var netex: NetexConfig = NetexConfig(),
     var gcp: GcpConfig = GcpConfig(),
     var local: LocalConfig = LocalConfig(),
+    var redeliveryGuard: RedeliveryGuardConfig = RedeliveryGuardConfig(),
 ) {
     class NetexConfig {
         lateinit var inputPath: String
@@ -26,5 +27,13 @@ class AppConfig(
 
     class LocalConfig {
         lateinit var blobstorePath: String
+    }
+
+    class RedeliveryGuardConfig {
+        /** When false the guard is a complete no-op (every delivery processes as today). */
+        var enabled: Boolean = true
+
+        /** A claim older than this is considered stale (holder presumed dead) and may be taken over. */
+        var ttlSeconds: Long = 1200
     }
 }

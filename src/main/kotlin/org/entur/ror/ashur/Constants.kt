@@ -22,4 +22,18 @@ object Constants {
     val FILTERING_ERROR_CODE_HEADER = "FilteringErrorCode"
 
     val NO_JOURNEYS_IN_NETEX_DATASET_ERROR_CODE = "NO_JOURNEYS_IN_NETEX_DATASET"
+
+    /**
+     * Stand-in used by the filtering pipeline for the output path when a request carries no
+     * correlationId. Deliberately NOT used as a redelivery-guard claim key: as a placeholder it is
+     * shared by every such request for a codespace+profile, so a completed claim under it would
+     * silently skip unrelated requests. Those deliveries run unguarded instead — see
+     * [org.entur.ror.ashur.pubsub.RedeliveryGuard.evaluate].
+     */
+    val UNKNOWN_CORRELATION_ID = "unknown"
+
+    val GUARD_DECISION_HEADER = "AshurRedeliveryGuardDecision"
+    val GUARD_DECISION_SKIP = "SKIP"
+    /** Internal-only exchange header carrying the [org.entur.ror.ashur.pubsub.ClaimHandle] from the guard to [org.entur.ror.ashur.camel.RedeliveryGuardCompletionProcessor]; never sent as a Pub/Sub attribute. */
+    val CLAIM_HANDLE_HEADER = "AshurRedeliveryGuardClaimHandle"
 }
