@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component
  * - compare-and-swap via [Storage.BlobTargetOption.generationMatch].
  *
  * A `412 PRECONDITION FAILED` is the *expected* "someone else got there first" signal and is
- * translated to a boolean; any other [StorageException] is rethrown so the guard can fail open.
+ * translated to a null return; any other [StorageException] is rethrown so the guard can fail open.
+ *
+ * Writes need `storage.objects.delete` on top of `storage.objects.create`, since overwriting an
+ * existing object counts as both — `roles/storage.objectAdmin` on the internal bucket covers it.
  */
 @Component
 @Profile("gcp")
