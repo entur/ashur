@@ -213,6 +213,23 @@ class RedeliveryGuardTest {
     }
 
     @Test
+    fun `bypasses the guard entirely when the request has no correlationId`() {
+        // Every correlationId-less request for a codespace+profile would otherwise share one claim path,
+        // so completing one would silently skip all the others — no status published, nothing for Marduk
+        // to observe. Running such a delivery unguarded is exactly the pre-guard behaviour.
+        val store = InMemoryClaimStore()
+        val (guard, registry) = guard(store)
+
+        val result = guard.evaluate(request.copy(correlationId = null), nowEpochMs = 1_000)
+
+        assertEquals(GuardDecision.PROCESS, result.decision)
+        assertNull(result.claimHandle)
+        assertNull(store.read("claims/RUT/null/StandardImportFilter"), "must not invent a claim key")
+        assertNull(store.read("claims/RUT/unknown/StandardImportFilter"), "must not invent a claim key")
+        assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_UNGUARDED_NO_CORRELATION_ID))
+    }
+
+    @Test
     fun `markCompleted swallows claim store errors instead of failing the run`() {
         // markCompleted runs after SUCCEEDED has been published, so an escaping exception would make
         // the route publish FAILED for a run that actually succeeded.

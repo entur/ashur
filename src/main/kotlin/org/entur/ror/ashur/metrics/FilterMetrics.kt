@@ -133,5 +133,11 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
          * the guard is not actually suppressing duplicates, so it is worth alerting on.
          */
         const val GUARD_OUTCOME_COMPLETION_FAILED = "completion_failed"
+
+        /**
+         * The delivery carried no correlationId, so it ran unguarded (there is no key that identifies
+         * it). Expected to stay at zero — every request Marduk sends carries one.
+         */
+        const val GUARD_OUTCOME_UNGUARDED_NO_CORRELATION_ID = "unguarded_no_correlation_id"
     }
 }

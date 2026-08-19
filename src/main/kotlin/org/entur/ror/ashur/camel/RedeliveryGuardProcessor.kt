@@ -27,9 +27,10 @@ import org.springframework.stereotype.Component
  * generic exception handler as a FAILED status. Re-checking them here would only swallow those
  * validations and re-raise the same thing a few steps later.
  *
- * correlationId is the exception: the handler tolerates a missing one by falling back to "unknown", so
- * the guard mirrors that fallback rather than failing or bailing out — otherwise such a message would
- * run entirely unguarded.
+ * correlationId is the exception: the handler tolerates a missing one by falling back to
+ * [Constants.UNKNOWN_CORRELATION_ID] for the output path. The guard deliberately does NOT mirror that
+ * fallback — a placeholder would be a shared claim key across unrelated requests — and instead passes
+ * the absence through so [RedeliveryGuard] can run the delivery unguarded.
  */
 @Component
 class RedeliveryGuardProcessor(
@@ -38,7 +39,7 @@ class RedeliveryGuardProcessor(
     override fun process(exchange: Exchange) {
         val message = exchange.toPubsubMessage()
         val codespace = message.getCodespace()!!
-        val correlationId = message.getCorrelationId() ?: Constants.UNKNOWN_CORRELATION_ID
+        val correlationId = message.getCorrelationId()
         val filterProfile = message.getFilterProfile()
 
         val request = GuardRequest(

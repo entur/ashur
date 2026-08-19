@@ -20,7 +20,8 @@ enum class GuardDecision { SKIP, PROCESS, BOUNCE }
  */
 data class GuardRequest(
     val codespace: String,
-    val correlationId: String,
+    /** Null when the request carries no correlationId at all; such a delivery cannot be guarded — see [RedeliveryGuard.evaluate]. */
+    val correlationId: String?,
     val filterProfile: FilterProfile,
 )
 
@@ -83,8 +84,21 @@ class RedeliveryGuard(
         if (!enabled) return GuardResult(GuardDecision.PROCESS)
 
         val codespace = request.codespace
-        val correlationId = request.correlationId
         val filterProfile = request.filterProfile.name
+
+        // No correlationId means there is nothing that identifies this unit of work, so it cannot be
+        // guarded: substituting a placeholder would collapse every such request for this
+        // codespace+profile onto one claim, and completing the first would silently skip all the rest —
+        // no status published at all. Run it unguarded instead, exactly as before the guard existed.
+        val correlationId = request.correlationId ?: run {
+            logger.warn(
+                "Redelivery guard: no correlationId for codespace={} filterProfile={}; processing unguarded (a redelivery of this request would be reprocessed).",
+                codespace, filterProfile,
+            )
+            filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_UNGUARDED_NO_CORRELATION_ID, codespace)
+            return GuardResult(GuardDecision.PROCESS)
+        }
+
         val claimPath = "claims/$codespace/$correlationId/$filterProfile"
 
         return try {

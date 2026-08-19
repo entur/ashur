@@ -117,7 +117,7 @@ class RedeliveryGuardProcessorTest {
     }
 
     @Test
-    fun `a missing correlationId is guarded under the same fallback the pipeline processes under`() {
+    fun `a missing correlationId is passed through as absent, not as a placeholder`() {
         val guard = mock<RedeliveryGuard> { on { evaluate(any(), any()) } doReturn GuardResult(GuardDecision.PROCESS) }
         val exchange = DefaultExchange(camelContext)
         exchange.getIn().body = ""
@@ -134,6 +134,8 @@ class RedeliveryGuardProcessorTest {
 
         val captor = argumentCaptor<GuardRequest>()
         org.mockito.kotlin.verify(guard).evaluate(captor.capture(), any())
-        assertEquals(Constants.UNKNOWN_CORRELATION_ID, captor.firstValue.correlationId)
+        // Substituting UNKNOWN_CORRELATION_ID here would make one claim key shared by every unrelated
+        // correlationId-less request for this codespace+profile.
+        assertNull(captor.firstValue.correlationId)
     }
 }

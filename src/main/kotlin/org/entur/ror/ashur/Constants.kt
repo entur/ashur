@@ -24,9 +24,11 @@ object Constants {
     val NO_JOURNEYS_IN_NETEX_DATASET_ERROR_CODE = "NO_JOURNEYS_IN_NETEX_DATASET"
 
     /**
-     * Stand-in used when a request carries no correlationId. Shared by the filtering pipeline and the
-     * redelivery guard so both identify such a run the same way — the guard's claim path must match the
-     * correlationId the run actually processes under.
+     * Stand-in used by the filtering pipeline for the output path when a request carries no
+     * correlationId. Deliberately NOT used as a redelivery-guard claim key: as a placeholder it is
+     * shared by every such request for a codespace+profile, so a completed claim under it would
+     * silently skip unrelated requests. Those deliveries run unguarded instead — see
+     * [org.entur.ror.ashur.pubsub.RedeliveryGuard.evaluate].
      */
     val UNKNOWN_CORRELATION_ID = "unknown"
 
