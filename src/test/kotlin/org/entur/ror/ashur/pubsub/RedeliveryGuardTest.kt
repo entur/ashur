@@ -211,4 +211,31 @@ class RedeliveryGuardTest {
         assertEquals("other-pod", stored.owner)
         assertEquals(false, stored.completed)
     }
+
+    @Test
+    fun `markCompleted swallows claim store errors instead of failing the run`() {
+        // markCompleted runs after SUCCEEDED has been published, so an escaping exception would make
+        // the route publish FAILED for a run that actually succeeded.
+        val throwingStore = mock<ClaimStore> {
+            on { overwriteIfGeneration(any(), any(), any()) } doThrow
+                StorageException(403, "does not have storage.objects.delete access")
+        }
+        val guard = RedeliveryGuard(throwingStore, FilterMetrics(SimpleMeterRegistry()), appConfig())
+
+        guard.markCompleted(ClaimHandle(claimPath, "RUT", generation = 7L, claim = Claim("pod-a", 1_000, 1)))
+    }
+
+    @Test
+    fun `markCompleted records a completion_failed outcome when the claim store fails`() {
+        val registry = SimpleMeterRegistry()
+        val throwingStore = mock<ClaimStore> {
+            on { overwriteIfGeneration(any(), any(), any()) } doThrow
+                StorageException(403, "does not have storage.objects.delete access")
+        }
+        val guard = RedeliveryGuard(throwingStore, FilterMetrics(registry), appConfig())
+
+        guard.markCompleted(ClaimHandle(claimPath, "RUT", generation = 7L, claim = Claim("pod-a", 1_000, 1)))
+
+        assertEquals(1.0, guardCount(registry, FilterMetrics.GUARD_OUTCOME_COMPLETION_FAILED))
+    }
 }

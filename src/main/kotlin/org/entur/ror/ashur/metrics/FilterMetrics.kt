@@ -126,5 +126,12 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
         const val GUARD_OUTCOME_BOUNCED_FRESH = "bounced_claim_fresh"
         const val GUARD_OUTCOME_TOOK_OVER_STALE = "took_over_stale"
         const val GUARD_OUTCOME_FAIL_OPEN = "fail_open"
+
+        /**
+         * The run finished and was reported as SUCCEEDED, but its claim could not be flagged as
+         * completed. Harmless in itself — at worst a redelivery reprocesses the request — but it means
+         * the guard is not actually suppressing duplicates, so it is worth alerting on.
+         */
+        const val GUARD_OUTCOME_COMPLETION_FAILED = "completion_failed"
     }
 }

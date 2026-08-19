@@ -23,7 +23,7 @@ class RedeliveryGuardCompletionProcessorTest {
 
     @Test
     fun `marks the claim completed when a claim handle is present`() {
-        val handle = ClaimHandle("claims/RUT/corr-1", generation = 7L, claim = Claim("pod-a", 1_000, 1))
+        val handle = ClaimHandle("claims/RUT/corr-1/StandardImportFilter", "RUT", generation = 7L, claim = Claim("pod-a", 1_000, 1))
         val guard = mock<RedeliveryGuard>()
         val ex = exchange()
         ex.getIn().setHeader(Constants.CLAIM_HANDLE_HEADER, handle)

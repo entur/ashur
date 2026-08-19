@@ -28,8 +28,11 @@ data class GuardRequest(
  * Opaque handle to the claim a [GuardDecision.PROCESS] outcome now owns. The caller must pass this
  * to [RedeliveryGuard.markCompleted] once — and only once — every externally-visible effect of the
  * run (bucket upload, exchange-bucket copy, status publish) has actually happened.
+ *
+ * [codespace] is carried along only so completion can be reported on the guard's metric under the
+ * same label as the rest of the delivery's outcomes.
  */
-data class ClaimHandle(val path: String, val generation: Long, val claim: Claim)
+data class ClaimHandle(val path: String, val codespace: String, val generation: Long, val claim: Claim)
 
 data class GuardResult(val decision: GuardDecision, val claimHandle: ClaimHandle? = null)
 
@@ -113,7 +116,10 @@ class RedeliveryGuard(
                 codespace, correlationId, filterProfile,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_CLAIMED, codespace)
-            return GuardResult(GuardDecision.PROCESS, ClaimHandle(claimPath, generation, newClaim))
+            return GuardResult(
+                GuardDecision.PROCESS,
+                ClaimHandle(path = claimPath, codespace = codespace, generation = generation, claim = newClaim),
+            )
         }
 
         val existing = claimStore.read(claimPath)
@@ -181,7 +187,15 @@ class RedeliveryGuard(
                 ageMs, ttlMs, claim.owner, codespace, correlationId, filterProfile,
             )
             filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_TOOK_OVER_STALE, codespace)
-            GuardResult(GuardDecision.PROCESS, ClaimHandle(claimPath, tookOverGeneration, tookOverClaim))
+            GuardResult(
+                GuardDecision.PROCESS,
+                ClaimHandle(
+                    path = claimPath,
+                    codespace = codespace,
+                    generation = tookOverGeneration,
+                    claim = tookOverClaim,
+                ),
+            )
         } else {
             // Both pods saw the same stale claim and raced to take it over; the compare-and-swap let
             // the other pod win, so it is now processing. Bounce (nack) — the winner owns the work.
@@ -202,14 +216,27 @@ class RedeliveryGuard(
      * If the generation has moved on (someone else took the claim over, presumably because this run
      * outran the TTL), the write is silently dropped: the new holder now owns completion, and this run
      * finishing late is a harmless, already-accepted duplicate (last-writer-wins on the output object).
+     *
+     * Never throws. This runs after SUCCEEDED has already been published, so anything escaping here
+     * would reach the route's generic exception handler and publish a FAILED for a run that actually
+     * succeeded. Not recording completion only risks a duplicate run on a later redelivery — the same
+     * fail-open trade-off [evaluate] makes.
      */
     fun markCompleted(handle: ClaimHandle) {
-        val newGeneration = claimStore.overwriteIfGeneration(handle.path, serialize(handle.claim.copy(completed = true)), handle.generation)
-        if (newGeneration == null) {
+        try {
+            val newGeneration = claimStore.overwriteIfGeneration(handle.path, serialize(handle.claim.copy(completed = true)), handle.generation)
+            if (newGeneration == null) {
+                logger.warn(
+                    "Redelivery guard: could not mark claim {} completed — its generation moved on (taken over as stale); the new holder owns completion.",
+                    handle.path,
+                )
+            }
+        } catch (e: Exception) {
             logger.warn(
-                "Redelivery guard: could not mark claim {} completed — its generation moved on (taken over as stale); the new holder owns completion.",
-                handle.path,
+                "Redelivery guard: failed to mark claim {} completed; the run itself succeeded and is reported as such, but a redelivery may reprocess it.",
+                handle.path, e,
             )
+            filterMetrics.recordGuardOutcome(FilterMetrics.GUARD_OUTCOME_COMPLETION_FAILED, handle.codespace)
         }
     }
 

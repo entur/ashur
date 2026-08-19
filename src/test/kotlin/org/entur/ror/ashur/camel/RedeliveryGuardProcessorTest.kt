@@ -58,7 +58,7 @@ class RedeliveryGuardProcessorTest {
 
     @Test
     fun `PROCESS with a claim handle stashes it on the exchange`() {
-        val handle = ClaimHandle("claims/RUT/corr-1/StandardImportFilter", generation = 7L, claim = Claim("pod-a", 1_000, 1))
+        val handle = ClaimHandle("claims/RUT/corr-1/StandardImportFilter", "RUT", generation = 7L, claim = Claim("pod-a", 1_000, 1))
         val guard = mock<RedeliveryGuard> { on { evaluate(any(), any()) } doReturn GuardResult(GuardDecision.PROCESS, handle) }
         val exchange = exchangeFor("data.zip", "RUT", "corr-1")
 
