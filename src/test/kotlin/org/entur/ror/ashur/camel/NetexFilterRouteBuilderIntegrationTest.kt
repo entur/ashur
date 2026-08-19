@@ -23,12 +23,8 @@ import org.entur.ror.ashur.filter.FilterProfile
 import org.entur.ror.ashur.report.FilteringReport
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doThrow
-import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.io.File
 import java.nio.file.Paths
@@ -55,11 +51,7 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
     @Autowired
     lateinit var meterRegistry: MeterRegistry
 
-    // A spy rather than a plain @Autowired so a single test can make a claim write fail. Pass-through
-    // otherwise, and Spring resets the stubbing after each test method. It has to live on this class:
-    // a second @SpringBootTest context would keep a second Camel route consuming the same emulator
-    // subscription, and messages would be processed by whichever context won the race.
-    @MockitoSpyBean
+    @Autowired
     lateinit var claimStore: org.entur.ror.ashur.file.InMemoryClaimStore
 
     @Autowired
@@ -345,23 +337,27 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
         // The only overwriteIfGeneration call on the success path is markCompleted's. A 403 is the
         // realistic trigger: overwriting an existing GCS object needs storage.objects.delete on top of
         // storage.objects.create.
-        doThrow(StorageException(403, "does not have storage.objects.delete access"))
-            .whenever(claimStore).overwriteIfGeneration(any(), any(), any())
+        claimStore.overwriteFailure = StorageException(403, "does not have storage.objects.delete access")
         val failedRunsBefore = runCount(FilterMetrics.STATUS_FAILED)
 
-        sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
+        try {
+            sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
 
-        assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, receiveStatusMessage(5000).toPubsubMessage().getStatus())
-        assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, receiveStatusMessage(10000).toPubsubMessage().getStatus())
+            assertEquals(Constants.FILTER_NETEX_FILE_STATUS_STARTED, receiveStatusMessage(5000).toPubsubMessage().getStatus())
+            assertEquals(Constants.FILTER_NETEX_FILE_STATUS_SUCCEEDED, receiveStatusMessage(10000).toPubsubMessage().getStatus())
 
-        val extraStatus = tryReceiveStatusMessage(4000)
-        assertEquals(
-            null,
-            extraStatus?.toPubsubMessage()?.getStatus(),
-            "the run succeeded end-to-end; a failed claim completion must not publish another status",
-        )
-        assertEquals(failedRunsBefore, runCount(FilterMetrics.STATUS_FAILED), "the run must not be counted as failed")
-        assertTrue(guardCount(FilterMetrics.GUARD_OUTCOME_COMPLETION_FAILED) > 0.0)
+            val extraStatus = tryReceiveStatusMessage(4000)
+            assertEquals(
+                null,
+                extraStatus?.toPubsubMessage()?.getStatus(),
+                "the run succeeded end-to-end; a failed claim completion must not publish another status",
+            )
+            assertEquals(failedRunsBefore, runCount(FilterMetrics.STATUS_FAILED), "the run must not be counted as failed")
+            assertTrue(guardCount(FilterMetrics.GUARD_OUTCOME_COMPLETION_FAILED) > 0.0)
+        } finally {
+            // Sibling tests take over stale claims and mark claims completed; both need writes working.
+            claimStore.overwriteFailure = null
+        }
 
         cleanupTestZipFiles()
     }

@@ -35,6 +35,7 @@ class InMemoryClaimStore : ClaimStore {
 
     @Synchronized
     override fun overwriteIfGeneration(name: String, content: ByteArray, expectedGeneration: Long): Long? {
+        overwriteFailure?.let { throw it }
         val entry = entries[name] ?: return null
         if (entry.generation != expectedGeneration) return null
         val generation = ++generationSequence
@@ -47,4 +48,16 @@ class InMemoryClaimStore : ClaimStore {
     fun put(name: String, content: ByteArray) {
         entries[name] = Entry(content.copyOf(), ++generationSequence)
     }
+
+    /**
+     * Test seam: while set, [overwriteIfGeneration] throws this instead of writing, so tests can
+     * exercise the guard's fail-open paths (a real GCS 403/5xx).
+     *
+     * A seam on the fake rather than a Mockito bean override on purpose: an override changes the test
+     * context cache key, which would give the owning test class its own ApplicationContext — and since
+     * Spring caches contexts rather than closing them, a second Camel route would then consume the same
+     * emulator subscription concurrently and steal other tests' messages.
+     */
+    @Volatile
+    var overwriteFailure: RuntimeException? = null
 }
