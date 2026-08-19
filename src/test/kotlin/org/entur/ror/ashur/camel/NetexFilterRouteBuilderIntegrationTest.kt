@@ -31,6 +31,7 @@ import java.nio.file.Paths
 import kotlin.io.path.inputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.fail
 
 @Testcontainers
 @CamelSpringBootTest
@@ -121,6 +122,21 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
             .tags("outcome", outcome, "codespace", testCodespace)
             .counter()
             ?.count() ?: 0.0
+
+    /**
+     * Polls a guard-outcome counter until it rises above [greaterThan], failing on timeout. Used to
+     * wait on things driven by a Pub/Sub redelivery, whose timing we don't control. Safe against the
+     * shared counter because the methods in this class run sequentially, so nothing else moves it
+     * during the window.
+     */
+    private fun awaitGuardCountAbove(outcome: String, greaterThan: Double, timeoutMillis: Long) {
+        val deadline = System.currentTimeMillis() + timeoutMillis
+        while (System.currentTimeMillis() < deadline) {
+            if (guardCount(outcome) > greaterThan) return
+            Thread.sleep(200)
+        }
+        fail("guard outcome '$outcome' never rose above $greaterThan within ${timeoutMillis}ms")
+    }
 
     fun fileExistsInAshurInternalBucket(filePath: String): Boolean {
         val target = File("${appConfig.local.blobstorePath}/${appConfig.gcp.ashurBucketName}/$filePath")
@@ -317,14 +333,21 @@ class NetexFilterRouteBuilderIntegrationTest: PubSubEmulatorTestBase() {
 
         sendFilterMessageToPubsub(netexFilePath = "testfile.zip", correlationId = correlationId)
 
-        // The bounce is nacked, not turned into a FAILED status.
+        // The bounce is not turned into a FAILED status.
         val status = tryReceiveStatusMessage(4000)
         assertEquals(null, status, "expected no status message on a bounce, got ${status?.toPubsubMessage()?.getStatus()}")
         assertTrue(guardCount(FilterMetrics.GUARD_OUTCOME_BOUNCED_FRESH) > bouncedBefore)
 
-        // Drain the bounced message cleanly: mark the claim completed so the next redelivery skips+acks
-        // rather than perpetually re-bouncing, which would otherwise starve sibling tests' single consumer.
+        // A bounce has to be a real nack, and publishing no status is not evidence of that on its own —
+        // an exchange that was quietly acked and dropped looks identical from here, and would lose the
+        // request outright. Crash recovery depends on the message coming back, so prove it does: marking
+        // the claim completed sends the next delivery down the skip path, so a rising skipped count can
+        // only mean the message was redelivered. It also drains it, since a skip acks.
+        val skippedBefore = guardCount(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE)
         putClaim(correlationId, Claim(owner = "test-cleanup", startedAtEpochMs = System.currentTimeMillis(), attempt = 1, completed = true))
+
+        awaitGuardCountAbove(FilterMetrics.GUARD_OUTCOME_SKIPPED_DONE, skippedBefore, 30000)
+        assertEquals(null, tryReceiveStatusMessage(2000), "a skipped redelivery must publish no status either")
     }
 
     @Test
