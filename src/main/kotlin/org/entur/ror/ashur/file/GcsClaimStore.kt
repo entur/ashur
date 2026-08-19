@@ -5,6 +5,7 @@ import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.Storage
 import com.google.cloud.storage.StorageException
 import org.entur.ror.ashur.config.AppConfig
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
@@ -22,7 +23,10 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("gcp")
 class GcsClaimStore(
-    private val storage: Storage,
+    // Names the intended bean explicitly: [GcsClaimStorageConfig] builds a Storage client just for the
+    // guard's claim objects, separate from the BlobStoreRepository clients in GcsStorageConfig. There is
+    // only one Storage bean today, so this documents intent rather than resolving an ambiguity.
+    @Qualifier("claimStorage") private val storage: Storage,
     appConfig: AppConfig,
 ) : ClaimStore {
 
