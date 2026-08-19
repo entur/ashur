@@ -244,6 +244,11 @@ class RedeliveryGuard(
                     "Redelivery guard: could not mark claim {} completed — its generation moved on (taken over as stale); the new holder owns completion.",
                     handle.path,
                 )
+            } else {
+                logger.info(
+                    "Redelivery guard: marked claim {} completed; any redelivery of this request will now be skipped.",
+                    handle.path,
+                )
             }
         } catch (e: Exception) {
             logger.warn(
