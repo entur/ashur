@@ -2,10 +2,16 @@ package org.entur.ror.ashur.sax.plugins.filenames
 
 class FileNameBuilder {
     var codespace: String = ""
+    var lineId: String = ""
     var lineType: String = ""
     var lineName: String = ""
     var linePublicCode: String = ""
     var linePrivateCode: String = ""
+
+    fun withLineId(id: String): FileNameBuilder {
+        this.lineId = sanitize(id)
+        return this
+    }
 
     fun withCodespace(codespace: String): FileNameBuilder {
         this.codespace = sanitize(codespace)
@@ -23,7 +29,8 @@ class FileNameBuilder {
     }
 
     fun withLinePublicCode(linePublicCode: String): FileNameBuilder {
-        this.linePublicCode = sanitize(linePublicCode)
+        // Trimmed so that a whitespace-only PublicCode counts as absent in build()
+        this.linePublicCode = sanitize(linePublicCode, trimWhitespace = true)
         return this
     }
 
@@ -34,9 +41,10 @@ class FileNameBuilder {
 
     fun firstCode(): String = sanitize(linePrivateCode.ifEmpty { linePublicCode })
 
-    private fun sanitize(fileNameString: String): String {
-        val transliterated = buildString(fileNameString.length) {
-            for (ch in fileNameString) {
+    private fun sanitize(fileNameString: String, trimWhitespace: Boolean = false): String {
+        val input = if (trimWhitespace) fileNameString.trim() else fileNameString
+        val transliterated = buildString(input.length) {
+            for (ch in input) {
                 val mapped = TRANSLITERATION[ch]
                 if (mapped != null) append(mapped) else append(ch)
             }
@@ -47,6 +55,9 @@ class FileNameBuilder {
     }
 
     fun build(): String {
+        if (linePublicCode.isEmpty()) {
+            return "${codespace.uppercase()}_${lineId}_${lineName}.xml"
+        }
         return "${codespace.uppercase()}_${codespace.uppercase()}-${lineType}-${firstCode()}_${linePublicCode}_${lineName}.xml"
     }
 
