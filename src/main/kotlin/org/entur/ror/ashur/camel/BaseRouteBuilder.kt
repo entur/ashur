@@ -34,8 +34,17 @@ open class BaseRouteBuilder(
 
         // A bounce is NOT a failure: do not publish FAILED, and handled(false) lets the exception
         // propagate so the Pub/Sub consumer nacks the message and the server redelivers it later.
+        //
+        // Without the log* suppressions below, every bounce also went through the default error
+        // handler's "Failed delivery ... Exhausted after delivery attempt: 1" at ERROR, with a stack
+        // trace. A run whose duration exceeds the ack deadline bounces repeatedly, so a perfectly
+        // healthy run produced a burst of ERROR entries. These are scoped to ClaimHeldException, so
+        // genuine failures still log in full.
         onException(ClaimHeldException::class.java)
             .handled(false)
+            .logExhausted(false)
+            .logStackTrace(false)
+            .logExhaustedMessageHistory(false)
             .log(
                 LoggingLevel.INFO,
                 "Redelivery guard bounced message from Pub/Sub topic $filterSubscription (nack for redelivery): \${exception.message}",
