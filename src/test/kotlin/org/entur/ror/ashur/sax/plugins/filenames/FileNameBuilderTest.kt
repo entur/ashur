@@ -28,6 +28,13 @@ class FileNameBuilderTest {
     }
 
     @Test
+    fun withLineId() {
+        val lineId = "TestLineId"
+        fileNameBuilder.withLineId(lineId)
+        assertEquals(lineId, fileNameBuilder.lineId)
+    }
+
+    @Test
     fun withLinePublicCode() {
         val publicCode = "TestPublicCode"
         fileNameBuilder.withLinePublicCode(publicCode)
@@ -57,6 +64,25 @@ class FileNameBuilderTest {
             .withLineName(lineName)
             .withLinePublicCode(publicCode)
             .withLinePrivateCode(privateCode)
+            .build()
+
+        assertEquals(expectedFileName, fileName)
+    }
+
+    @Test
+    fun testBuildWithEmptyPublicCode() {
+        val codespace = "TestCodespace"
+        val lineType = "TestLineType"
+        val lineName = "TestLineName"
+        val lineId = "AVI:Line:WF_ALF-VDS"
+
+        val expectedFileName = "TESTCODESPACE_AVI-Line-WF_ALF-VDS_TestLineName.xml"
+
+        val fileName = fileNameBuilder
+            .withCodespace(codespace)
+            .withLineType(lineType)
+            .withLineName(lineName)
+            .withLineId(lineId)
             .build()
 
         assertEquals(expectedFileName, fileName)
@@ -159,6 +185,90 @@ class FileNameBuilderTest {
 
         assertEquals(
             "TST_TST-Line-X_1_Linjetest.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun whitespaceOnlyPublicCodeCountsAsAbsentAndFallsBackToLineId() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("TestLineName")
+            .withLinePublicCode("   ")
+            .withLineId("AVI:Line:WF")
+            .build()
+
+        assertEquals(
+            "TST_AVI-Line-WF_TestLineName.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun trimsSurroundingWhitespaceInPublicCode() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("TestLineName")
+            .withLinePublicCode("\n  12\n  ")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_12_TestLineName.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun trimsPublicCodeOnlyAndLeavesOtherFieldsUntouched() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("  Bussen  ")
+            .withLinePublicCode("1")
+            .withLinePrivateCode("X")
+            .build()
+
+        assertEquals(
+            "TST_TST-Line-X_1_--Bussen--.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun withLineIdSanitizesOnAssignment() {
+        fileNameBuilder.withLineId("AVI:Line:../x")
+        assertEquals("AVI-Line----x", fileNameBuilder.lineId)
+    }
+
+    @Test
+    fun sanitizesPathSeparatorsAndTraversalInLineId() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("TestLineName")
+            .withLineId("AVI:Line:../../etc/tst x")
+            .build()
+
+        assertEquals(
+            "TST_AVI-Line-------etc-tst-x_TestLineName.xml",
+            fileName,
+        )
+    }
+
+    @Test
+    fun sanitizesNonAsciiInLineId() {
+        val fileName = fileNameBuilder
+            .withCodespace("TST")
+            .withLineType("Line")
+            .withLineName("TestLineName")
+            .withLineId("AVI:Line:Ålesund–α")
+            .build()
+
+        assertEquals(
+            "TST_AVI-Line-Alesund_TestLineName.xml",
             fileName,
         )
     }

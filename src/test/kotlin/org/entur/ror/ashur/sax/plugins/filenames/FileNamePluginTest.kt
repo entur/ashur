@@ -40,11 +40,20 @@ class FileNamePluginTest {
     }
 
     @Test
+    fun testStartElementCapturesLineId() {
+        val lineAttrs = AttributesImpl()
+        lineAttrs.addAttribute("", "id", "id", "CDATA", "AVI:Line:WF_ALF-VDS")
+        fileNamePlugin.startElement("Line", lineAttrs, null)
+        assertEquals("AVI:Line:WF_ALF-VDS", context.lineId)
+    }
+
+    @Test
     fun testStartElementForNonLineElement() {
         val journeyAttrs = AttributesImpl()
         journeyAttrs.addAttribute("", "id", "id", "CDATA", "servicejourney1")
         fileNamePlugin.startElement("ServiceJourney", journeyAttrs, null)
         assertEquals( "", context.lineType)
+        assertEquals("", context.lineId)
     }
 
     @Test

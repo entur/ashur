@@ -119,29 +119,29 @@ class FilterService(
     }
 
     /**
-     * Constructs the path for the input directory based on the codespace and correlation ID.
+     * Constructs the path for the input directory based on the codespace, correlation ID and filter profile.
      *
      * @param codespace The codespace identifier
      * @param correlationId The correlation ID
-     * @param netexSource The source of the request (e.g. marduk).
+     * @param filterProfile The filter profile applied to the request.
      *
      * @return The path of the input directory for the specified message.
      */
-    fun getPathForNetexInputFiles(codespace: String, correlationId: String): String {
-        return "${appConfig.netex.inputPath}/${codespace}/${correlationId}"
+    fun getPathForNetexInputFiles(codespace: String, correlationId: String, filterProfile: FilterProfile): String {
+        return "${appConfig.netex.inputPath}/${codespace}/${correlationId}/${filterProfile.name}"
     }
 
     /**
-     * Constructs the path for the output directory based on the codespace and correlation ID.
+     * Constructs the path for the output directory based on the codespace, correlation ID and filter profile.
      *
      * @param codespace The codespace identifier
      * @param correlationId The correlation ID
-     * @param netexSource The source of the request (e.g. marduk).
+     * @param filterProfile The filter profile applied to the request.
      *
      * @return The path of the output directory for the specified message.
      */
-    fun getPathForNetexOutputFiles(codespace: String, correlationId: String): String {
-        return "${appConfig.netex.outputPath}/${codespace}/${correlationId}"
+    fun getPathForNetexOutputFiles(codespace: String, correlationId: String, filterProfile: FilterProfile): String {
+        return "${appConfig.netex.outputPath}/${codespace}/${correlationId}/${filterProfile.name}"
     }
 
     private fun validateZipFile(fileName: String?): File {
@@ -229,7 +229,8 @@ class FilterService(
      * @param filterConfig The filtering config to use.
      * @param codespace The codespace that the dataset belongs to.
      * @param correlationId The correlation ID.
-     * @param netexSource The source of the request (e.g. marduk).
+     * @param filterProfile The filter profile applied to the request. Part of the derived output path, since the
+     * profile determines the filtered content and two profiles must not overwrite each other's output.
      *
      * @return A [FilterResult] containing the path of the filtered zip file and the filter report.
      *
@@ -240,11 +241,12 @@ class FilterService(
         filterConfig: FilterConfig,
         codespace: String,
         correlationId: String,
+        filterProfile: FilterProfile,
     ): FilterResult {
         val runStartNanos = System.nanoTime()
         val netexInputFile = getZipFile(fileName)
-        val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId)
-        val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId)
+        val localPathForInputFiles = getPathForNetexInputFiles(codespace, correlationId, filterProfile)
+        val localPathForOutputFiles = getPathForNetexOutputFiles(codespace, correlationId, filterProfile)
         val (localDirectoryForInputFiles, localDirectoryForOutputFiles) = createDirectories(
             localPathForInputFiles,
             localPathForOutputFiles
@@ -259,7 +261,7 @@ class FilterService(
         )
         logger.info("Filtering process for file ${netexInputFile.name} was successful")
 
-        val uploadPath = "${codespace}/${correlationId}"
+        val uploadPath = "${codespace}/${correlationId}/${filterProfile.name}"
         val filteredZipFileName = "${uploadPath}/filtered_${netexInputFile.name}"
         logger.info("Uploading filtered Netex zip file to Ashur bucket")
         filteredNetexZipFile.inputStream().use { inputStream ->
