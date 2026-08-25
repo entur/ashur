@@ -88,6 +88,19 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
             }
         }
 
+    /**
+     * Records the outcome of the redelivery guard for a delivery, tagged by [outcome] and [codespace].
+     * In Prometheus this surfaces as `ashur_filter_guard_total{outcome,codespace}` — the signal for
+     * whether the concurrent/crash redelivery cases actually occur in production.
+     */
+    fun recordGuardOutcome(outcome: String, codespace: String?) {
+        Counter.builder(GUARD_METRIC_NAME)
+            .tag("outcome", outcome)
+            .tag("codespace", codespace.orUnknown())
+            .register(meterRegistry)
+            .increment()
+    }
+
     private fun increment(status: String, codespace: String?) {
         Counter.builder(RUNS_METRIC_NAME)
             .tag("status", status)
@@ -107,5 +120,24 @@ class FilterMetrics(private val meterRegistry: MeterRegistry) {
         const val STATUS_SUCCESS = "success"
         const val STATUS_FAILED = "failed"
         const val UNKNOWN_CODESPACE = "unknown"
+        const val GUARD_METRIC_NAME = "ashur.filter.guard"
+        const val GUARD_OUTCOME_CLAIMED = "claimed"
+        const val GUARD_OUTCOME_SKIPPED_DONE = "skipped_already_done"
+        const val GUARD_OUTCOME_BOUNCED_FRESH = "bounced_claim_fresh"
+        const val GUARD_OUTCOME_TOOK_OVER_STALE = "took_over_stale"
+        const val GUARD_OUTCOME_FAIL_OPEN = "fail_open"
+
+        /**
+         * The run finished and was reported as SUCCEEDED, but its claim could not be flagged as
+         * completed. Harmless in itself — at worst a redelivery reprocesses the request — but it means
+         * the guard is not actually suppressing duplicates, so it is worth alerting on.
+         */
+        const val GUARD_OUTCOME_COMPLETION_FAILED = "completion_failed"
+
+        /**
+         * The delivery carried no correlationId, so it ran unguarded (there is no key that identifies
+         * it). Expected to stay at zero — every request Marduk sends carries one.
+         */
+        const val GUARD_OUTCOME_UNGUARDED_NO_CORRELATION_ID = "unguarded_no_correlation_id"
     }
 }

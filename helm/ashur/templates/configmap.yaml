@@ -20,7 +20,10 @@ data:
     ashur.netex.input-path={{ .Values.configmap.ashur.netex.inputPath }}
     ashur.netex.output-path={{ .Values.configmap.ashur.netex.outputPath }}
     ashur.netex.cleanup-enabled={{ .Values.configmap.ashur.netex.cleanupEnabled }}
-    
+
+    ashur.redelivery-guard.enabled={{ .Values.configmap.ashur.redeliveryGuard.enabled }}
+    ashur.redelivery-guard.ttl-seconds={{ .Values.configmap.ashur.redeliveryGuard.ttlSeconds }}
+
     camel.component.google-pubsub.projectId={{ .Values.configmap.camel.component.googlePubsub.projectId }}
     
     spring.profiles.active=gcp

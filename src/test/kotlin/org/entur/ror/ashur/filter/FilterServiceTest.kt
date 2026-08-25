@@ -138,4 +138,27 @@ class FilterServiceTest(@Autowired var filterService: FilterService) : PubSubEmu
         Assertions.assertTrue(filterService.isLineFile(File("line1.xml")))
         Assertions.assertFalse(filterService.isLineFile(File("_shared.xml")))
     }
+
+    @Test
+    fun testPathForNetexInputFilesIncludesFilterProfile() {
+        Assertions.assertEquals(
+            "${appConfig.netex.inputPath}/RUT/corr-1/StandardImportFilter",
+            filterService.getPathForNetexInputFiles("RUT", "corr-1", FilterProfile.StandardImportFilter),
+        )
+    }
+
+    @Test
+    fun testPathForNetexOutputFilesIncludesFilterProfile() {
+        Assertions.assertEquals(
+            "${appConfig.netex.outputPath}/RUT/corr-1/StandardImportFilter",
+            filterService.getPathForNetexOutputFiles("RUT", "corr-1", FilterProfile.StandardImportFilter),
+        )
+    }
+
+    @Test
+    fun testPathsDifferPerFilterProfileForSameCodespaceAndCorrelationId() {
+        val standard = filterService.getPathForNetexOutputFiles("RUT", "corr-1", FilterProfile.StandardImportFilter)
+        val asIs = filterService.getPathForNetexOutputFiles("RUT", "corr-1", FilterProfile.AsIsImportFilter)
+        Assertions.assertNotEquals(standard, asIs)
+    }
 }

@@ -20,6 +20,7 @@ class FileNamePlugin(
         }
         if (elementName == "FlexibleLine" || elementName == "Line") {
             context.lineType = elementName
+            attributes?.getValue("id")?.let { context.lineId = it }
         }
     }
 
@@ -47,6 +48,7 @@ class FileNamePlugin(
         }
 
         val newFileName = FileNameBuilder()
+            .withLineId(context.lineId)
             .withLineName(context.lineName.toString())
             .withLinePublicCode(context.linePublicCode.toString())
             .withLinePrivateCode(context.linePrivateCode.toString())

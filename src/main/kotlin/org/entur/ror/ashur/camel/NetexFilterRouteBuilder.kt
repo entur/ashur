@@ -23,6 +23,8 @@ class NetexFilterRouteBuilder(
     netexFilterMessageProcessor: NetexFilterMessageProcessor,
     createFilteringReportProcessor: CreateFilteringReportProcessor,
     filterMetrics: FilterMetrics,
+    private val redeliveryGuardProcessor: RedeliveryGuardProcessor,
+    private val redeliveryGuardCompletionProcessor: RedeliveryGuardCompletionProcessor,
 ) : BaseRouteBuilder(appConfig, netexFilterMessageProcessor, createFilteringReportProcessor, filterMetrics) {
     override fun configure() {
         super.configure()
@@ -39,6 +41,14 @@ class NetexFilterRouteBuilder(
                 exchange.message.setHeader(Constants.FILTERING_PROFILE_HEADER,
                     pubsubMessage.attributesMap[Constants.FILTERING_PROFILE_HEADER])
             })
+            // Idempotency guard: runs before STARTED so a skipped/bounced redelivery emits no status.
+            // SKIP -> stop (ack, no re-processing); BOUNCE -> ClaimHeldException (nack); PROCESS -> continue.
+            .process(redeliveryGuardProcessor)
+            .choice()
+                .`when`(header(Constants.GUARD_DECISION_HEADER).isEqualTo(Constants.GUARD_DECISION_SKIP))
+                    .log(LoggingLevel.INFO, "Redelivery guard: skipping already-completed request for codespace: \${header.codespace}")
+                    .stop()
+            .end()
             .to("direct:filterProcessingStatusStarted")
             .to("direct:filterProcessingQueue")
             .to("direct:filterProcessingStatusSucceeded")
@@ -69,5 +79,8 @@ class NetexFilterRouteBuilder(
             }
             .log(LoggingLevel.INFO, "Publishing processing status SUCCEEDED for codespace: \${header.codespace}")
             .to("google-pubsub:$mardukProjectId:$statusTopic")
+            // Only after SUCCEEDED has actually been published is the run's every externally-visible
+            // effect done; only then can the claim be marked completed (see RedeliveryGuard).
+            .process(redeliveryGuardCompletionProcessor)
     }
 }

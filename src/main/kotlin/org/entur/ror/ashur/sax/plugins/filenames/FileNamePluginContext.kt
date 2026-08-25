@@ -1,12 +1,14 @@
 package org.entur.ror.ashur.sax.plugins.filenames
 
 class FileNamePluginContext{
+    var lineId: String = ""
     var lineType: String = ""
     var lineName: StringBuilder = StringBuilder()
     var linePublicCode: StringBuilder = StringBuilder()
     var linePrivateCode: StringBuilder = StringBuilder()
 
     fun reset() {
+        lineId = ""
         lineType = ""
         lineName.clear()
         linePublicCode.clear()
