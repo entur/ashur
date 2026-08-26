@@ -6,25 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Ashur is a NeTEx dataset filtering and normalization service for Entur. It listens to Google Pub/Sub for messages indicating new NeTEx datasets are available, processes them using the [netex-tools](https://github.com/entur/netex-tools) library, and uploads filtered results to Google Cloud Storage.
 
-## Build & Test Commands
-
-```bash
-# Build the project
-mvn clean package
-
-# Run all tests
-mvn test
-
-# Run a single test class
-mvn test -Dtest=FilterServiceTest
-
-# Run a single test method
-mvn test -Dtest=FilterServiceTest#hasNoJourneysInFilteredDataset
-
-# Skip tests during build
-mvn package -DskipTests
-```
-
 ## Running Locally
 
 Requires Google PubSub emulator running on port 8085:
@@ -107,13 +88,6 @@ Application properties prefixed with `ashur.*`:
 - `ashur.gcp.ashur-project-id` / `marduk-project-id` - GCP project IDs
 - `ashur.redelivery-guard.enabled` - When false the redelivery guard is a complete no-op
 - `ashur.redelivery-guard.ttl-seconds` - Age at which an uncompleted claim is treated as abandoned and may be taken over. Must exceed the worst-case legitimate run duration, or a slow-but-alive run gets taken over mid-flight
-
-### Key Dependencies
-
-- **netex-tools** (`org.entur.ror:netex-pipeline`, `netex-tools-lib`) - Core NeTEx filtering engine
-- **Apache Camel** - Message routing and PubSub integration
-- **Spring Boot** - Application framework
-- **entur-helpers** - Entur's shared GCS and PubSub utilities
 
 ## PubSub Message Attributes
 
