@@ -23,7 +23,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.5.18</logback.version>
         <google-cloud-storage.version>2.54.0</google-cloud-storage.version>
-        <google-pubsub.version>1.150.2</google-pubsub.version>
+        <google-pubsub.version>1.154.0</google-pubsub.version>
         <protobuf-java.version>4.35.1</protobuf-java.version>
         <gax.version>2.82.0</gax.version>
         <netex-tools.version>0.0.50</netex-tools.version>
