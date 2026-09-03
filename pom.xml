@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
-        <entur.helpers.version>7.2.0</entur.helpers.version>
+        <entur.helpers.version>7.3.0</entur.helpers.version>
         <org.apache.commons.version>3.14.0</org.apache.commons.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>2.4.10</kotlin.version>
@@ -23,7 +23,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.5.18</logback.version>
         <google-cloud-storage.version>2.54.0</google-cloud-storage.version>
-        <google-pubsub.version>1.150.2</google-pubsub.version>
+        <google-pubsub.version>1.154.0</google-pubsub.version>
         <protobuf-java.version>4.35.1</protobuf-java.version>
         <gax.version>2.84.0</gax.version>
         <netex-tools.version>0.0.50</netex-tools.version>
