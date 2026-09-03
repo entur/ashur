@@ -1,5 +1,6 @@
 package org.entur.ror.ashur.pubsub
 
+import com.google.api.gax.core.NoCredentialsProvider
 import com.google.api.gax.grpc.InstantiatingGrpcChannelProvider
 import com.google.api.gax.rpc.NotFoundException
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient
@@ -34,13 +35,13 @@ class PubSubInitializer(
     private fun topicAdminSettings(): TopicAdminSettings =
         TopicAdminSettings.newBuilder()
             .setTransportChannelProvider(createChannelProvider())
-            .setCredentialsProvider { null }
+            .setCredentialsProvider(NoCredentialsProvider.create())
             .build()
 
     private fun subscriptionAdminSettings(): SubscriptionAdminSettings =
         SubscriptionAdminSettings.newBuilder()
             .setTransportChannelProvider(createChannelProvider())
-            .setCredentialsProvider { null }
+            .setCredentialsProvider(NoCredentialsProvider.create())
             .build()
 
     private fun createTopicAdminClient(settings: TopicAdminSettings = topicAdminSettings()): TopicAdminClient =
