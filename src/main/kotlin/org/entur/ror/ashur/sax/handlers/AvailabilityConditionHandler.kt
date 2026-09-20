@@ -1,6 +1,7 @@
 package org.entur.ror.ashur.sax.handlers
 
 import org.entur.netex.tools.lib.extensions.addNewAttribute
+import org.entur.netex.tools.lib.extensions.toISO8601
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
 import org.entur.netex.tools.lib.output.NetexIdGenerator
@@ -8,6 +9,10 @@ import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.xml.sax.helpers.AttributesImpl
 import java.time.LocalDate
 
+/**
+ * Writes the AvailabilityCondition entity, using a pre-defined period. The period is
+ * the same one used to determine which journeys to keep through the filtering in Ashur.
+ **/
 class AvailabilityConditionHandler(
     private val codespace: String,
     private val fromDate: LocalDate,
@@ -31,7 +36,7 @@ class AvailabilityConditionHandler(
 
     fun writeDateField(fieldName: String, date: LocalDate, writer: DelegatingXMLElementWriter) {
         writer.startElement("", fieldName, fieldName, null)
-        val dateString = date.toString()
+        val dateString = date.toISO8601()
         writer.characters(dateString.toCharArray(), 0, dateString.length)
         writer.endElement("", fieldName, fieldName)
     }

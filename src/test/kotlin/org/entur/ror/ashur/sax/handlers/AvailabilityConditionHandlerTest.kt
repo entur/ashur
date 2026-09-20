@@ -1,5 +1,6 @@
 package org.entur.ror.ashur.sax.handlers
 
+import org.entur.netex.tools.lib.extensions.toISO8601
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
 import org.junit.Test
@@ -14,7 +15,19 @@ import kotlin.test.assertEquals
 
 class AvailabilityConditionHandlerTest {
     val codespace = "tst"
-    val handler = AvailabilityConditionHandler(codespace = codespace, fromDate = LocalDate.now(), toDate = LocalDate.now())
+
+    val fromDate = LocalDate.of(2027, 1, 1)
+    val fromDateInXML = fromDate.toISO8601()
+
+    val toDate = LocalDate.of(2027, 1, 31)
+    val toDateInXML = toDate.toISO8601()
+
+    val handler = AvailabilityConditionHandler(
+        codespace = codespace,
+        fromDate = fromDate,
+        toDate = toDate,
+    )
+
     val writer = mock<DelegatingXMLElementWriter>()
 
     @BeforeEach
@@ -49,9 +62,14 @@ class AvailabilityConditionHandlerTest {
 
         verify(writer).startElement("", NetexTypes.FROM_DATE, NetexTypes.FROM_DATE, null)
 
+        verify(writer).characters(fromDateInXML.toCharArray(), 0, fromDateInXML.length)
+
         verify(writer).endElement("", NetexTypes.FROM_DATE, NetexTypes.FROM_DATE)
 
+
         verify(writer).startElement("", NetexTypes.TO_DATE, NetexTypes.TO_DATE, null)
+
+        verify(writer).characters(toDateInXML.toCharArray(), 0, toDateInXML.length)
 
         verify(writer).endElement("", NetexTypes.TO_DATE, NetexTypes.TO_DATE)
 
