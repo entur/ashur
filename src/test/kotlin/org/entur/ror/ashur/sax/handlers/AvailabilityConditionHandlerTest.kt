@@ -11,11 +11,12 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.xml.sax.helpers.AttributesImpl
+import java.time.LocalDate
 import kotlin.test.assertEquals
 
 class AvailabilityConditionHandlerTest {
     val codespace = "tst"
-    val handler = AvailabilityConditionHandler(codespace = codespace)
+    val handler = AvailabilityConditionHandler(codespace = codespace, fromDate = LocalDate.now(), toDate = LocalDate.now())
     val writer = mock<DelegatingXMLElementWriter>()
 
     @BeforeEach
