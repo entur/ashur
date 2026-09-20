@@ -5,12 +5,10 @@ import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
 import org.junit.Test
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
-import org.xml.sax.helpers.AttributesImpl
 import java.time.LocalDate
 import kotlin.test.assertEquals
 
