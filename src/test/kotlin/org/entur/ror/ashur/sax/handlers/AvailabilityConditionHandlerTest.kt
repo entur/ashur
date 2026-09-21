@@ -35,8 +35,7 @@ class AvailabilityConditionHandlerTest {
         reset(writer)
     }
 
-    @Test
-    fun handlerShouldWriteFixedPeriodToAvailabilityCondition() {
+    fun handleAvailabilityConditionEvents() {
         handler.startElement(
             "",
             NetexTypes.AVAILABILITY_CONDITION,
@@ -45,12 +44,19 @@ class AvailabilityConditionHandlerTest {
             writer
         )
         handler.characters("".toCharArray(), 0, 0, writer)
-        handler.endElement("",
+        handler.endElement(
+            "",
             NetexTypes.AVAILABILITY_CONDITION,
             NetexTypes.AVAILABILITY_CONDITION,
             writer
         )
+    }
 
+    @Test
+    fun handlerShouldWriteFixedPeriodToAvailabilityCondition() {
+        handleAvailabilityConditionEvents()
+
+        // verify AvailabilityCondition starting tag
         verify(writer).startElement(
             eq(""),
             eq(NetexTypes.AVAILABILITY_CONDITION),
@@ -61,19 +67,17 @@ class AvailabilityConditionHandlerTest {
             }
         )
 
+        // verify FromDate element
         verify(writer).startElement("", NetexTypes.FROM_DATE, NetexTypes.FROM_DATE, null)
-
         verify(writer).characters(fromDateInXML.toCharArray(), 0, fromDateInXML.length)
-
         verify(writer).endElement("", NetexTypes.FROM_DATE, NetexTypes.FROM_DATE)
 
-
+        // Verify ToDate element
         verify(writer).startElement("", NetexTypes.TO_DATE, NetexTypes.TO_DATE, null)
-
         verify(writer).characters(toDateInXML.toCharArray(), 0, toDateInXML.length)
-
         verify(writer).endElement("", NetexTypes.TO_DATE, NetexTypes.TO_DATE)
 
+        // Verify AvailabilityCondition closing tag
         verify(writer).endElement("", NetexTypes.AVAILABILITY_CONDITION, NetexTypes.AVAILABILITY_CONDITION)
     }
 
