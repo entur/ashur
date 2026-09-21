@@ -28,6 +28,7 @@ class AvailabilityConditionHandler(
         val id = NetexIdGenerator.next(codespace.uppercase(), NetexTypes.AVAILABILITY_CONDITION)
         val newAttributes = AttributesImpl()
         newAttributes.addNewAttribute("id", id)
+        newAttributes.addNewAttribute("version", "1")
         writer.startElement(uri, localName, qName, newAttributes)
 
         writeDateField(NetexTypes.FROM_DATE, fromDate, writer)

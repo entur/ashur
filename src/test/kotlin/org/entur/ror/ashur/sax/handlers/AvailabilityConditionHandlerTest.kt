@@ -57,6 +57,7 @@ class AvailabilityConditionHandlerTest {
             eq(NetexTypes.AVAILABILITY_CONDITION),
             check {
                 assertEquals("TST:AvailabilityCondition:1", it.getValue("id"))
+                assertEquals("1", it.getValue("version"))
             }
         )
 
