@@ -6,13 +6,12 @@ import org.xml.sax.Attributes
 
 /**
  * The filtering done by Ashur implicitly scopes any dataset being imported to
- * a pre-defined a validity period, by filtering away journeys that do not run
+ * a pre-defined validity period, by filtering away journeys that do not run
  * inside that window.
  *
  * A codespace may import NeTEx data that has set an explicit AvailabilityCondition, that
  * likely differs from this period. This handler specifically, ensures that the ToDate field
- * on AvailabilityCondition is entirely controlled by Ashur, and not written from the
- * received from the import.
+ * on AvailabilityCondition is entirely controlled by Ashur.
  *
  * See @AvailabilityConditionHandler to see how ToDate is written explicitly by Ashur.
  **/
