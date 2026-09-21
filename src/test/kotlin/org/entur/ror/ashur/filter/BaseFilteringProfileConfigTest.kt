@@ -1,6 +1,8 @@
 package org.entur.ror.ashur.filter
 
 import org.entur.netex.tools.lib.config.TimePeriod
+import org.entur.netex.tools.lib.extensions.toISO8601
+import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
 import org.entur.netex.tools.lib.selectors.entities.EntitySelector
 import org.entur.ror.ashur.sax.plugins.activedates.ActiveDatesRepository
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -8,6 +10,8 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import java.time.LocalDate
 
 class BaseFilteringProfileConfigTest {
@@ -186,6 +190,47 @@ class BaseFilteringProfileConfigTest {
     @Test
     fun testBuildReturnsNonNullConfig() {
         assertNotNull(standardConfig())
+    }
+
+    @Test
+    fun testAvailabilityConditionHandlersAreWiredToCompositeFrameValidityConditions() {
+        val config = standardConfig()
+        val availabilityCondition =
+            "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/AvailabilityCondition"
+
+        val expectedHandlers = mapOf(
+            availabilityCondition to "AvailabilityConditionHandler",
+            "$availabilityCondition/FromDate" to "AvailabilityConditionFromDateHandler",
+            "$availabilityCondition/ToDate" to "AvailabilityConditionToDateHandler"
+        )
+
+        expectedHandlers.forEach { (path, expectedHandler) ->
+            assertEquals(
+                expectedHandler,
+                config.customElementHandlers[path]?.javaClass?.simpleName,
+                "Wrong or missing custom element handler registered for '$path'"
+            )
+        }
+    }
+
+    @Test
+    fun testAvailabilityConditionHandlerIsGivenTheStandardTimePeriod() {
+        // Own codespace: driving the handler increments the process-global NetexIdGenerator
+        // counter, which other tests assert exact values on.
+        val config = StandardImportFilteringProfileConfig().build(
+            FilterContext(profile = FilterProfile.StandardImportFilter, codespace = "bra")
+        )
+        val handler = config
+            .customElementHandlers["/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/AvailabilityCondition"]!!
+        val writer = mock<DelegatingXMLElementWriter>()
+
+        handler.startElement("", "AvailabilityCondition", "AvailabilityCondition", null, writer)
+
+        val period = BaseFilteringProfileConfig.standardTimePeriod()
+        val expectedFromDate = period.start!!.toISO8601()
+        val expectedToDate = period.end!!.toISO8601()
+        verify(writer).characters(expectedFromDate.toCharArray(), 0, expectedFromDate.length)
+        verify(writer).characters(expectedToDate.toCharArray(), 0, expectedToDate.length)
     }
 
     /**
