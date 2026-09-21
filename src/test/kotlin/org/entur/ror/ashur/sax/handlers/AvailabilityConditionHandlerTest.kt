@@ -3,7 +3,7 @@ package org.entur.ror.ashur.sax.handlers
 import org.entur.netex.tools.lib.extensions.toISO8601
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
-import org.junit.Test
+import kotlin.test.Test
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.check
@@ -14,7 +14,7 @@ import java.time.LocalDate
 import kotlin.test.assertEquals
 
 class AvailabilityConditionHandlerTest {
-    val codespace = "tst"
+    val codespace = "tro"
 
     val fromDate = LocalDate.of(2027, 1, 1)
     val fromDateInXML = fromDate.toISO8601()
@@ -62,7 +62,7 @@ class AvailabilityConditionHandlerTest {
             eq(NetexTypes.AVAILABILITY_CONDITION),
             eq(NetexTypes.AVAILABILITY_CONDITION),
             check {
-                assertEquals("TST:AvailabilityCondition:1", it.getValue("id"))
+                assertEquals("TRO:AvailabilityCondition:1", it.getValue("id"))
                 assertEquals("1", it.getValue("version"))
             }
         )

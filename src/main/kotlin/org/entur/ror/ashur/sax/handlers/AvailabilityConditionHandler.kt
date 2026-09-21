@@ -6,6 +6,8 @@ import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
 import org.entur.netex.tools.lib.output.NetexIdGenerator
 import org.entur.netex.tools.lib.output.XMLElementHandler
+import org.entur.ror.ashur.utils.removeRbPrefix
+import org.xml.sax.Attributes
 import org.xml.sax.helpers.AttributesImpl
 import java.time.LocalDate
 
@@ -22,10 +24,11 @@ class AvailabilityConditionHandler(
         uri: String?,
         localName: String?,
         qName: String?,
-        attributes: org.xml.sax.Attributes?,
+        attributes: Attributes?,
         writer: DelegatingXMLElementWriter
     ) {
-        val id = NetexIdGenerator.next(codespace.uppercase(), NetexTypes.AVAILABILITY_CONDITION)
+        val codespaceWithoutRbPrefix = removeRbPrefix(codespace.uppercase())
+        val id = NetexIdGenerator.next(codespaceWithoutRbPrefix, NetexTypes.AVAILABILITY_CONDITION)
         val newAttributes = AttributesImpl()
         newAttributes.addNewAttribute("id", id)
         newAttributes.addNewAttribute("version", "1")
@@ -35,7 +38,7 @@ class AvailabilityConditionHandler(
         writeDateField(NetexTypes.TO_DATE, toDate, writer)
     }
 
-    fun writeDateField(fieldName: String, date: LocalDate, writer: DelegatingXMLElementWriter) {
+    private fun writeDateField(fieldName: String, date: LocalDate, writer: DelegatingXMLElementWriter) {
         writer.startElement("", fieldName, fieldName, null)
         val dateString = date.toISO8601()
         writer.characters(dateString.toCharArray(), 0, dateString.length)

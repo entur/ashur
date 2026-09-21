@@ -2,7 +2,7 @@ package org.entur.ror.ashur.sax.handlers
 
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
-import org.junit.Test
+import kotlin.test.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.verifyNoInteractions
 

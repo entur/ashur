@@ -2,7 +2,7 @@ package org.entur.ror.ashur.sax.handlers
 
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
-import org.junit.Test
+import kotlin.test.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.verifyNoInteractions
 
@@ -10,9 +10,9 @@ class AvailabilityConditionToDateHandlerTest {
     val elementName = NetexTypes.TO_DATE
     
     @Test
-    fun availabilityConditionFromDateHandlerIsANoOp() {
+    fun availabilityConditionToDateHandlerIsANoOp() {
         val writer = mock<DelegatingXMLElementWriter>()
-        val handler = AvailabilityConditionFromDateHandler()
+        val handler = AvailabilityConditionToDateHandler()
         handler.startElement("", elementName, elementName, null, mock())
         handler.characters("".toCharArray(), 0, 0, writer)
         handler.endElement("", elementName, elementName, writer)
