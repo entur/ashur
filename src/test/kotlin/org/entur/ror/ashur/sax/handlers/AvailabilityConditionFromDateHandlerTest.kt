@@ -13,7 +13,7 @@ class AvailabilityConditionFromDateHandlerTest {
     fun availabilityConditionFromDateHandlerIsANoOp() {
         val writer = mock<DelegatingXMLElementWriter>()
         val handler = AvailabilityConditionFromDateHandler()
-        handler.startElement("", elementName, elementName, null, mock())
+        handler.startElement("", elementName, elementName, null, writer)
         handler.characters("".toCharArray(), 0, 0, writer)
         handler.endElement("", elementName, elementName, writer)
         verifyNoInteractions(writer)
