@@ -201,7 +201,6 @@ class BaseFilteringProfileConfigTest {
         val expectedHandlers = mapOf(
             availabilityCondition to "AvailabilityConditionHandler",
             "$availabilityCondition/FromDate" to "AvailabilityConditionFromDateHandler",
-            "$availabilityCondition/ToDate" to "AvailabilityConditionToDateHandler"
         )
 
         expectedHandlers.forEach { (path, expectedHandler) ->
@@ -228,9 +227,7 @@ class BaseFilteringProfileConfigTest {
 
         val period = BaseFilteringProfileConfig.standardTimePeriod()
         val expectedFromDate = period.start!!.toISO8601()
-        val expectedToDate = period.end!!.toISO8601()
         verify(writer).characters(expectedFromDate.toCharArray(), 0, expectedFromDate.length)
-        verify(writer).characters(expectedToDate.toCharArray(), 0, expectedToDate.length)
     }
 
     /**

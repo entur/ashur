@@ -10,7 +10,7 @@ import org.xml.sax.Attributes
  * inside that same window.
  *
  * A codespace may import NeTEx data that has set an explicit AvailabilityCondition that
- * differs from this period. This handler specifically, ensures that the FromDate field
+ * differ from this period. This handler specifically, ensures that the FromDate field
  * from AvailabilityCondition is entirely controlled by Ashur, and not written based of
  * the FromDate received.
  *

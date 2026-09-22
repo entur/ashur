@@ -19,13 +19,9 @@ class AvailabilityConditionHandlerTest {
     val fromDate = LocalDate.of(2027, 1, 1)
     val fromDateInXML = fromDate.toISO8601()
 
-    val toDate = LocalDate.of(2027, 1, 31)
-    val toDateInXML = toDate.toISO8601()
-
     val handler = AvailabilityConditionHandler(
         codespace = codespace,
         fromDate = fromDate,
-        toDate = toDate,
     )
 
     val writer = mock<DelegatingXMLElementWriter>()
@@ -71,11 +67,6 @@ class AvailabilityConditionHandlerTest {
         verify(writer).startElement("", NetexTypes.FROM_DATE, NetexTypes.FROM_DATE, null)
         verify(writer).characters(fromDateInXML.toCharArray(), 0, fromDateInXML.length)
         verify(writer).endElement("", NetexTypes.FROM_DATE, NetexTypes.FROM_DATE)
-
-        // Verify ToDate element
-        verify(writer).startElement("", NetexTypes.TO_DATE, NetexTypes.TO_DATE, null)
-        verify(writer).characters(toDateInXML.toCharArray(), 0, toDateInXML.length)
-        verify(writer).endElement("", NetexTypes.TO_DATE, NetexTypes.TO_DATE)
 
         // Verify AvailabilityCondition closing tag
         verify(writer).endElement("", NetexTypes.AVAILABILITY_CONDITION, NetexTypes.AVAILABILITY_CONDITION)

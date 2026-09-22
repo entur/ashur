@@ -12,14 +12,17 @@ import org.xml.sax.helpers.AttributesImpl
 import java.time.LocalDate
 
 /**
- * Writes the AvailabilityCondition entity, using a pre-defined period. The period is
- * the same one used to determine which journeys to keep through the filtering in Ashur.
+ * Writes the AvailabilityCondition entity, using a pre-defined FromDate.
+ *
+ * The FromDate value is the same one used to determine the start of the window when
+ * filtering journeys in the past.
  **/
 class AvailabilityConditionHandler(
     private val codespace: String,
     private val fromDate: LocalDate,
-    private val toDate: LocalDate,
 ) : XMLElementHandler {
+    private val fromDateField = NetexTypes.FROM_DATE
+
     override fun startElement(
         uri: String?,
         localName: String?,
@@ -34,15 +37,14 @@ class AvailabilityConditionHandler(
         newAttributes.addNewAttribute("version", "1")
         writer.startElement(uri, localName, qName, newAttributes)
 
-        writeDateField(NetexTypes.FROM_DATE, fromDate, writer)
-        writeDateField(NetexTypes.TO_DATE, toDate, writer)
+        writeFromDateField(fromDate, writer)
     }
 
-    private fun writeDateField(fieldName: String, date: LocalDate, writer: DelegatingXMLElementWriter) {
-        writer.startElement("", fieldName, fieldName, null)
+    private fun writeFromDateField(date: LocalDate, writer: DelegatingXMLElementWriter) {
+        writer.startElement("", fromDateField, fromDateField, null)
         val dateString = date.toISO8601()
         writer.characters(dateString.toCharArray(), 0, dateString.length)
-        writer.endElement("", fieldName, fieldName)
+        writer.endElement("", fromDateField, fromDateField)
     }
 
     override fun characters(
