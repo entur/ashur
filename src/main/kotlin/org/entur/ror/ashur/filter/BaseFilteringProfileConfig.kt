@@ -63,7 +63,7 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
         val codespacesHandler = CodespacesHandler()
         val validBetweenFromDateHandler = ValidBetweenFromDateHandler(fromDate = period.start!!)
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
-        val availabilityConditionHandler = AvailabilityConditionHandler(codespace, period.start!!)
+        val availabilityConditionHandler = AvailabilityConditionHandler(period.start!!)
         val availabilityConditionFromDateHandler = AvailabilityConditionFromDateHandler()
         val journeyPatternWithNameHandler = JourneyPatternWithNameHandler(journeyPatternNameRepository)
         return mapOf(

@@ -1,14 +1,10 @@
 package org.entur.ror.ashur.sax.handlers
 
-import org.entur.netex.tools.lib.extensions.addNewAttribute
 import org.entur.netex.tools.lib.extensions.toISO8601
 import org.entur.netex.tools.lib.model.NetexTypes
 import org.entur.netex.tools.lib.output.DelegatingXMLElementWriter
-import org.entur.netex.tools.lib.output.NetexIdGenerator
 import org.entur.netex.tools.lib.output.XMLElementHandler
-import org.entur.ror.ashur.utils.removeRbPrefix
 import org.xml.sax.Attributes
-import org.xml.sax.helpers.AttributesImpl
 import java.time.LocalDate
 
 /**
@@ -17,10 +13,7 @@ import java.time.LocalDate
  * The FromDate value is the same one used to determine the start of the window when
  * filtering journeys in the past.
  **/
-class AvailabilityConditionHandler(
-    private val codespace: String,
-    private val fromDate: LocalDate,
-) : XMLElementHandler {
+class AvailabilityConditionHandler(private val fromDate: LocalDate) : XMLElementHandler {
     private val fromDateField = NetexTypes.FROM_DATE
 
     override fun startElement(
@@ -30,13 +23,7 @@ class AvailabilityConditionHandler(
         attributes: Attributes?,
         writer: DelegatingXMLElementWriter
     ) {
-        val codespaceWithoutRbPrefix = removeRbPrefix(codespace.uppercase())
-        val id = NetexIdGenerator.next(codespaceWithoutRbPrefix, NetexTypes.AVAILABILITY_CONDITION)
-        val newAttributes = AttributesImpl()
-        newAttributes.addNewAttribute("id", id)
-        newAttributes.addNewAttribute("version", "1")
-        writer.startElement(uri, localName, qName, newAttributes)
-
+        writer.startElement(uri, localName, qName, attributes)
         writeFromDateField(fromDate, writer)
     }
 

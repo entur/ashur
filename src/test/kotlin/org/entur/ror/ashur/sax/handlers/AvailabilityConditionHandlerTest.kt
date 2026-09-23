@@ -10,19 +10,18 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
+import org.xml.sax.helpers.AttributesImpl
 import java.time.LocalDate
 import kotlin.test.assertEquals
 
 class AvailabilityConditionHandlerTest {
-    val codespace = "tro"
+    val availabilityConditionId = "TST:AvailabilityCondition:1234"
+    val availabilityConditionVersion = "1"
 
     val fromDate = LocalDate.of(2027, 1, 1)
     val fromDateInXML = fromDate.toISO8601()
 
-    val handler = AvailabilityConditionHandler(
-        codespace = codespace,
-        fromDate = fromDate,
-    )
+    val handler = AvailabilityConditionHandler(fromDate)
 
     val writer = mock<DelegatingXMLElementWriter>()
 
@@ -32,11 +31,15 @@ class AvailabilityConditionHandlerTest {
     }
 
     fun handleAvailabilityConditionEvents() {
+        val attributes = AttributesImpl()
+        attributes.addAttribute("", "version", "version", "", availabilityConditionVersion)
+        attributes.addAttribute("", "id", "id", "", availabilityConditionId)
+
         handler.startElement(
             "",
             NetexTypes.AVAILABILITY_CONDITION,
             NetexTypes.AVAILABILITY_CONDITION,
-            null,
+            attributes,
             writer
         )
         handler.characters("".toCharArray(), 0, 0, writer)
@@ -58,8 +61,8 @@ class AvailabilityConditionHandlerTest {
             eq(NetexTypes.AVAILABILITY_CONDITION),
             eq(NetexTypes.AVAILABILITY_CONDITION),
             check {
-                assertEquals("TRO:AvailabilityCondition:1", it.getValue("id"))
-                assertEquals("1", it.getValue("version"))
+                assertEquals(availabilityConditionId, it.getValue("id"))
+                assertEquals(availabilityConditionVersion, it.getValue("version"))
             }
         )
 
