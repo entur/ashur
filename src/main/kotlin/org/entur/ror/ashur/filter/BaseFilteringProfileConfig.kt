@@ -6,6 +6,8 @@ import org.entur.netex.tools.lib.config.TimePeriod
 import org.entur.netex.tools.lib.output.SkipElementHandler
 import org.entur.netex.tools.lib.output.XMLElementHandler
 import org.entur.netex.tools.lib.selectors.entities.EntitySelector
+import org.entur.ror.ashur.sax.handlers.AvailabilityConditionFromDateHandler
+import org.entur.ror.ashur.sax.handlers.AvailabilityConditionHandler
 import org.entur.ror.ashur.sax.handlers.CodespacesHandler
 import org.entur.ror.ashur.sax.handlers.CompositeFrameHandler
 import org.entur.ror.ashur.sax.handlers.JourneyPatternWithNameHandler
@@ -61,11 +63,15 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
         val codespacesHandler = CodespacesHandler()
         val validBetweenFromDateHandler = ValidBetweenFromDateHandler(fromDate = period.start!!)
         val validBetweenToDateHandler = ValidBetweenToDateHandler(toDate = period.end!!)
+        val availabilityConditionHandler = AvailabilityConditionHandler(period.start!!)
+        val availabilityConditionFromDateHandler = AvailabilityConditionFromDateHandler()
         val journeyPatternWithNameHandler = JourneyPatternWithNameHandler(journeyPatternNameRepository)
         return mapOf(
             "/PublicationDelivery" to publicationDeliveryHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame" to compositeFrameHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/codespaces" to codespacesHandler,
+            "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/AvailabilityCondition" to availabilityConditionHandler,
+            "/PublicationDelivery/dataObjects/CompositeFrame/validityConditions/AvailabilityCondition/FromDate" to availabilityConditionFromDateHandler,
             "/PublicationDelivery/dataObjects/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar" to skipElementHandler,
             "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar/FromDate" to skipElementHandler,
