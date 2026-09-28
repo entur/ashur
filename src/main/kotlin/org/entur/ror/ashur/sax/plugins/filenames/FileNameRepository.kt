@@ -13,10 +13,20 @@ data class FileNameRepository(
             val unique = generateSequence(2) { it + 1 }
                 .map { "${base}_$it.xml" }
                 .first { it !in filesToRename.values }
-            logger.warn(
-                "Filename collision: '{}' already mapped; using '{}' for '{}'",
-                newName, unique, previousName
-            )
+
+            if (newName.startsWith("_")) {
+                logger.info(
+                    "Filename collision for common file: '{}' already mapped; using '{}' for '{}'",
+                    newName, unique, previousName
+                )
+            }
+            else {
+                logger.warn(
+                    "Filename collision for line file: '{}' already mapped; using '{}' for '{}'",
+                    newName, unique, previousName
+                )
+            }
+
             unique
         } else {
             newName
