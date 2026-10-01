@@ -1,8 +1,5 @@
 common:
   env: prd
-  ingress:
-    host:
-      ashur.prd.entur.io
 
 configmap:
   gcp:

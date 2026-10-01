@@ -18,6 +18,18 @@ Run Main.kt with VM arguments pointing to local config files:
 -Dspring.config.location=/path/to/application.properties -Dlogging.config=/path/to/logback.xml
 ```
 
+## Rendering the chart
+
+The deployment uses the Entur `common` subchart. `helm/ashur/charts/` is gitignored and only
+`Chart.lock` is committed, so fetch the dependency once per clone (and again after bumping the version
+in `Chart.yaml`), then render:
+```bash
+helm dependency update helm/ashur
+helm template ashur helm/ashur -n ashur -f helm/ashur/env/values-kub-ent-dev.yaml
+```
+`helm dependency update` rewrites `Chart.lock`; commit it when the version changes. CI (gha-helm) runs
+the same `dependency update`, so the chart is refetched at deploy time regardless.
+
 ## Architecture
 
 ### Message Flow

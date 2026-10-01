@@ -47,3 +47,5 @@ ashur.yaml
 notes.md
 
 tmp
+### Helm ###
+/helm/ashur/charts/

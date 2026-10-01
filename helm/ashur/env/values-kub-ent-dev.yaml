@@ -1,8 +1,5 @@
 common:
   env: dev
-  ingress:
-    host:
-      ashur.dev.entur.io
 
 configmap:
   gcp:
