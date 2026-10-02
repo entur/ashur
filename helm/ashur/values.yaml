@@ -2,23 +2,22 @@ common:
   labels:
     customLogRetention: enabled
   app: ashur
-  shortname: ashur
+  # Renamed from shortname in common v2. Max 10 alphanumeric chars.
+  appId: ashur
   team: ror
   ingress:
     enabled: false
   service:
     externalPort: 80
     internalPort: 8080
-  hpa:
-    spec:
-      minReplicas: 2
-      maxReplicas: 2
   container:
-    image: <+artifacts.primary.image>
-    forceReplicas: 2
+    # Replaced at deploy time by gha-helm (--set common.container.image).
+    image: ashur
     cpu: 5
-    memory: 11500
-    memoryLimit: 12500
+    # common v2 makes the memory limit equal to the request; memoryLimit is gone. Keep the value at the
+    # old limit (12500) so the ceiling against -Xmx9000m is unchanged; the request rises from 11500 to
+    # 12500. CPU keeps a request but no limit, so the pod stays Burstable (not Guaranteed QoS).
+    memory: 12500
     probes:
       liveness:
         path: /actuator/health/liveness
@@ -31,17 +30,26 @@ common:
       - mountPath: /etc/application-config
         name: application-config
         readOnly: true
+  deployment:
+    # Fixed at 2, no autoscaling (was container.forceReplicas plus hpa.spec min=max=2). forceReplicas
+    # disables the HPA; the PDB now guards minAvailable 50%.
+    forceReplicas: 2
+    # Preserve the v1 rollout: 25% of 2 floored to 0 unavailable. maxSurge defaults to 1, so the new pod
+    # comes up before an old one goes down.
+    maxUnavailable: "0%"
+    # application.properties, rendered by templates/configmap.yaml into the ashur-application ConfigMap.
+    # Distinct from common.configmap below (the ashur ConfigMap, injected as env with envFrom).
     volumes:
       - configMap:
           defaultMode: 420
           name: ashur-application
         name: application-config
   configmap:
+    # toEnv is gone in common v2; the chart mounts this ConfigMap (named ashur) with envFrom automatically.
+    enabled: true
     data:
       JDK_JAVA_OPTIONS: -server -Xmx9000m -Xss512k -XX:MaxGCPauseMillis=1000
         -XX:+ExitOnOutOfMemoryError
         -XX:+IgnoreUnrecognizedVMOptions --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -Dspring.config.location=/etc/application-config/application.properties
         -Dfile.encoding=UTF-8
       TZ: Europe/Oslo
-    enabled: true
-    toEnv: true

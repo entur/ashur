@@ -1,8 +1,5 @@
 common:
   env: tst
-  ingress:
-    host:
-      ashur.tst.entur.io
 
 configmap:
   gcp:
