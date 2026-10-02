@@ -50,7 +50,9 @@ class ActiveDatesRefSelector(val activeDatesRepository: ActiveDatesRepository, v
 
         for ((serviceJourneyId, serviceJourneyData) in serviceJourneys) {
             val dayTypesOfServiceJourney = mutableMapOf<String, DayTypeData>()
-            serviceJourneyData.dayTypes.forEach { dayTypesOfServiceJourney.put(it, dayTypes[it]!!) }
+            // A DayType with neither DaysOfWeek nor DayTypeAssignments has no entry in the repository,
+            // it has no active dates
+            serviceJourneyData.dayTypes.forEach { dayTypesOfServiceJourney.put(it, dayTypes[it] ?: DayTypeData()) }
             for ((dayTypeRef, dayTypeData) in dayTypesOfServiceJourney) {
                 val datesWithinPeriod = dayTypeData.dates.filter {
                     isDateInPeriod(it, serviceJourneyData.finalArrivalDayOffset, period)
