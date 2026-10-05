@@ -24,7 +24,7 @@
         <logback.version>1.5.18</logback.version>
         <google-cloud-storage.version>2.72.0</google-cloud-storage.version>
         <google-pubsub.version>1.154.0</google-pubsub.version>
-        <protobuf-java.version>4.35.1</protobuf-java.version>
+        <protobuf-java.version>4.36.2</protobuf-java.version>
         <gax.version>2.84.0</gax.version>
         <netex-tools.version>0.0.50</netex-tools.version>
         <camel.version>4.22.1</camel.version>
