@@ -12,15 +12,15 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v5.7.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
-          java-version: 25.0.4
+          java-version: 25
           distribution: liberica
       - name: Cache Maven dependencies
-        uses: actions/cache@v6.1.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -31,13 +31,13 @@ jobs:
 
       - name: Run maven build
         run: mvn verify
-      - uses: actions/upload-artifact@v7.0.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: artifact
           path: target
   docker-lint:
     needs: [maven-verify]
-    uses: entur/gha-docker/.github/workflows/lint.yml@v1
+    uses: entur/gha-docker/.github/workflows/lint.yml@dcdc76ce2d251de20f35a92c566d8fe99036e03e # v1.13.0
     with:
       ignore: DL3018
   docker-smoke:
@@ -47,8 +47,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/download-artifact@v8.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: artifact
           path: target
@@ -63,34 +63,34 @@ jobs:
   docker-build:
     if: github.repository_owner == 'entur' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [maven-verify]
-    uses: entur/gha-docker/.github/workflows/build.yml@v1
+    uses: entur/gha-docker/.github/workflows/build.yml@dcdc76ce2d251de20f35a92c566d8fe99036e03e # v1.13.0
     with:
       build_artifact_name: artifact
       build_artifact_path: target
   docker-push:
     needs: [docker-build, docker-smoke]
-    uses: entur/gha-docker/.github/workflows/push.yml@v1
+    uses: entur/gha-docker/.github/workflows/push.yml@dcdc76ce2d251de20f35a92c566d8fe99036e03e # v1.13.0
 
   docker-scan:
     needs: [ docker-build ]
-    uses: entur/gha-security/.github/workflows/docker-scan.yml@v2
+    uses: entur/gha-security/.github/workflows/docker-scan.yml@0962fb4f3f9004eeaea88582db8639e140ec6fda # v2.17.1
     with:
       image_artifact: ${{ needs.docker-build.outputs.image_artifact }}
 
   helm-lint:
-    uses: entur/gha-helm/.github/workflows/lint.yml@v2.0.0
+    uses: entur/gha-helm/.github/workflows/lint.yml@eebe21e7625a695085aefd79f64893a34adc2302 # v2.0.0
     with:
       environment: dev
 
   terraform-lint:
-    uses: entur/gha-terraform/.github/workflows/lint.yml@v2
+    uses: entur/gha-terraform/.github/workflows/lint.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
 
 
   tf-plan-dev:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ terraform-lint, docker-push ]
     name: Terraform Plan DEV
-    uses: entur/gha-terraform/.github/workflows/plan.yml@v2
+    uses: entur/gha-terraform/.github/workflows/plan.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
     with:
       environment: dev
 
@@ -109,7 +109,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-dev.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-dev, tf-approval-dev ]
     name: Terraform Apply DEV
-    uses: entur/gha-terraform/.github/workflows/apply.yml@v2
+    uses: entur/gha-terraform/.github/workflows/apply.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
     with:
       environment: dev
       has_changes: ${{ needs.tf-plan-dev.outputs.has_changes }}
@@ -117,7 +117,7 @@ jobs:
   deploy-dev:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ helm-lint, tf-plan-dev, tf-apply-dev, docker-push, docker-lint ]
-    uses: entur/gha-helm/.github/workflows/deploy.yml@v2.0.0
+    uses: entur/gha-helm/.github/workflows/deploy.yml@eebe21e7625a695085aefd79f64893a34adc2302 # v2.0.0
     with:
       environment: dev
       image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
@@ -142,7 +142,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ terraform-lint, approval-tst ]
     name: Terraform Plan TST
-    uses: entur/gha-terraform/.github/workflows/plan.yml@v2
+    uses: entur/gha-terraform/.github/workflows/plan.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
     with:
       environment: tst
 
@@ -161,7 +161,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-tst.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-tst, tf-approval-tst ]
     name: Terraform Apply TST
-    uses: entur/gha-terraform/.github/workflows/apply.yml@v2
+    uses: entur/gha-terraform/.github/workflows/apply.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
     with:
       environment: tst
       has_changes: ${{ needs.tf-plan-tst.outputs.has_changes }}
@@ -170,7 +170,7 @@ jobs:
   deploy-tst:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ approval-tst, tf-plan-tst, tf-apply-tst, docker-push, docker-lint ]
-    uses: entur/gha-helm/.github/workflows/deploy.yml@v2.0.0
+    uses: entur/gha-helm/.github/workflows/deploy.yml@eebe21e7625a695085aefd79f64893a34adc2302 # v2.0.0
     with:
       environment: tst
       image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
@@ -195,7 +195,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ terraform-lint, approval-prd ]
     name: Terraform Plan PRD
-    uses: entur/gha-terraform/.github/workflows/plan.yml@v2
+    uses: entur/gha-terraform/.github/workflows/plan.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
     with:
       environment: prd
 
@@ -214,7 +214,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-prd.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-prd, tf-approval-prd ]
     name: Terraform Apply PRD
-    uses: entur/gha-terraform/.github/workflows/apply.yml@v2
+    uses: entur/gha-terraform/.github/workflows/apply.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
     with:
       environment: prd
       has_changes: ${{ needs.tf-plan-prd.outputs.has_changes }}
@@ -223,7 +223,7 @@ jobs:
   deploy-prd:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.ref == 'refs/heads/main' }}
     needs: [ approval-prd, tf-plan-prd, tf-apply-prd, docker-push, docker-lint ]
-    uses: entur/gha-helm/.github/workflows/deploy.yml@v2.0.0
+    uses: entur/gha-helm/.github/workflows/deploy.yml@eebe21e7625a695085aefd79f64893a34adc2302 # v2.0.0
     with:
       environment: prd
       image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
