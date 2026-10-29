@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-openjdk-alpine:25.0.4@sha256:b728c08690506dac4ed7150ab40f406236d43f487c51a72f375e817f02d7cbde AS builder
+FROM bellsoft/liberica-openjdk-alpine:25.0.5.0.3-5@sha256:5f60a2c005b48298a9fa65fdaaa117a92a50e8da26891598e367eeb6a37ae4a0 AS builder
 WORKDIR /builder
 # Upgrades all system packages to patch known CVEs
 RUN apk update \
@@ -7,13 +7,13 @@ RUN apk update \
 COPY target/*-SNAPSHOT.jar application.jar
 RUN java -Djarmode=tools  -jar application.jar extract --layers --destination extracted
 
-FROM bellsoft/liberica-openjdk-alpine:25.0.4@sha256:b728c08690506dac4ed7150ab40f406236d43f487c51a72f375e817f02d7cbde
+FROM bellsoft/liberica-openjdk-alpine:25.0.5.0.3-5@sha256:5f60a2c005b48298a9fa65fdaaa117a92a50e8da26891598e367eeb6a37ae4a0
 # Upgrades all system packages to patch known CVEs.
 RUN apk update \
  && apk upgrade --no-cache \
  && apk add --no-cache tini \
  && rm -rf /var/cache/apk/* \
- && echo "fresh apk upgrade 2026-06-12"
+ && echo "fresh apk upgrade 2026-10-28"
 WORKDIR /deployments
 RUN addgroup appuser && adduser --disabled-password appuser --ingroup appuser
 USER appuser
