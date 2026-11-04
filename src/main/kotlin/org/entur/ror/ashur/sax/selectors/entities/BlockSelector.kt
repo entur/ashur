@@ -5,6 +5,13 @@ import org.entur.netex.tools.lib.selections.EntitySelection
 import org.entur.netex.tools.lib.selectors.entities.EntitySelector
 import org.entur.netex.tools.lib.selectors.entities.EntitySelectorContext
 
+/**
+ * Selects Block-entities that refer to at least one ServiceJourney, and at least one DayType. Additionally,
+ * the referred ServiceJourney(s) and DayType(s) must be included in the provided EntitySelection.
+ *
+ * Any Block that only refer to ServiceJourneys or DayTypes that have been filtered out of the selection,
+ * is excluded from the EntitySelection.
+ * */
 class BlockSelector: EntitySelector {
     override fun selectEntities(context: EntitySelectorContext): EntitySelection {
         val model = context.entityModel
