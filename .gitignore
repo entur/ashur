@@ -41,7 +41,6 @@ build/
 ### Custom ###
 netex-data/
 
-.terraform.lock.hcl
 .terraform/
 ashur.yaml
 notes.md
