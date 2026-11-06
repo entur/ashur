@@ -109,7 +109,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-dev.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-dev, tf-approval-dev ]
     name: Terraform Apply DEV
-    uses: entur/gha-terraform/.github/workflows/apply.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
+    uses: entur/gha-terraform/.github/workflows/apply.yml@67c83c025c1810b54a77624ca6090a46dcac9c94 # v3.0.0
     with:
       environment: dev
       has_changes: ${{ needs.tf-plan-dev.outputs.has_changes }}
@@ -161,7 +161,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-tst.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-tst, tf-approval-tst ]
     name: Terraform Apply TST
-    uses: entur/gha-terraform/.github/workflows/apply.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
+    uses: entur/gha-terraform/.github/workflows/apply.yml@67c83c025c1810b54a77624ca6090a46dcac9c94 # v3.0.0
     with:
       environment: tst
       has_changes: ${{ needs.tf-plan-tst.outputs.has_changes }}
@@ -214,7 +214,7 @@ jobs:
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && needs.tf-plan-prd.outputs.has_changes == 'true' && github.ref == 'refs/heads/main' }}
     needs: [ tf-plan-prd, tf-approval-prd ]
     name: Terraform Apply PRD
-    uses: entur/gha-terraform/.github/workflows/apply.yml@7492b8dd422a63a6826f1ccfbdec14c7e5d43bb0 # v2.5.0
+    uses: entur/gha-terraform/.github/workflows/apply.yml@67c83c025c1810b54a77624ca6090a46dcac9c94 # v3.0.0
     with:
       environment: prd
       has_changes: ${{ needs.tf-plan-prd.outputs.has_changes }}
