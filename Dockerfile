@@ -13,7 +13,7 @@ RUN apk update \
  && apk upgrade --no-cache \
  && apk add --no-cache tini \
  && rm -rf /var/cache/apk/* \
- && echo "fresh apk upgrade 2026-10-28"
+ && echo "fresh apk upgrade 2026-11-09"
 WORKDIR /deployments
 RUN addgroup appuser && adduser --disabled-password appuser --ingroup appuser
 USER appuser
