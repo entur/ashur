@@ -50,6 +50,7 @@ common:
     data:
       JDK_JAVA_OPTIONS: -server -Xmx9000m -Xss512k -XX:MaxGCPauseMillis=1000
         -XX:+ExitOnOutOfMemoryError
+        -XX:-UseBASE64Intrinsics
         -XX:+IgnoreUnrecognizedVMOptions --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -Dspring.config.location=/etc/application-config/application.properties
         -Dfile.encoding=UTF-8
       TZ: Europe/Oslo
