@@ -126,7 +126,7 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
             .withPreserveComments(false)
             .withUseSelfClosingTagsWhereApplicable(true)
             .withPruneReferences(true)
-            .withReferencesToExcludeFromPruning(setOf("QuayRef", "VehicleTypeRef"))
+            .withReferencesToExcludeFromPruning(setOf("QuayRef", "VehicleTypeRef", "TrainElementRef"))
             .withUnreferencedEntitiesToPrune(
                 setOf(
                     "JourneyPattern",
