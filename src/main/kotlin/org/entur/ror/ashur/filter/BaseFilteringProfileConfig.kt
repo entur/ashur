@@ -104,8 +104,6 @@ abstract class BaseFilteringProfileConfig : FilterProfileConfiguration {
         "/PublicationDelivery/dataObjects/ResourceFrame/dataSources",
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney/parts",
         "/PublicationDelivery/dataObjects/TimetableFrame/vehicleJourneys/ServiceJourney/parts",
-        "/PublicationDelivery/dataObjects/CompositeFrame/frames/ResourceFrame/vehicles",
-        "/PublicationDelivery/dataObjects/ResourceFrame/vehicles",
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/SiteFrame",
         "/PublicationDelivery/dataObjects/SiteFrame",
         "/PublicationDelivery/dataObjects/CompositeFrame/frames/VehicleScheduleFrame",
