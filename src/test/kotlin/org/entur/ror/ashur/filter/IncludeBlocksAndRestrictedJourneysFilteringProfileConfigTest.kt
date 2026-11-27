@@ -54,7 +54,7 @@ class IncludeBlocksAndRestrictedJourneysFilteringProfileConfigTest {
     }
 
     @Test
-    fun testStillSkipsSiteAndInfrastructureFrames() {
+    fun testStillSkipsSiteFrame() {
         val config = includeBlocksConfig()
 
         assertTrue(
@@ -62,8 +62,6 @@ class IncludeBlocksAndRestrictedJourneysFilteringProfileConfigTest {
                 listOf(
                     "/PublicationDelivery/dataObjects/CompositeFrame/frames/SiteFrame",
                     "/PublicationDelivery/dataObjects/SiteFrame",
-                    "/PublicationDelivery/dataObjects/CompositeFrame/frames/InfrastructureFrame",
-                    "/PublicationDelivery/dataObjects/InfrastructureFrame"
                 )
             )
         )

@@ -72,7 +72,7 @@ class StandardImportFilteringProfileConfigTest {
     }
 
     @Test
-    fun testSkipsSiteAndInfrastructureFrames() {
+    fun testSkipsSiteFrame() {
         val config = standardConfig()
 
         assertTrue(
@@ -80,8 +80,6 @@ class StandardImportFilteringProfileConfigTest {
                 listOf(
                     "/PublicationDelivery/dataObjects/CompositeFrame/frames/SiteFrame",
                     "/PublicationDelivery/dataObjects/SiteFrame",
-                    "/PublicationDelivery/dataObjects/CompositeFrame/frames/InfrastructureFrame",
-                    "/PublicationDelivery/dataObjects/InfrastructureFrame"
                 )
             )
         )

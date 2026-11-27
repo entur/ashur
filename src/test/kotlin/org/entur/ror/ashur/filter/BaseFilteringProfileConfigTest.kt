@@ -33,8 +33,6 @@ class BaseFilteringProfileConfigTest {
                     "/PublicationDelivery/dataObjects/ResourceFrame/organisations/Authority/ContactDetails/Email",
                     "/PublicationDelivery/dataObjects/CompositeFrame/frames/ResourceFrame/organisations/Authority/ContactDetails/Email",
                     "/PublicationDelivery/dataObjects/CompositeFrame/codespaces/Codespace/Description",
-                    "/PublicationDelivery/dataObjects/CompositeFrame/frames/InfrastructureFrame",
-                    "/PublicationDelivery/dataObjects/InfrastructureFrame",
                     "/PublicationDelivery/dataObjects/CompositeFrame/FrameDefaults",
                     "/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/lines/Line/routes",
                     "/PublicationDelivery/dataObjects/ServiceFrame/lines/Line/routes",
@@ -144,7 +142,7 @@ class BaseFilteringProfileConfigTest {
         // Sanity check: an unrelated path should still be skipped
         assertTrue(
             config.skipElements.contains(
-                "/PublicationDelivery/dataObjects/CompositeFrame/frames/InfrastructureFrame"
+                "/PublicationDelivery/dataObjects/ResourceFrame/vehicles"
             )
         )
     }
